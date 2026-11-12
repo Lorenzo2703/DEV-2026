@@ -1,0 +1,15 @@
+{
+  "name": "pnpm-workspace-example",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@12.18.0",
+  "dependencies": {
+    "@dev-2026/shared": "workspace:*"
+  },
+  "scripts": {
+    "typecheck": "node --check packages/shared/index.js && node --check verify.mjs",
+    "run": "node ../../node_modules/pnpm/bin/pnpm.mjs install --frozen-lockfile && node verify.mjs",
+    "verify": "node ../../node_modules/pnpm/bin/pnpm.mjs install --frozen-lockfile && node verify.mjs && node --experimental-strip-types ../astro/check-output.ts"
+  }
+}

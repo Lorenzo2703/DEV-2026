@@ -1,0 +1,123 @@
+---
+title: pnpm
+summary: Pin package-manager versions, build reliable workspaces, and install dependencies from a committed lockfile.
+category: package-management
+maturity: stable
+radar: trial
+toolVersion: 12.18.0
+verifiedAt: 2026-11-12
+officialDocs: https://pnpm.io/installation
+repo: https://github.com/pnpm/pnpm
+license: MIT
+pricing: oss
+difficulty: intermediate
+alternatives: [bun]
+related: [bun, mise]
+tags: [pnpm, package-manager, workspaces, reproducible-builds]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import rootManifest from '../../../../snippets/pnpm/package.json?raw';
+import workspaceConfig from '../../../../snippets/pnpm/pnpm-workspace.yaml?raw';
+import sharedManifest from '../../../../snippets/pnpm/packages/shared/package.json?raw';
+import sharedModule from '../../../../snippets/pnpm/packages/shared/index.js?raw';
+import testCode from '../../../../snippets/pnpm/verify.mjs?raw';
+
+## What it is, when to use it, when not to
+
+pnpm is a package manager for JavaScript projects, with workspace support and a lockfile-based install workflow. Use it when its dependency model and workspace features fit your team and deployment pipeline.
+
+Prefer the package manager already chosen for a repository unless there is a concrete reason to migrate. This handbook uses Bun; this guide shows a separate pnpm workspace so its lockfile and commands remain isolated from the site.
+
+## Prerequisites and versions
+
+This guide is verified against **pnpm 12.18.0**, the latest stable release found on 2026-11-12. pnpm 12 is distributed as a native executable; installing the `pnpm` npm package requires Node.js 18 or newer. The example repository uses Node.js 22.23.4 and pins pnpm with `packageManager`.
+
+## Install and minimal setup
+
+For a Node.js-based setup, install the pinned release and confirm the executable:
+
+```sh
+npm install --global pnpm@12.18.0
+pnpm --version
+```
+
+In a repository, commit `package.json`, `pnpm-workspace.yaml`, and `pnpm-lock.yaml` together. The example below has no registry dependencies, so the workspace behavior can be tested without downloading third-party packages.
+
+## Correct implementation
+
+Pin the package manager version in the root manifest and declare the workspace patterns in `pnpm-workspace.yaml`. Use the `workspace:` protocol when a package must resolve to a local workspace member; it makes a missing local package an install error rather than silently selecting a registry package.
+
+<CodeTabs
+  id="pnpm-workspace"
+  label="pnpm workspace configuration"
+  items={[
+    { label: 'package.json', language: 'json', code: rootManifest },
+    { label: 'pnpm-workspace.yaml', language: 'yaml', code: workspaceConfig },
+    { label: 'shared/package.json', language: 'json', code: sharedManifest },
+    { label: 'shared/index.js', language: 'javascript', code: sharedModule },
+  ]}
+/>
+
+Commit the generated lockfile. In CI, request a frozen install explicitly with `pnpm install --frozen-lockfile`; do not rely solely on automatic CI detection. Keep the pnpm major that wrote the lockfile aligned with the one used by CI, since incompatible lockfiles fail rather than being silently rewritten.
+
+For larger workspaces, keep package boundaries explicit and use the workspace protocol for internal dependencies. Add pnpm configuration in `pnpm-workspace.yaml`, not an invented `pnpm` section in `package.json`.
+
+## Integrate with the rest of the stack
+
+Pair pnpm with a runtime/version manager such as [mise](/tools/package-management/mise/) when the project needs the same Node.js and package-manager versions across local development and CI. The [Bun guide](/tools/package-management/bun/) describes this site's selected package manager; don't mix lockfiles in one project without an explicit migration plan.
+
+## Test it
+
+The fixture's workspace package is resolved through pnpm's local link, and the test checks the imported behavior. `bun run snippets` runs the fixture's syntax checks and performs `pnpm install --frozen-lockfile` before executing the test:
+
+<CodeTabs
+  id="pnpm-test"
+  label="pnpm workspace test"
+  items={[{ label: 'verify.mjs', language: 'javascript', code: testCode }]}
+/>
+
+## Security and performance
+
+pnpm restricts dependency build scripts unless they are explicitly allowed. Review packages that need install-time execution and allow only the ones you trust. Keep registry credentials out of committed configuration and logs.
+
+Set a deliberate policy for dependency update age and trust, and consider `minimumReleaseAge` or `trustPolicy` where they fit your threat model. Do not share pnpm's store or metadata cache from an untrusted job with trusted CI jobs. If security scanners read the lockfile, make sure they support pnpm's possible two-document format; reading only the first document can miss the project dependency graph.
+
+Measure install time in the actual CI environment. A warm store is not guaranteed to make every pipeline faster.
+
+## Common mistakes
+
+- **Omitting the version pin:** local and CI machines can run different pnpm versions. Pin one exact version with `packageManager`.
+- **Treating a lockfile as a substitute for a frozen install:** use the explicit CI flag so dependency drift fails visibly.
+- **Using `workspaces` in `package.json` without `pnpm-workspace.yaml`:** pnpm reads its workspace patterns from the YAML file.
+- **Declaring an internal dependency with a normal version range:** use `workspace:` when the dependency must come from the local repository.
+- **Assuming the lockfile is always one YAML document:** scanners and SBOM tools must read the format pnpm actually generated.
+- **Approving every dependency build script:** this removes a useful supply-chain boundary; allow only reviewed packages.
+
+## Observability
+
+Keep install output in CI logs and track install duration and failures alongside the lockfile revision and pnpm version. Investigate lockfile changes and rejected build scripts during dependency updates; avoid logging registry credentials or environment secrets.
+
+## Upgrade and migration notes
+
+Update the exact `packageManager` pin deliberately, regenerate the lockfile using that version, and review the diff before merging. Then run the same frozen install in CI. Read the release notes before changing major versions; pnpm 12 is a native executable, and its installation and Node.js requirements differ from older JavaScript-based pnpm releases.
+
+To leave pnpm, migrate the lockfile and workspace declarations intentionally. Do not commit multiple competing lockfiles as if they were interchangeable.
+
+## Alternatives
+
+Bun is this handbook's choice and combines package management with a runtime and test runner. npm is a practical default for Node.js-centered projects; Yarn is another established option. Compare workspace behavior, lockfile support, platform needs, and CI integration before switching.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [Installation and platform support](https://pnpm.io/installation)
+- [Workspace packages and `workspace:` dependencies](https://pnpm.io/workspaces)
+- [Continuous integration and frozen installs](https://pnpm.io/continuous-integration)
+- [Lockfile format](https://pnpm.io/lockfile)
+- [Project configuration](https://pnpm.io/settings)
+- [Package-manager version pinning](https://pnpm.io/package_json#packagemanager)
+- [Supply-chain security guidance](https://pnpm.io/supply-chain-security)
+- [pnpm 12.18.0 release notes](https://pnpm.io/blog/releases/12.18.0)
+- [pnpm license](https://raw.githubusercontent.com/pnpm/pnpm/main/LICENSE)

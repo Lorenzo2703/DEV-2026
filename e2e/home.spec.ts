@@ -78,6 +78,7 @@ for (const tool of [
     title: 'TypeScript',
     sample: 'export function parseServiceConfig',
   },
+  { url: '/tools/package-management/pnpm/', title: 'pnpm', sample: 'packageManager' },
   { url: '/tools/package-management/bun/', title: 'Bun', sample: 'export function welcome' },
   { url: '/tools/frontend/astro/', title: 'Astro', sample: 'Ship a static site' },
   { url: '/tools/testing/vitest/', title: 'Vitest', sample: 'export function slugify' },
