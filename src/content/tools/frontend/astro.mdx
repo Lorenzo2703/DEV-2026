@@ -1,0 +1,94 @@
+---
+title: Astro
+summary: Build content-focused sites as static HTML and add interactivity only where it is needed.
+category: frontend
+maturity: stable
+radar: adopt
+toolVersion: 7.4.11
+verifiedAt: 2026-11-12
+officialDocs: https://docs.astro.build/en/getting-started/
+repo: https://github.com/withastro/astro
+license: MIT
+pricing: oss
+difficulty: beginner
+related: [typescript, bun]
+tags: [astro, frontend, static-sites]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import pageCode from '../../../../snippets/astro/src/pages/index.astro?raw';
+import bunCommand from '../../../../snippets/astro/commands/bun.txt?raw';
+import npmCommand from '../../../../snippets/astro/commands/npm.txt?raw';
+import pnpmCommand from '../../../../snippets/astro/commands/pnpm.txt?raw';
+import yarnCommand from '../../../../snippets/astro/commands/yarn.txt?raw';
+
+## What it is, when to use it, when not to
+
+Astro is a web framework suited to content-focused sites. It can prerender pages to HTML and add interactive components where they are needed.
+
+Choose static output for content that can be generated during a build. If every request requires highly dynamic, personalized data, evaluate on-demand rendering and hosting requirements, or a framework designed around your application's interaction model.
+
+## Prerequisites and versions
+
+This guide is verified against Astro **7.4.11**. Astro's installation guide requires Node.js **22.23.4 or newer** and excludes odd-numbered Node releases. This repository also uses Bun as its package manager.
+
+## Install and minimal setup
+
+Follow the [official installation guide](https://docs.astro.build/en/install-and-setup/) to create a project, then start its development server. Add a page under `src/pages` and run the project's build command to generate static output.
+
+## Correct implementation
+
+The following complete page is prerendered to HTML. Its TypeScript expressions run while rendering; they do not automatically become browser JavaScript.
+
+<CodeTabs id="astro-page" label="Astro page" items={[{ label: 'index.astro', language: 'astro', code: pageCode }]} />
+
+For repeated structured content, use content collections with a loader and schema to validate entry metadata. Add a client island only for a component that needs browser interactivity; choose hydration deliberately and measure the result.
+
+## Integrate with the rest of the stack
+
+Use the [TypeScript guide](/tools/languages-runtimes/typescript/) for type checking and the [Bun guide](/tools/package-management/bun/) for reproducible installs. For static hosting, deploy the generated output; on-demand rendering requires a compatible deployment adapter and environment.
+
+## Test it
+
+Run `bun run snippets` in this repository. It checks the sample with Astro, builds it, and asserts that its generated HTML contains the expected heading and list. From `snippets/astro`, after building the example, you can rerun its `verify` package script with any of these installed package managers:
+
+<CodeTabs id="astro-package-manager" label="Package manager commands" items={[{ label: 'Bun', language: 'bash', code: bunCommand }, { label: 'npm', language: 'bash', code: npmCommand }, { label: 'pnpm', language: 'bash', code: pnpmCommand }, { label: 'Yarn', language: 'bash', code: yarnCommand }]} />
+
+The snippet runner executes all four commands; this project still uses Bun for dependency management. Also test real navigation and accessibility in a browser against your production build.
+
+## Security and performance
+
+Anything rendered into a static page is public, even if it came from a build-time environment variable. Keep secrets server-side and out of generated HTML. Validate untrusted data and review any use of raw HTML. Limit client JavaScript to necessary interactions and measure real pages.
+
+## Common mistakes
+
+Do not assume static content updates without a rebuild, or assume a component is interactive without client-side code. Do not select an adapter for a purely static deployment unless your hosting setup actually needs it.
+
+## Observability
+
+Track build and deployment failures in CI. Monitor availability and user-facing performance at the hosting layer; static output alone does not provide application telemetry. For on-demand rendering, also monitor server errors and latency.
+
+## Upgrade and migration notes
+
+Review the Astro release notes and the migration guide before a major upgrade. Test integrations, generated routes, and browser behavior together, and retain a known-good lockfile for rollback. Astro 7 upgrades Vite, so check Vite-dependent integrations for compatibility.
+
+## Alternatives
+
+A conventional single-page application can be a better fit for a heavily interactive application. Other static site generators may be simpler for a project that does not need Astro's component or island model; compare their deployment and content workflows against your requirements.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [Astro documentation](https://docs.astro.build/en/getting-started/)
+- [Installation and prerequisites](https://docs.astro.build/en/install-and-setup/)
+- [Astro components](https://docs.astro.build/en/basics/astro-components/)
+- [Content collections](https://docs.astro.build/en/guides/content-collections/)
+- [Islands architecture](https://docs.astro.build/en/concepts/islands/)
+- [Deployment](https://docs.astro.build/en/guides/deploy/)
+- [Upgrade to Astro 7](https://docs.astro.build/en/guides/upgrade-to/v7/)
+- [Astro 7.4.11 release](https://github.com/withastro/astro/releases/tag/astro%407.4.11)
+- [Bun script execution](https://bun.com/docs/runtime)
+- [npm run-script](https://docs.npmjs.com/cli/v10/commands/npm-run-script/)
+- [pnpm run](https://pnpm.io/cli/run)
+- [Yarn run](https://yarnpkg.com/cli/run)

@@ -1,0 +1,38 @@
+---
+import { getCollection } from 'astro:content';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+
+export async function getStaticPaths() {
+  const [guides, blueprints, posts] = await Promise.all([
+    getCollection('guides', ({ data }) => !data.draft),
+    getCollection('blueprints', ({ data }) => !data.draft),
+    getCollection('posts', ({ data }) => !data.draft),
+  ]);
+  return [
+    { params: { collection: 'guides' }, props: { title: 'Guides', entries: guides } },
+    { params: { collection: 'blueprints' }, props: { title: 'Blueprints', entries: blueprints } },
+    { params: { collection: 'posts' }, props: { title: 'Posts', entries: posts } },
+  ];
+}
+
+const { title, entries } = Astro.props;
+const sortedEntries = [...entries].sort((a, b) => a.data.title.localeCompare(b.data.title));
+---
+
+<SiteLayout title={title} description={`Explore published ${title.toLowerCase()} from the handbook.`}>
+  <h1 class="text-4xl font-bold">{title}</h1>
+  {sortedEntries.length ? (
+    <ul class="mt-10 grid list-none gap-6 p-0 md:grid-cols-2">
+      {sortedEntries.map((entry) => (
+        <li>
+          <article class="rounded-xl border border-slate-300/70 bg-white/70 p-6 dark:border-slate-700 dark:bg-slate-900">
+            <h2 class="text-2xl font-bold"><a href={`/${entry.collection}/${entry.id}/`}>{entry.data.title}</a></h2>
+            <p>{entry.data.summary}</p>
+          </article>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p class="mt-10 text-muted">No {title.toLowerCase()} have been published yet.</p>
+  )}
+</SiteLayout>

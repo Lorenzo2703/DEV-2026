@@ -1,0 +1,11 @@
+---
+interface Props {
+  maturity: 'frontier' | 'stable' | 'legacy' | 'deprecated';
+}
+
+const { maturity } = Astro.props;
+---
+
+<span class={`inline-flex rounded-full px-3 py-1 text-sm font-semibold maturity-${maturity}`}>
+  {maturity}
+</span>

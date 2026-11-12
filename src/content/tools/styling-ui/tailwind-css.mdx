@@ -1,0 +1,80 @@
+---
+title: Tailwind CSS
+summary: Generate utility CSS from source files and maintain design tokens with CSS-first configuration.
+category: styling-ui
+maturity: stable
+radar: adopt
+toolVersion: 4.3.5
+verifiedAt: 2026-11-12
+officialDocs: https://tailwindcss.com/docs/installation/using-vite
+repo: https://github.com/tailwindlabs/tailwindcss
+license: MIT
+pricing: oss
+difficulty: beginner
+related: [astro]
+tags: [css, tailwind, styling]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import configCode from '../../../../snippets/tailwind-css/astro.config.mjs?raw';
+import cssCode from '../../../../snippets/tailwind-css/src/styles.css?raw';
+import pageCode from '../../../../snippets/tailwind-css/src/pages/index.astro?raw';
+
+## What it is, when to use it, when not to
+
+Tailwind CSS generates utility classes from tokens found in your source files. It works well when a team wants a shared design vocabulary without maintaining a separate stylesheet for every component.
+
+It is not a design system by itself: teams still need accessible components, consistent decisions, and review. Plain CSS may be simpler for a small project or an existing system with established styles.
+
+## Prerequisites and versions
+
+This guide is verified against Tailwind CSS **4.3.5**. The example uses Astro with its Vite integration and the project's installed Tailwind packages.
+
+## Install and minimal setup
+
+For a Vite-based application, add `tailwindcss` and `@tailwindcss/vite` to the project. Register the plugin, import Tailwind in your CSS, and ensure the application's entry point loads that CSS. Follow the framework-specific setup when your project uses a different build tool.
+
+## Correct implementation
+
+This Astro configuration registers the Vite plugin. The stylesheet defines a color token with `@theme`, and the page uses its generated utility class.
+
+<CodeTabs id="tailwind-config" label="Tailwind configuration" items={[{ label: 'astro.config.mjs', language: 'javascript', code: configCode }, { label: 'styles.css', language: 'css', code: cssCode }, { label: 'index.astro', language: 'astro', code: pageCode }]} />
+
+Write complete utility names in source. Tailwind scans text rather than evaluating code, so constructing partial class names dynamically can leave required styles out of the build.
+
+## Integrate with the rest of the stack
+
+Use the [Astro guide](/tools/frontend/astro/) for page structure and static builds. Keep shared tokens and accessible component patterns consistent across pages. Check source detection when styles live outside the normal project paths.
+
+## Test it
+
+Run `bun run snippets` in this repository. The example is checked and built, then its test verifies the generated HTML, theme token, and utility CSS. Also inspect real component states and contrast in browser and accessibility tests.
+
+## Security and performance
+
+Do not treat styling as input validation or authorization. Verify contrast and focus visibility, and check the production CSS output rather than assuming a development build represents the deployed bundle. Avoid rendering untrusted HTML merely to apply utility classes.
+
+## Common mistakes
+
+Avoid constructing utility names from fragments, forgetting to load the CSS entry point, or assuming a token alone creates an accessible design. Inspect the built CSS when a class works in development but is missing in production.
+
+## Observability
+
+Track build failures and production CSS size in CI. Monitor user-facing performance separately and investigate visual regressions with browser tests; a successful CSS build does not prove a component is usable.
+
+## Upgrade and migration notes
+
+Read release notes and the migration guidance before changing major versions. Test the build integration, theme tokens, generated classes, and visual states together. Keep the prior lockfile available for rollback.
+
+## Alternatives
+
+Plain CSS offers direct control with no utility generator. CSS Modules can scope component styles; a component library may provide more complete patterns if its design and accessibility characteristics fit your application.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [Vite installation](https://tailwindcss.com/docs/installation/using-vite)
+- [Theme variables](https://tailwindcss.com/docs/theme)
+- [Source detection](https://tailwindcss.com/docs/detecting-classes-in-source-files)
+- [Tailwind CSS releases](https://github.com/tailwindlabs/tailwindcss/releases)

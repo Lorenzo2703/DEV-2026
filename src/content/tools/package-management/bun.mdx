@@ -1,0 +1,87 @@
+---
+title: Bun
+summary: Install dependencies reproducibly and run JavaScript and TypeScript with Bun.
+category: package-management
+maturity: stable
+radar: trial
+toolVersion: 1.4.4
+verifiedAt: 2026-11-12
+officialDocs: https://bun.com/docs/installation
+repo: https://github.com/oven-sh/bun
+license: MIT
+pricing: oss
+difficulty: beginner
+related: [typescript]
+tags: [bun, javascript, package-manager]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import messageCode from '../../../../snippets/bun/message.ts?raw';
+import testCode from '../../../../snippets/bun/check-message.ts?raw';
+
+## What it is, when to use it, when not to
+
+Bun combines a JavaScript runtime, package manager, and test runner. It can manage dependencies in projects that use Node.js as well as projects that run on Bun.
+
+Try it when its tools simplify your development workflow and your dependencies support your target environments. Keep an existing runtime or package manager when a critical dependency, platform, or deployment environment is incompatible; verify compatibility rather than assuming it.
+
+## Prerequisites and versions
+
+The latest stable release verified for this guide is **1.4.4**. Bun supports Windows, macOS, and Linux; check the official installation guide for platform requirements. This repository pins **1.3.10**, and the example below is tested with that pinned version, not 1.4.4.
+
+## Install and minimal setup
+
+Install Bun using a method from the [official installation guide](https://bun.com/docs/installation), then confirm the executable with `bun --version`. In an existing project with a `package.json`, run `bun install` and review the resulting `bun.lock`.
+
+## Correct implementation
+
+Pin the Bun version in your development environment and CI, commit `bun.lock`, and use `bun ci` for a frozen install in CI. A frozen install does not create a missing lockfile, so verify that the lockfile is present before relying on it for reproducibility.
+
+The following TypeScript function runs with Bun. Running TypeScript is not a substitute for checking its types: run a compiler check separately.
+
+<CodeTabs id="bun-example" label="Bun example" items={[{ label: 'message.ts', language: 'typescript', code: messageCode }]} />
+
+## Integrate with the rest of the stack
+
+Use package scripts to expose consistent build and test commands. If an application ultimately runs on Node.js, test it on Node.js too; dependency installation with Bun does not prove runtime compatibility. See the [TypeScript guide](/tools/languages-runtimes/typescript/) for boundary validation and compiler configuration.
+
+## Test it
+
+This repository's `bun run snippets` type-checks and executes the example with the pinned Bun runtime. Its test checks both a normal value and the empty-input failure:
+
+<CodeTabs id="bun-test" label="Bun example test" items={[{ label: 'check-message.ts', language: 'typescript', code: testCode }]} />
+
+## Security and performance
+
+Review dependencies and their lifecycle scripts. Bun blocks arbitrary dependency lifecycle scripts by default, but supports trusted packages and built-in exceptions; explicitly trust only packages you have reviewed. Your own project lifecycle scripts can still run. Keep registry credentials out of source control and build logs.
+
+Measure installation and application performance in your own environment; package-install speed is not an application latency guarantee.
+
+## Common mistakes
+
+Do not treat a lockfile as a substitute for pinning the runtime. Do not expect `bun ci` to generate a missing lockfile, or assume executing TypeScript validates its types. Test native dependencies on each supported deployment platform.
+
+## Observability
+
+Record the Bun version, install failures, and test results in CI. In production, monitor the application's errors, latency, and resource use independently of the package manager.
+
+## Upgrade and migration notes
+
+Read the release notes, update the pinned version deliberately, and run frozen installs and tests on every supported platform. Preserve the previous version and lockfile in version control so an incompatible upgrade can be reverted.
+
+## Alternatives
+
+npm is bundled with Node.js and is a straightforward choice for Node-centered projects. pnpm and Yarn are other package managers; evaluate workspace requirements, compatibility, and team familiarity before switching.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [Installation](https://bun.com/docs/installation)
+- [Package installation and frozen installs](https://bun.com/docs/pm/cli/install)
+- [Lockfiles](https://bun.com/docs/pm/lockfile)
+- [Lifecycle scripts](https://bun.com/docs/pm/lifecycle)
+- [Runtime](https://bun.com/docs/runtime)
+- [Node.js compatibility](https://bun.com/docs/runtime/nodejs-compat)
+- [Bun 1.4.4 release notes](https://bun.com/blog/bun-v1.4.4)
+- [Bun releases](https://github.com/oven-sh/bun/releases)

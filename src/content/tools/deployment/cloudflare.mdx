@@ -1,0 +1,82 @@
+---
+title: Cloudflare Workers static assets
+summary: Deploy static build output with Wrangler and scoped Cloudflare credentials.
+category: deployment
+maturity: stable
+radar: trial
+toolVersion: 4.161.0
+verifiedAt: 2026-11-12
+officialDocs: https://developers.cloudflare.com/workers/static-assets/
+repo: https://github.com/cloudflare/workers-sdk
+license: "Wrangler: MIT OR Apache-2.0; Cloudflare service: proprietary"
+pricing: mixed
+difficulty: intermediate
+related: [astro]
+tags: [cloudflare, deployment, static-sites]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import configCode from '../../../../snippets/cloudflare/wrangler.jsonc?raw';
+import htmlCode from '../../../../snippets/cloudflare/public/index.html?raw';
+
+## What it is, when to use it, when not to
+
+Cloudflare Workers can serve static assets uploaded with a Worker version. Use this path for a static site when Cloudflare's deployment, caching, and account controls fit your operational requirements.
+
+It introduces a managed-service dependency. Compare the hosting provider's limits, pricing, deployment model, and portability with alternatives before committing to it.
+
+## Prerequisites and versions
+
+The version recorded here is **Wrangler 4.161.0**, not a version number for the Cloudflare service. A real deployment requires a Cloudflare account, suitable permissions, and a unique Worker name. The sample dry run does not require deployment credentials.
+
+## Install and minimal setup
+
+Add Wrangler to your project, build the site's static output, and configure the assets directory. Authenticate through an appropriate Cloudflare workflow before deploying; for CI, use a scoped token stored in the CI secret store.
+
+## Correct implementation
+
+This minimal configuration serves the sample's `public` directory and selects 404-page handling. Set the Worker name for your own account, point the directory at your actual build output, and review the compatibility date before deployment.
+
+<CodeTabs id="cloudflare-config" label="Cloudflare static assets example" items={[{ label: 'wrangler.jsonc', language: 'json', code: configCode }, { label: 'index.html', language: 'html', code: htmlCode }]} />
+
+In this handbook, the production build writes to `dist`. Deploy the output produced by the same revision that passed CI; do not assume a local preview proves the account, routing, or production configuration.
+
+## Integrate with the rest of the stack
+
+Build the [Astro site](/tools/frontend/astro/) before deploying its static assets. Run checks and browser tests first, then deploy from a protected environment with only the required credentials.
+
+## Test it
+
+Run `bun run snippets` in this repository. Wrangler validates the sample with a dry run and does not upload it. After an authorized deployment, test the real URL, custom domain, missing-page behavior, and asset loading separately.
+
+## Security and performance
+
+Use narrowly scoped API tokens, never commit credentials, and restrict who can deploy. Static assets are public: do not include secrets in the build output. Review cache behavior, usage limits, and pricing, and measure performance from user locations.
+
+## Common mistakes
+
+Avoid deploying a stale or wrong build directory, assuming a dry run is a live deployment, or using an overly broad token. Test version changes carefully because HTML and its assets can briefly be served from different Worker versions during rollout.
+
+## Observability
+
+Monitor deployment results, availability, error rates, and traffic through your hosting and application telemetry. Set alerts for user-visible failures and review usage against the current plan limits.
+
+## Upgrade and migration notes
+
+Review Wrangler release notes before upgrading and test the compatibility date separately from the CLI version. Retain the built site and deployment configuration so the site can be redeployed or moved to another static host.
+
+## Alternatives
+
+Other static hosts can be preferable when they better match your team's account, routing, pricing, or operational requirements. A static Astro build is portable, though provider-specific configuration must be adapted.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [Workers static assets](https://developers.cloudflare.com/workers/static-assets/)
+- [Static assets setup](https://developers.cloudflare.com/workers/static-assets/get-started/)
+- [Wrangler commands](https://developers.cloudflare.com/workers/wrangler/commands/)
+- [Compatibility dates](https://developers.cloudflare.com/workers/configuration/compatibility-dates/)
+- [API tokens](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
+- [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/)
+- [Wrangler 4.161.0 release](https://github.com/cloudflare/workers-sdk/releases/tag/wrangler%404.161.0)

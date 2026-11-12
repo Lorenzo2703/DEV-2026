@@ -1,0 +1,10 @@
+{
+  "name": "playwright-snippet",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "node ../../node_modules/typescript-7/bin/tsc --project tsconfig.json",
+    "run": "node ../../node_modules/@playwright/test/cli.js test --config playwright.config.ts"
+  }
+}

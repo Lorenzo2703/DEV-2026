@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const [blueprints, tools] = await Promise.all([
+  getCollection('blueprints', ({ data }) => !data.draft),
+  getCollection('tools', ({ data }) => !data.draft),
+]);
+const featuredBlueprints = [...blueprints]
+  .sort((a, b) => a.data.title.localeCompare(b.data.title))
+  .slice(0, 3);
+const statuses = ['adopt', 'trial', 'assess', 'hold'] as const;
+---
+
+<SiteLayout
+  title="Home"
+  description="Practical, source-verified guides for building, shipping, and operating software."
+>
+  <section class="max-w-3xl">
+    <p class="font-semibold uppercase tracking-wide text-brand">A developer's handbook</p>
+    <h1 class="mt-4 text-5xl font-bold leading-tight">Build and operate software with confidence.</h1>
+    <p class="mt-6 text-xl text-muted">
+      Clear implementation guidance for the tools and systems developers rely on, grounded in
+      current sources and runnable examples.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-4">
+      <a class="rounded-lg bg-brand px-5 py-3 font-semibold text-paper no-underline" href="/tools/">
+        Browse tool guides
+      </a>
+      <a class="rounded-lg border border-current px-5 py-3 font-semibold no-underline" href="/radar/">
+        Explore the radar
+      </a>
+    </div>
+  </section>
+  <section class="mt-16" aria-labelledby="featured-blueprints">
+    <h2 id="featured-blueprints" class="text-3xl font-bold">Featured blueprints</h2>
+    {featuredBlueprints.length ? (
+      <ul class="mt-6 grid list-none gap-4 p-0 md:grid-cols-3">
+        {featuredBlueprints.map((entry) => (
+          <li class="rounded-xl border border-slate-300/70 p-5 dark:border-slate-700">
+            <h3 class="text-xl font-bold"><a href={`/blueprints/${entry.id}/`}>{entry.data.title}</a></h3>
+            <p>{entry.data.summary}</p>
+          </li>
+        ))}
+      </ul>
+    ) : <p class="mt-4 text-muted">No blueprints have been published yet.</p>}
+    <a href="/blueprints/">Browse blueprints</a>
+  </section>
+  <section class="mt-16" aria-labelledby="radar-overview">
+    <h2 id="radar-overview" class="text-3xl font-bold">Technology radar</h2>
+    <ul class="mt-6 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
+      {statuses.map((status) => (
+        <li class="rounded-xl border border-slate-300/70 p-5 dark:border-slate-700">
+          <h3 class="font-bold capitalize">{status}</h3>
+          <p>{tools.filter((entry) => entry.data.radar === status).length} tools</p>
+        </li>
+      ))}
+    </ul>
+    <a href="/radar/">Explore the radar</a>
+  </section>
+</SiteLayout>

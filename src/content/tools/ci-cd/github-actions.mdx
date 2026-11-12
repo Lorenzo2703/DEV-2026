@@ -1,0 +1,83 @@
+---
+title: GitHub Actions
+summary: Run repeatable CI workflows with limited permissions, pinned actions, and protected secrets.
+category: ci-cd
+maturity: stable
+radar: adopt
+toolVersion: 2.338.2
+verifiedAt: 2026-11-12
+officialDocs: https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax
+repo: https://github.com/actions/runner
+license: "Runner: MIT; GitHub Actions service: proprietary"
+pricing: mixed
+difficulty: intermediate
+related: [playwright]
+tags: [github-actions, ci, automation]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import workflowCode from '../../../../snippets/github-actions/workflow.yml?raw';
+import testCode from '../../../../snippets/github-actions/health.test.ts?raw';
+import healthCode from '../../../../snippets/github-actions/health.ts?raw';
+
+## What it is, when to use it, when not to
+
+GitHub Actions runs workflows in response to repository events and other triggers. It is useful when your code already lives on GitHub and you want checks, releases, or deployments tied to pull requests and pushes.
+
+It adds a hosted-service dependency and can incur runner and storage costs. Compare portability, security controls, and runner availability with your existing CI platform before migrating.
+
+## Prerequisites and versions
+
+Workflows require a GitHub repository with Actions enabled. The recorded version is the open-source runner's latest verified release, **2.338.2**; GitHub's hosted service and individual actions are versioned separately.
+
+## Install and minimal setup
+
+Put a workflow file under `.github/workflows` in your repository. The example uses a GitHub-hosted Linux runner, checks out the repository, sets up Node.js, and runs an existing test.
+
+## Correct implementation
+
+The workflow limits token permissions, disables persisted checkout credentials, cancels superseded runs, and pins each action to a full commit SHA. The Node version is explicit. The test command assumes the accompanying files exist at the displayed repository paths.
+
+<CodeTabs id="github-actions-workflow" label="GitHub Actions example" items={[{ label: 'workflow.yml', language: 'yaml', code: workflowCode }, { label: 'health.test.ts', language: 'typescript', code: testCode }, { label: 'health.ts', language: 'typescript', code: healthCode }]} />
+
+Place a copy of the workflow in `.github/workflows` to use it; files under `snippets` do not execute as workflows. Review action updates and their commit provenance before changing pins.
+
+## Integrate with the rest of the stack
+
+Run unit checks, production builds, and [browser tests](/tools/testing/playwright/) before deployment. Separate deployment credentials and environments from pull-request checks, and use caches only where the cache key and trust boundary are appropriate.
+
+## Test it
+
+Run `bun run snippets` in this repository to type-check and execute the same Node test command used by the example workflow. Lint the workflow with actionlint and test it in a repository before relying on it; local execution does not reproduce hosted-runner permissions or event behavior.
+
+## Security and performance
+
+Use least-privilege token permissions, pin third-party actions to full commit SHAs, and store credentials as protected secrets. Do not run untrusted pull-request code with privileged triggers or interpolate untrusted event data directly into shell commands. Limit unnecessary jobs and monitor usage costs.
+
+## Common mistakes
+
+Avoid mutable action tags for security-sensitive workflows, overly broad permissions, and assuming a successful local command proves a GitHub workflow will execute. Check runner availability and the trust boundary of any artifacts or caches.
+
+## Observability
+
+Review workflow status, logs, duration, and failure trends. Alert on repeated deployment or main-branch failures, and restrict access to logs and artifacts that may contain sensitive output.
+
+## Upgrade and migration notes
+
+Review runner and action release notes, update pinned SHAs deliberately, and exercise the workflow on a branch before relying on it for deployment. Retain the prior version of the workflow for rollback.
+
+## Alternatives
+
+Other hosted or self-managed CI systems may be preferable when they better match your source control, compliance needs, runner requirements, or existing operations. Keep application test commands independent of the CI vendor where possible.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [Workflow syntax](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax)
+- [Concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)
+- [Secure use](https://docs.github.com/en/actions/reference/security/secure-use)
+- [GitHub Actions billing](https://docs.github.com/en/billing/concepts/product-billing/github-actions)
+- [Runner 2.338.2 release](https://github.com/actions/runner/releases/tag/v2.338.2)
+- [Checkout pinned commit](https://github.com/actions/checkout/commit/11d5960a326750d5838078e36cf38b85af677262)
+- [Setup Node pinned commit](https://github.com/actions/setup-node/commit/49933ea5288caeca8642d1e84afbd3f7d6820020)

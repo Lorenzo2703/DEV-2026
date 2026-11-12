@@ -1,0 +1,84 @@
+---
+title: Playwright
+summary: Exercise user-visible browser behavior with isolated tests and automated accessibility checks.
+category: testing
+maturity: stable
+radar: adopt
+toolVersion: 1.65.0
+verifiedAt: 2026-11-12
+officialDocs: https://playwright.dev/docs/intro
+repo: https://github.com/microsoft/playwright
+license: Apache-2.0
+pricing: oss
+difficulty: intermediate
+related: [vitest]
+tags: [testing, browser, accessibility]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import configCode from '../../../../snippets/playwright/playwright.config.ts?raw';
+import testCode from '../../../../snippets/playwright/form.spec.ts?raw';
+
+## What it is, when to use it, when not to
+
+Playwright automates browsers and includes a test runner, assertions, isolated fixtures, and debugging tools. Use it to verify user-visible flows and browser integration against a running application.
+
+Browser tests cost more to run and diagnose than focused unit tests. Keep most pure logic covered by unit tests and use browser tests for behavior that genuinely needs a browser.
+
+## Prerequisites and versions
+
+This guide is verified against Playwright **1.65.0**. Its test package requires Node.js **20 or newer**. Install the browser binaries and any required operating-system dependencies for the browser projects you run.
+
+## Install and minimal setup
+
+Add `@playwright/test` as a development dependency, install the browser you intend to use, and create a Playwright configuration. For accessibility scans, also add `@axe-core/playwright`. Follow the official CI guide for Linux browser dependencies.
+
+## Correct implementation
+
+This configuration runs the sample in Chromium, limits workers, and sets a global timeout. It uses Playwright's isolated `page` fixture rather than sharing a browser page between tests.
+
+<CodeTabs id="playwright-config" label="Playwright configuration" items={[{ label: 'playwright.config.ts', language: 'typescript', code: configCode }]} />
+
+The self-contained example locates controls by their accessible labels and roles and runs an axe scan. A real application test should navigate to your application and exercise a meaningful end-to-end flow.
+
+<CodeTabs id="playwright-test" label="Playwright test" items={[{ label: 'form.spec.ts', language: 'typescript', code: testCode }]} />
+
+## Integrate with the rest of the stack
+
+Run browser tests against a production build alongside the [Vitest guide](/tools/testing/vitest/) unit tests. Configure a dedicated test server and isolated test data; install matching browser binaries in CI before running the suite.
+
+## Test it
+
+Run `bun run snippets` in this repository after installing Playwright's Chromium browser. The sample checks form input, a visible control, and automated accessibility violations. Use manual accessibility and keyboard checks as well: automated scans do not detect every issue.
+
+## Security and performance
+
+Use synthetic accounts and avoid storing secrets in tests, screenshots, traces, or reports. Treat test artifacts as potentially sensitive. Control concurrency and timeouts in CI so a slow service or excessive parallelism does not make results unreliable.
+
+## Common mistakes
+
+Avoid fixed sleeps when a locator assertion can wait for the expected state. Prefer accessible roles and labels to brittle DOM selectors. Do not rely on another test to create state, and do not treat an axe pass as complete accessibility certification.
+
+## Observability
+
+Review failure reports, traces, and screenshots to diagnose flaky tests. Track repeated failures and test duration in CI, but do not expose captured sensitive data to an untrusted audience.
+
+## Upgrade and migration notes
+
+Review release notes, update the Playwright package and its browser binaries together, and run tests on the browsers your users actually need. Version 1.65 also offers an explicit Bun runner mode; this example runs the test runner with Node.js.
+
+## Alternatives
+
+Vitest is suitable for focused unit tests and complements browser testing. Other browser automation tools can be appropriate when your team already has a stable framework or a specific browser support requirement.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [Installation](https://playwright.dev/docs/intro)
+- [Best practices](https://playwright.dev/docs/best-practices)
+- [Locators](https://playwright.dev/docs/locators)
+- [Fixtures](https://playwright.dev/docs/test-fixtures)
+- [Accessibility testing](https://playwright.dev/docs/accessibility-testing)
+- [Continuous integration](https://playwright.dev/docs/ci)
+- [Playwright 1.65.0 release](https://github.com/microsoft/playwright/releases/tag/v1.65.0)

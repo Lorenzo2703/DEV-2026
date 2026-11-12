@@ -1,0 +1,40 @@
+---
+import { getCollection } from 'astro:content';
+import ToolCard from '../../components/ToolCard.astro';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+
+export async function getStaticPaths() {
+  const [tools, guides, posts] = await Promise.all([
+    getCollection('tools', ({ data }) => !data.draft),
+    getCollection('guides', ({ data }) => !data.draft),
+    getCollection('posts', ({ data }) => !data.draft),
+  ]);
+  const entries = [...tools, ...guides, ...posts];
+  const tags = [...new Set(entries.flatMap((entry) => entry.data.tags))].sort();
+  return tags.map((tag) => ({
+    params: { tag },
+    props: { tag, entries: entries.filter((entry) => entry.data.tags.includes(tag)) },
+  }));
+}
+
+const { tag, entries } = Astro.props;
+entries.sort((a, b) => a.data.title.localeCompare(b.data.title));
+---
+
+<SiteLayout title={`Tag: ${tag}`} description={`Handbook content tagged ${tag}.`}>
+  <h1 class="text-4xl font-bold">Tag: {tag}</h1>
+  <p class="mt-4 text-muted">Published content for this topic.</p>
+  <ul class="mt-10 grid list-none gap-6 p-0 md:grid-cols-2">
+    {entries.map((entry) => (
+      <li>
+        {entry.collection === 'tools' ? <ToolCard entry={entry} /> : (
+          <article class="rounded-xl border border-slate-300/70 bg-white/70 p-6 dark:border-slate-700 dark:bg-slate-900">
+            <p class="m-0 text-sm capitalize text-muted">{entry.collection}</p>
+            <h2 class="mt-4 text-2xl font-bold"><a href={`/${entry.collection}/${entry.id}/`}>{entry.data.title}</a></h2>
+            <p>{entry.data.summary}</p>
+          </article>
+        )}
+      </li>
+    ))}
+  </ul>
+</SiteLayout>

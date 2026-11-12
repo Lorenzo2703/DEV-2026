@@ -1,0 +1,38 @@
+---
+import { getCollection } from 'astro:content';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+
+const entries = await getCollection('tools', ({ data }) => !data.draft);
+const statuses = ['adopt', 'trial', 'assess', 'hold'] as const;
+---
+
+<SiteLayout title="Radar" description="A maturity-aware view of tools evaluated in this handbook.">
+  <h1 class="text-4xl font-bold">Technology radar</h1>
+  <p class="mt-4 max-w-2xl text-lg text-muted">
+    Recommendations are based on the verified tool guides. Frontier tools include explicit risks
+    and an exit path.
+  </p>
+  <div class="mt-10 grid gap-8 md:grid-cols-2">
+    {
+      statuses.map((status) => {
+        const tools = entries.filter((entry) => entry.data.radar === status);
+        return (
+          <section aria-labelledby={`radar-${status}`} class="rounded-xl border border-slate-300/70 p-6 dark:border-slate-700">
+            <h2 id={`radar-${status}`} class="text-2xl font-bold capitalize">{status}</h2>
+            {tools.length ? (
+              <ul>
+                {tools.map((tool) => (
+                  <li>
+                    <a href={`/tools/${tool.id}/`}>{tool.data.title}</a>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="text-muted">No tools in this ring yet.</p>
+            )}
+          </section>
+        );
+      })
+    }
+  </div>
+</SiteLayout>

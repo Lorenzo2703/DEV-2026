@@ -1,0 +1,124 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  category?: string;
+  image?: string;
+  article?: boolean;
+}
+
+const { title, description, category, image = '/og/site.png', article = false } = Astro.props;
+const pageTitle = title === 'Home' ? 'Dev in 2026' : `${title} | Dev in 2026`;
+const canonical = Astro.site ? new URL(Astro.url.pathname, Astro.site).href : undefined;
+const imageUrl = Astro.site ? new URL(image, Astro.site).href : undefined;
+const analyticsScript = process.env.UMAMI_SCRIPT_PATH;
+const analyticsHost = process.env.UMAMI_HOST_URL;
+const analyticsId = process.env.UMAMI_WEBSITE_ID;
+const structuredData =
+  article && canonical && imageUrl
+    ? JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        headline: title,
+        description,
+        url: canonical,
+        image: imageUrl,
+      }).replaceAll('<', '\\u003c')
+    : undefined;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    {imageUrl && <meta property="og:image" content={imageUrl} />}
+    {imageUrl && <meta property="og:image:alt" content={pageTitle} />}
+    {structuredData && <script type="application/ld+json" set:html={structuredData} />}
+    {analyticsScript && analyticsHost && analyticsId && Astro.site && (
+      <script is:inline defer src={analyticsScript} data-website-id={analyticsId} data-host-url={analyticsHost} data-domains={Astro.site.hostname} data-exclude-search="true" data-exclude-hash="true" data-do-not-track="true"></script>
+    )}
+    {Astro.site && <link rel="alternate" type="application/rss+xml" title="Dev in 2026" href="/rss.xml" />}
+    {Astro.site && category && <link rel="alternate" type="application/rss+xml" title={`${category} tool guides`} href={`/feeds/${category}.xml`} />}
+    <meta name="generator" content={Astro.generator} />
+    {category && <meta data-pagefind-filter="category[content]" content={category} />}
+    <script is:inline>
+      try {
+        const theme = localStorage.getItem('theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch (error) {
+        console.error('Could not read the theme preference:', error);
+      }
+    </script>
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="border-b border-slate-300/70 px-6 py-5 dark:border-slate-700">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4">
+        <a class="text-xl font-bold no-underline" href="/">Dev in 2026</a>
+        <nav aria-label="Main navigation">
+          <ul class="flex flex-wrap gap-5 p-0">
+            <li class="list-none"><a href="/tools/">Tools</a></li>
+            <li class="list-none"><a href="/guides/">Guides</a></li>
+            <li class="list-none"><a href="/blueprints/">Blueprints</a></li>
+            <li class="list-none"><a href="/posts/">Posts</a></li>
+            <li class="list-none"><a href="/radar/">Radar</a></li>
+            <li class="list-none"><a href="/search/">Search</a></li>
+          </ul>
+        </nav>
+        <label id="theme-control" class="flex items-center gap-2 text-sm" hidden>
+          Theme
+          <select id="theme-select" class="rounded border border-slate-400 bg-paper p-1 text-ink">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
+      <p id="theme-status" class="mx-auto max-w-6xl text-sm" aria-live="polite"></p>
+    </header>
+    <main id="main" class="mx-auto min-h-[70vh] max-w-6xl px-6 py-12" data-pagefind-body>
+      <slot />
+    </main>
+    <footer class="border-t border-slate-300/70 px-6 py-8 dark:border-slate-700">
+      <p class="mx-auto max-w-6xl text-sm text-muted">
+        Practical, source-verified guidance for building and operating software.
+      </p>
+    </footer>
+  </body>
+</html>
+
+<script>
+  const control = document.querySelector<HTMLElement>('#theme-control');
+  const select = document.querySelector<HTMLSelectElement>('#theme-select');
+  const status = document.querySelector<HTMLElement>('#theme-status');
+  if (control && select && status) {
+    select.value = document.documentElement.dataset.theme ?? 'system';
+    control.hidden = false;
+    select.addEventListener('change', () => {
+      const theme = select.value;
+      if (theme === 'light' || theme === 'dark') {
+        document.documentElement.dataset.theme = theme;
+      } else {
+        delete document.documentElement.dataset.theme;
+      }
+      try {
+        if (theme === 'system') localStorage.removeItem('theme');
+        else localStorage.setItem('theme', theme);
+        status.textContent = '';
+      } catch (error) {
+        console.error('Could not save the theme preference:', error);
+        status.textContent = 'Your theme preference could not be saved for future visits.';
+      }
+    });
+  }
+</script>

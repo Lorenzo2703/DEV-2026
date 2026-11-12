@@ -1,0 +1,147 @@
+---
+import { codeToHtml } from 'shiki';
+
+interface CodeItem {
+  label: string;
+  language: string;
+  code: string;
+  highlightLines?: number[];
+}
+
+interface Props {
+  id: string;
+  items: CodeItem[];
+  label: string;
+}
+
+const { id, items, label } = Astro.props;
+const initialItem = items[0];
+const highlightedItems = await Promise.all(
+  items.map(async (item) => ({
+    ...item,
+    html: await codeToHtml(item.code, {
+      lang: item.language,
+      theme: 'github-dark',
+      transformers: [
+        {
+          pre(node) {
+            node.properties.tabindex = 0;
+          },
+          line(node, line) {
+            if (item.highlightLines?.includes(line)) this.addClassToHast(node, 'highlighted');
+          },
+        },
+      ],
+    }),
+  })),
+);
+---
+
+{
+  initialItem && (
+    <section id={id} aria-label={label} class="my-6 overflow-hidden rounded-xl border border-slate-300/70 dark:border-slate-700" data-code-tabs>
+      <div role="tablist" aria-label={label} hidden class="flex flex-wrap gap-1 border-b border-slate-300/70 p-2 dark:border-slate-700">
+        {items.map((item, index) => (
+          <button
+            type="button"
+            role="tab"
+            id={`${id}-tab-${index}`}
+            aria-controls={`${id}-panel-${index}`}
+            aria-selected={index === 0 ? 'true' : 'false'}
+            tabindex={index === 0 ? 0 : -1}
+            data-tab-index={index}
+            class="rounded-md px-3 py-2 text-sm font-semibold"
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      {highlightedItems.map((item, index) => (
+        <div
+          id={`${id}-panel-${index}`}
+          data-panel-index={index}
+        >
+          <h3 data-panel-label class="m-0 px-4 py-2 text-sm">{item.label}</h3>
+          <div set:html={item.html} />
+        </div>
+      ))}
+      <div hidden data-copy-controls class="flex items-center justify-between gap-4 border-t border-slate-300/70 p-3 dark:border-slate-700">
+        <output aria-live="polite" data-copy-status class="text-sm text-muted"></output>
+        <button type="button" class="rounded-md border border-current px-3 py-2 text-sm font-semibold" data-copy>
+          Copy code
+        </button>
+      </div>
+    </section>
+  )
+}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-code-tabs]').forEach((group) => {
+    const tablist = group.querySelector<HTMLElement>('[role="tablist"]');
+    const tabs = [...group.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
+    const panels = [...group.querySelectorAll<HTMLElement>('[data-panel-index]')];
+    const copyControls = group.querySelector<HTMLElement>('[data-copy-controls]');
+    const status = group.querySelector<HTMLOutputElement>('[data-copy-status]');
+    const copyButton = group.querySelector<HTMLButtonElement>('[data-copy]');
+
+    if (!tablist || !copyControls || tabs.length !== panels.length) {
+      console.error('Code sample controls are incomplete.');
+      return;
+    }
+
+    panels.forEach((panel, index) => {
+      const tab = tabs[index];
+      if (!tab) return;
+      panel.setAttribute('role', 'tabpanel');
+      panel.setAttribute('aria-labelledby', tab.id);
+      panel.querySelector<HTMLElement>('[data-panel-label]')?.setAttribute('hidden', '');
+    });
+
+    function select(index: number): void {
+      tabs.forEach((tab, tabIndex) => {
+        const selected = tabIndex === index;
+        tab.setAttribute('aria-selected', String(selected));
+        tab.tabIndex = selected ? 0 : -1;
+        const panel = panels[tabIndex];
+        if (panel) panel.hidden = !selected;
+      });
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(index));
+      tab.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+          event.preventDefault();
+          const direction = event.key === 'ArrowRight' ? 1 : -1;
+          const next = (index + direction + tabs.length) % tabs.length;
+          select(next);
+          tabs[next]?.focus();
+        }
+      });
+    });
+
+    select(0);
+    tablist.hidden = false;
+    copyControls.hidden = false;
+
+    copyButton?.addEventListener('click', async () => {
+      const selectedPanel = panels.find((panel) => !panel.hidden);
+      const code = selectedPanel?.querySelector('code')?.textContent;
+      if (!status) {
+        console.error('Code sample copy status region is missing.');
+        return;
+      }
+      if (code === undefined) {
+        status.textContent = 'No code sample is available to copy.';
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(code);
+        status.textContent = 'Code copied.';
+      } catch {
+        status.textContent = 'Copy failed. Select and copy the code manually.';
+      }
+    });
+  });
+</script>

@@ -1,0 +1,83 @@
+---
+title: Vitest
+summary: Write focused, repeatable unit tests with a Vite-aware test runner.
+category: testing
+maturity: stable
+radar: adopt
+toolVersion: 5.1.0
+verifiedAt: 2026-11-12
+officialDocs: https://vitest.dev/guide/
+repo: https://github.com/vitest-dev/vitest
+license: MIT
+pricing: oss
+difficulty: beginner
+related: [typescript, bun]
+tags: [testing, vitest, vite]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import sourceCode from '../../../../snippets/vitest/slug.ts?raw';
+import testCode from '../../../../snippets/vitest/slug.test.ts?raw';
+import configCode from '../../../../snippets/vitest/vitest.config.ts?raw';
+
+## What it is, when to use it, when not to
+
+Vitest is a test runner built around Vite's tooling. It is useful for fast feedback on functions and components, especially when your project already uses Vite.
+
+Unit tests do not prove that the deployed application works across browsers or external services. Use browser and integration tests as complementary checks, not as a replacement for focused tests.
+
+## Prerequisites and versions
+
+This guide is verified against Vitest **5.1.0**. Its getting-started guide requires Node.js **22.12.0 or newer** and Vite **6.4.0 or newer**. The example uses the installed Vitest and runs under Node.js.
+
+## Install and minimal setup
+
+In an existing Bun project, add Vitest as a development dependency with `bun add -d vitest`. Create test files ending in `.test.ts` or `.spec.ts`, and run Vitest in non-watch mode in CI.
+
+## Correct implementation
+
+Keep test discovery explicit when a repository contains unrelated test suites. A separate Vitest configuration overrides rather than automatically merges a Vite configuration, so merge the settings you actually need.
+
+<CodeTabs id="vitest-config" label="Vitest configuration" items={[{ label: 'vitest.config.ts', language: 'typescript', code: configCode }]} />
+
+The function below normalizes whitespace and rejects an empty title. Its test asserts both observable outcomes without relying on the function's internal steps.
+
+<CodeTabs id="vitest-example" label="Vitest example" items={[{ label: 'slug.ts', language: 'typescript', code: sourceCode }, { label: 'slug.test.ts', language: 'typescript', code: testCode }]} />
+
+## Integrate with the rest of the stack
+
+Run unit tests alongside TypeScript checks and browser tests in CI. Use separate integration tests for databases and other real services. If your application relies on Vite plugins or aliases, make sure your test configuration includes the necessary settings.
+
+## Test it
+
+Run `bun run snippets` in this repository to type-check the example and execute its Vitest suite. In a project of your own, run the suite repeatedly and independently to detect shared-state assumptions.
+
+## Security and performance
+
+Use synthetic test data and keep credentials out of fixtures and CI logs. Avoid unnecessary network calls in unit tests. Coverage collection adds work and requires a separately installed provider; use its reports to locate untested behavior, not as proof that the tests are meaningful.
+
+## Common mistakes
+
+Do not let tests depend on order or state left by another test. Restore mocks and modified globals, and avoid asserting implementation details that can change without altering behavior. A standalone Vitest config does not automatically inherit every Vite setting.
+
+## Observability
+
+Inspect test failures and CI reports, including flaky or slow tests. Track failures by suite and investigate recurring retries rather than hiding them. Test success is not a production health signal.
+
+## Upgrade and migration notes
+
+Review the release notes and check the supported Node and Vite versions before upgrading. Run the existing suite and any coverage or browser integrations against the candidate version, then retain a known-good lockfile for rollback.
+
+## Alternatives
+
+Node's built-in test runner avoids an additional test framework for simple Node projects. Jest is another established option; compare compatibility, existing configuration, and migration effort before switching.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [Getting started](https://vitest.dev/guide/)
+- [Vitest features](https://vitest.dev/guide/features)
+- [Configuration](https://vitest.dev/config/)
+- [Coverage](https://vitest.dev/guide/coverage)
+- [Vitest 5.1.0 release](https://github.com/vitest-dev/vitest/releases/tag/v5.1.0)

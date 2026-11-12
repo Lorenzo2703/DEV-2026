@@ -1,0 +1,83 @@
+---
+import { getCollection } from 'astro:content';
+import SiteLayout from '../layouts/SiteLayout.astro';
+
+const entries = await getCollection('tools', ({ data }) => !data.draft);
+const categories = [...new Set(entries.map((entry) => entry.data.category))].sort();
+---
+
+<SiteLayout title="Search" description="Search the handbook by keyword and category.">
+  <h1 class="text-4xl font-bold">Search the handbook</h1>
+  <p class="mt-4 text-muted">Search all published pages, or narrow results to a tool category.</p>
+  <noscript><p>Search requires JavaScript. You can still <a href="/tools/">browse the tool guides</a>.</p></noscript>
+  <form id="search-form" class="mt-8 max-w-2xl" hidden>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <label class="flex flex-col gap-2 font-semibold" for="search-query">
+        Search terms
+        <input id="search-query" type="search" required class="rounded-lg border border-slate-400 bg-paper p-2 text-ink" />
+      </label>
+      <label class="flex flex-col gap-2 font-semibold" for="search-category">
+        Category
+        <select id="search-category" class="rounded-lg border border-slate-400 bg-paper p-2 text-ink">
+          <option value="">All pages</option>
+          {categories.map((category) => <option value={category}>{category.replaceAll('-', ' ')}</option>)}
+        </select>
+      </label>
+    </div>
+    <button type="submit" class="mt-4 rounded-lg bg-brand px-5 py-3 font-semibold text-paper">Search</button>
+  </form>
+  <p id="search-status" class="mt-6" role="status" aria-live="polite"></p>
+  <ul id="search-results" class="mt-4 space-y-4"></ul>
+</SiteLayout>
+
+<script>
+  interface SearchResult {
+    data: () => Promise<{ url: string; meta: { title: string } }>;
+  }
+  interface Pagefind {
+    search: (term: string, options: { filters: Record<string, string> }) => Promise<{ results: SearchResult[] }>;
+  }
+
+  const form = document.querySelector<HTMLFormElement>('#search-form');
+  const query = document.querySelector<HTMLInputElement>('#search-query');
+  const category = document.querySelector<HTMLSelectElement>('#search-category');
+  const status = document.querySelector<HTMLElement>('#search-status');
+  const results = document.querySelector<HTMLUListElement>('#search-results');
+
+  if (form && query && category && status && results) {
+    form.hidden = false;
+    let request = 0;
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const currentRequest = ++request;
+      const term = query.value.trim();
+      results.replaceChildren();
+      if (!term) {
+        status.textContent = 'Enter search terms.';
+        return;
+      }
+      status.textContent = 'Searching...';
+      try {
+        const modulePath = '/pagefind/pagefind.js';
+        const pagefind: Pagefind = await import(/* @vite-ignore */ modulePath);
+        const filters: Record<string, string> = category.value ? { category: category.value } : {};
+        const search = await pagefind.search(term, { filters });
+        const pages = await Promise.all(search.results.map((result) => result.data()));
+        if (currentRequest !== request) return;
+        for (const page of pages) {
+          const item = document.createElement('li');
+          const link = document.createElement('a');
+          link.href = page.url;
+          link.textContent = page.meta.title;
+          item.append(link);
+          results.append(item);
+        }
+        status.textContent = `${pages.length} ${pages.length === 1 ? 'result' : 'results'} found.`;
+      } catch (error) {
+        if (currentRequest !== request) return;
+        console.error('Search index could not be loaded:', error);
+        status.textContent = 'Search is unavailable. Build the site and try again, or browse the tool guides.';
+      }
+    });
+  }
+</script>

@@ -1,0 +1,83 @@
+---
+title: TypeScript
+summary: Use strict types and runtime validation to make JavaScript applications easier to change safely.
+category: languages-runtimes
+maturity: stable
+radar: adopt
+toolVersion: 7.0.2
+verifiedAt: 2026-11-12
+officialDocs: https://www.typescriptlang.org/docs/
+repo: https://github.com/microsoft/TypeScript
+license: Apache-2.0
+pricing: oss
+difficulty: beginner
+tags: [typescript, javascript, types]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import configCode from '../../../../snippets/typescript/config.ts?raw';
+import tsconfigCode from '../../../../snippets/typescript/tsconfig.json?raw';
+
+## What it is, when to use it, when not to
+
+TypeScript adds static types to JavaScript. Use it when code has multiple callers, long-lived interfaces, or a team that benefits from compiler feedback during changes.
+
+It does not replace runtime validation: network responses, environment variables, and user input can still be invalid. A small disposable script may not justify introducing a compiler and configuration.
+
+## Prerequisites and versions
+
+The latest stable compiler verified for this guide is **7.0.2**. The example uses Bun to run its test and Node.js to start the compiler; it is checked with TypeScript 7.0.2. TypeScript itself does not provide a JavaScript runtime.
+
+## Install and minimal setup
+
+In an existing Bun project, add the compiler with `bun add -d typescript@7.0.2`. Create a TypeScript configuration appropriate for your runtime or bundler; the example below uses Bun and does not emit JavaScript. Run the compiler as part of your project's checks.
+
+## Correct implementation
+
+This configuration enables strict checking and makes unchecked indexed access explicit. Choose module and resolution settings for the environment that actually runs the code, rather than copying a bundler configuration into a Node-only application.
+
+<CodeTabs id="typescript-config" label="TypeScript configuration" items={[{ label: 'tsconfig.json', language: 'json', code: tsconfigCode, highlightLines: [5, 6, 7] }]} />
+
+Treat external data as `unknown` until checked. This example validates a service name and port and returns a typed value only after validation. It does not read environment variables itself; convert and validate them at the application boundary.
+
+<CodeTabs id="typescript-example" label="TypeScript runtime validation example" items={[{ label: 'config.ts', language: 'typescript', code: configCode }]} />
+
+## Integrate with the rest of the stack
+
+Use the compiler alongside your runtime, test runner, and build tool. Keep their module resolution and targeted runtime consistent; use separate configurations when browser and server code have different globals.
+
+## Test it
+
+In this repository, `bun run snippets` type-checks and executes the example and its assertions. The test covers valid input, missing or malformed values, and port boundaries. For your own application, also test the real input boundary and its error handling.
+
+## Security and performance
+
+Types are erased at runtime and are not a security boundary. Validate untrusted data before using it, avoid treating type assertions as validation, and keep secrets out of configuration committed to source control. Compiler speed does not measure application runtime performance.
+
+## Common mistakes
+
+Avoid using `any` or unchecked assertions to silence errors at external boundaries. Avoid assuming that a successful type check proves the runtime understands the emitted module format. Keep strict checks enabled and investigate errors rather than disabling them wholesale.
+
+## Observability
+
+Track compiler failures in CI and report validation failures at the application boundary without logging secrets or sensitive input. Monitor your application's own latency and error rates separately; TypeScript does not instrument production traffic.
+
+## Upgrade and migration notes
+
+TypeScript 7 is a native compiler port. Test an upgrade in CI against your actual build, editor integrations, and libraries before rolling it out; the release notes describe compatibility considerations. Keep a working compiler version pinned so a problematic upgrade can be rolled back.
+
+## Alternatives
+
+Plain JavaScript avoids a separate type-checking step and can suit small scripts, but loses TypeScript's compiler-enforced contracts. JavaScript projects can also adopt TypeScript checking incrementally rather than converting every file at once.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [TypeScript documentation](https://www.typescriptlang.org/docs/)
+- [Narrowing and type guards](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
+- [Strict compiler option](https://www.typescriptlang.org/tsconfig/strict.html)
+- [Unchecked indexed access](https://www.typescriptlang.org/tsconfig/noUncheckedIndexedAccess.html)
+- [Choosing compiler options](https://www.typescriptlang.org/docs/handbook/modules/guides/choosing-compiler-options.html)
+- [TypeScript 7.0 announcement](https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/)
+- [TypeScript 7.0.2 release](https://github.com/microsoft/TypeScript/releases/tag/v7.0.2)

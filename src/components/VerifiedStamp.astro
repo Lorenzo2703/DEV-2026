@@ -1,0 +1,35 @@
+---
+import { getStaleStatus } from '../lib/staleness';
+
+interface Props {
+  verifiedAt: Date;
+  maturity: 'frontier' | 'stable' | 'legacy' | 'deprecated';
+  needsVerification?: boolean;
+}
+
+const { verifiedAt, maturity, needsVerification = false } = Astro.props;
+const { stale, reviewWindowDays } = getStaleStatus(verifiedAt, maturity);
+const needsReview = stale || needsVerification;
+const dateLabel = verifiedAt.toLocaleDateString('en', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  timeZone: 'UTC',
+});
+---
+
+<p class="text-sm text-muted" data-review-deadline={verifiedAt.getTime() + reviewWindowDays * 86_400_000} data-needs-verification={needsVerification}>
+  Last verified
+  <time datetime={verifiedAt.toISOString()}>{dateLabel}</time>
+  <strong class="ml-2 text-amber-700 dark:text-amber-300" data-review-badge hidden={!needsReview}>Needs review</strong>
+</p>
+
+<script>
+  for (const stamp of document.querySelectorAll<HTMLElement>('[data-review-deadline]')) {
+    const badge = stamp.querySelector<HTMLElement>('[data-review-badge]');
+    const deadline = Number(stamp.dataset.reviewDeadline);
+    if (badge && Number.isFinite(deadline)) {
+      badge.hidden = stamp.dataset.needsVerification !== 'true' && Date.now() <= deadline;
+    }
+  }
+</script>

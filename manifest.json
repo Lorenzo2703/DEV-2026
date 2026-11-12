@@ -1,0 +1,41 @@
+[
+  {
+    "url": "http://localhost:63574/",
+    "isRepresentativeRun": false,
+    "htmlPath": "C:\\Users\\gialo\\Desktop\\APP\\DEV-2026\\.lighthouseci\\localhost--2026_11_12_14_48_39.report.html",
+    "jsonPath": "C:\\Users\\gialo\\Desktop\\APP\\DEV-2026\\.lighthouseci\\localhost--2026_11_12_14_48_39.report.json",
+    "summary": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1,
+      "agentic-browsing": 1
+    }
+  },
+  {
+    "url": "http://localhost:63574/",
+    "isRepresentativeRun": false,
+    "htmlPath": "C:\\Users\\gialo\\Desktop\\APP\\DEV-2026\\.lighthouseci\\localhost--2026_11_12_14_48_51.report.html",
+    "jsonPath": "C:\\Users\\gialo\\Desktop\\APP\\DEV-2026\\.lighthouseci\\localhost--2026_11_12_14_48_51.report.json",
+    "summary": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1,
+      "agentic-browsing": 1
+    }
+  },
+  {
+    "url": "http://localhost:63574/",
+    "isRepresentativeRun": true,
+    "htmlPath": "C:\\Users\\gialo\\Desktop\\APP\\DEV-2026\\.lighthouseci\\localhost--2026_11_12_14_48_27.report.html",
+    "jsonPath": "C:\\Users\\gialo\\Desktop\\APP\\DEV-2026\\.lighthouseci\\localhost--2026_11_12_14_48_27.report.json",
+    "summary": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1,
+      "agentic-browsing": 1
+    }
+  }
+]

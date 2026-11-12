@@ -1,0 +1,82 @@
+---
+title: PostgreSQL
+summary: Model relational data, use parameterized queries, and operate PostgreSQL with recoverable backups.
+category: data
+maturity: stable
+radar: adopt
+toolVersion: "18.7"
+verifiedAt: 2026-11-12
+officialDocs: https://www.postgresql.org/docs/18/
+repo: https://github.com/postgres/postgres
+license: PostgreSQL
+pricing: oss
+difficulty: intermediate
+tags: [postgresql, database, sql]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import migrationCode from '../../../../snippets/postgresql/001_create_tasks.sql?raw';
+import exampleCode from '../../../../snippets/postgresql/example.ts?raw';
+
+## What it is, when to use it, when not to
+
+PostgreSQL is an open-source relational database with transactions and a rich SQL feature set. Use it when your application benefits from relational constraints, consistent updates, and operational control over data.
+
+It still requires capacity planning, backups, upgrades, and access controls. A lightweight local store or a managed service may be preferable when those operational responsibilities are disproportionate to the application.
+
+## Prerequisites and versions
+
+The latest stable PostgreSQL release verified for this guide is **18.7**. The runnable example uses an in-memory PGlite PostgreSQL build for fast isolated SQL checks; it does not start or validate a PostgreSQL 18.7 server.
+
+## Install and minimal setup
+
+Install a supported PostgreSQL distribution or provision a managed instance using its provider's instructions. Create a dedicated database and least-privilege application role, and keep connection credentials outside source control. Apply versioned migrations through your deployment process.
+
+## Correct implementation
+
+This migration defines a required, non-blank title and a default completion state:
+
+<CodeTabs id="postgresql-example" label="PostgreSQL example" items={[{ label: '001_create_tasks.sql', language: 'sql', code: migrationCode }, { label: 'example.ts', language: 'typescript', code: exampleCode }]} />
+
+The test passes values as query parameters rather than interpolating them into SQL. It also checks that a failed transaction rolls back its insert. In production, use a PostgreSQL driver and test migrations and transactions against the same server major version and extensions you deploy.
+
+## Integrate with the rest of the stack
+
+Run migrations before application versions that depend on the new schema, while planning compatibility between deployments. Size connection pools for the database and application replicas, and use secure transport when connections leave a trusted local environment.
+
+## Test it
+
+Run `bun run snippets` in this repository. The example applies the migration to PGlite and tests parameter binding and rollback. Also run integration tests against a real PostgreSQL server: the embedded test does not verify server networking, roles, extensions, backups, or deployment behavior.
+
+## Security and performance
+
+Grant only necessary database privileges, protect credentials, use parameterized queries, and avoid logging sensitive values. Review indexes and query plans for real workloads. Maintain backups and regularly test restores; a successful backup job alone does not demonstrate recoverability.
+
+## Common mistakes
+
+Avoid building SQL by concatenating untrusted values, leaving long transactions open, or relying on migrations that were never tested against production-like data. Do not treat an embedded database test as a replacement for server-level tests.
+
+## Observability
+
+Monitor connection utilization, query latency, errors, storage, replication lag where applicable, and backup and restore outcomes. PostgreSQL's statistics views provide operational signals; alert on user-visible degradation as well as resource exhaustion.
+
+## Upgrade and migration notes
+
+Read the exact release notes and test upgrades and restores on a representative copy before production. PostgreSQL 18.7's notes call out cases requiring index review and recommend a new full backup for incremental-backup users; follow the release guidance for your installation.
+
+## Alternatives
+
+SQLite is useful for embedded and simpler single-process workloads. A managed relational service may reduce operational work, but compare its version support, recovery guarantees, portability, and pricing.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [PostgreSQL 18 documentation](https://www.postgresql.org/docs/18/)
+- [Transactions](https://www.postgresql.org/docs/18/tutorial-transactions.html)
+- [Backup and restore](https://www.postgresql.org/docs/18/backup.html)
+- [Prepared statements](https://www.postgresql.org/docs/18/sql-prepare.html)
+- [Monitoring statistics](https://www.postgresql.org/docs/18/monitoring-stats.html)
+- [PostgreSQL 18.7 release notes](https://www.postgresql.org/docs/release/18.7/)
+- [PGlite getting started](https://pglite.dev/docs/)
+- [PGlite API](https://pglite.dev/docs/api)

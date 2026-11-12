@@ -1,0 +1,86 @@
+---
+import { getCollection } from 'astro:content';
+import ToolCard from '../../components/ToolCard.astro';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+
+const entries = await getCollection('tools', ({ data }) => !data.draft);
+entries.sort((a, b) => a.data.title.localeCompare(b.data.title));
+const filters = [
+  { key: 'category', label: 'Category' },
+  { key: 'maturity', label: 'Maturity' },
+  { key: 'radar', label: 'Radar' },
+  { key: 'pricing', label: 'Pricing' },
+  { key: 'difficulty', label: 'Difficulty' },
+] as const;
+---
+
+<SiteLayout title="Tools" description="Source-verified implementation guides for software tools.">
+  <h1 class="text-4xl font-bold">Tool guides</h1>
+  <p class="mt-4 max-w-2xl text-lg text-muted">
+    Practical setup and production guidance, with verified versions and runnable examples.
+  </p>
+  {
+    entries.length > 0 ? (
+      <>
+      <form id="tool-filters" class="mt-10" hidden>
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {filters.map(({ key, label }) => (
+            <label class="flex flex-col gap-2 font-semibold" for={`filter-${key}`}>
+              {label}
+              <select id={`filter-${key}`} name={key} class="rounded-lg border border-slate-400 bg-paper p-2 text-ink">
+                <option value="">All</option>
+                {[...new Set(entries.map((entry) => entry.data[key]))].sort().map((value) => (
+                  <option value={value}>{value.replaceAll('-', ' ')}</option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
+        <div class="mt-4 flex flex-wrap items-center gap-4">
+          <button type="reset" class="rounded-lg border border-current px-4 py-2">Clear filters</button>
+          <p id="filter-count" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+      <ul id="tool-list" class="mt-10 grid list-none gap-6 p-0 md:grid-cols-2">
+        {entries.map((entry) => (
+          <li data-tool data-category={entry.data.category} data-maturity={entry.data.maturity} data-radar={entry.data.radar} data-pricing={entry.data.pricing} data-difficulty={entry.data.difficulty}>
+            <ToolCard entry={entry} />
+          </li>
+        ))}
+      </ul>
+      </>
+    ) : (
+      <p class="mt-10 rounded-xl border border-dashed border-slate-400 p-8 text-muted">
+        No tool guides have been published yet.
+      </p>
+    )
+  }
+</SiteLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#tool-filters');
+  if (form) {
+    const selects = [...form.querySelectorAll<HTMLSelectElement>('select')];
+    const tools = [...document.querySelectorAll<HTMLElement>('[data-tool]')];
+    const count = document.querySelector<HTMLElement>('#filter-count');
+
+    function updateFilters() {
+      let visible = 0;
+      for (const tool of tools) {
+        const matches = selects.every((select) => !select.value || tool.dataset[select.name] === select.value);
+        tool.hidden = !matches;
+        if (matches) visible++;
+      }
+      if (count) count.textContent = `${visible} ${visible === 1 ? 'guide' : 'guides'} found.`;
+    }
+
+    form.addEventListener('change', updateFilters);
+    form.addEventListener('reset', (event) => {
+      event.preventDefault();
+      for (const select of selects) select.value = '';
+      updateFilters();
+    });
+    updateFilters();
+    form.hidden = false;
+  }
+</script>

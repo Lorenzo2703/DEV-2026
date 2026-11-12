@@ -1,0 +1,23 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import MaturityBadge from './MaturityBadge.astro';
+import VerifiedStamp from './VerifiedStamp.astro';
+
+interface Props {
+  entry: CollectionEntry<'tools'>;
+}
+
+const { entry } = Astro.props;
+---
+
+<article class="rounded-xl border border-slate-300/70 bg-white/70 p-6 dark:border-slate-700 dark:bg-slate-900">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <p class="m-0 text-sm text-muted">{entry.data.category}</p>
+    <MaturityBadge maturity={entry.data.maturity} />
+  </div>
+  <h2 class="mt-4 text-2xl font-bold">
+    <a href={`/tools/${entry.id}/`}>{entry.data.title}</a>
+  </h2>
+  <p>{entry.data.summary}</p>
+  <VerifiedStamp verifiedAt={entry.data.verifiedAt} maturity={entry.data.maturity} needsVerification={entry.data.needsVerification} />
+</article>

@@ -1,0 +1,82 @@
+---
+title: OpenTelemetry
+summary: Instrument useful traces and export telemetry without exposing sensitive data.
+category: observability
+maturity: stable
+radar: trial
+toolVersion: 3.1.1
+verifiedAt: 2026-11-12
+officialDocs: https://opentelemetry.io/docs/languages/js/instrumentation/
+repo: https://github.com/open-telemetry/opentelemetry-js
+license: Apache-2.0
+pricing: oss
+difficulty: advanced
+related: [typescript]
+tags: [observability, tracing, opentelemetry]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import exampleCode from '../../../../snippets/opentelemetry/example.ts?raw';
+
+## What it is, when to use it, when not to
+
+OpenTelemetry provides APIs, SDKs, and protocols for producing and transporting telemetry. Use it when you need correlated traces, metrics, and logs across services without binding all instrumentation to one backend.
+
+Instrumentation and storage have cost and privacy implications. A small isolated application may need only straightforward logs and metrics; introduce tracing where it answers operational questions.
+
+## Prerequisites and versions
+
+This guide covers the JavaScript trace SDK **3.1.1** with API **1.10.0**. The SDK package requires Node.js **22.15.0 or newer**. Other OpenTelemetry language packages and experimental packages use their own version numbers.
+
+## Install and minimal setup
+
+Install `@opentelemetry/api` and `@opentelemetry/sdk-trace` in a Node.js project. The example uses an in-memory exporter so it can be tested locally without a collector or credentials.
+
+## Correct implementation
+
+Create a tracer provider with a span processor, start a span around meaningful work, end it, and flush before shutdown. The sample asserts that a completed span reaches the in-memory exporter:
+
+<CodeTabs id="otel-example" label="OpenTelemetry trace example" items={[{ label: 'example.ts', language: 'typescript', code: exampleCode }]} />
+
+This is a test setup, not a production exporter. For a service, initialize an appropriate Node SDK and exporter before instrumented libraries, configure a collector or backend, and ensure the SDK shuts down cleanly. The standalone trace SDK does not configure automatic instrumentation, context management, or cross-service propagation by itself.
+
+## Integrate with the rest of the stack
+
+Use the [TypeScript guide](/tools/languages-runtimes/typescript/) for type checking. For distributed traces, propagate context across service boundaries and verify that downstream spans share the expected trace. Coordinate exporter, collector, and backend configuration with your deployment.
+
+## Test it
+
+Run `bun run snippets` in this repository. The example is type-checked and executed with Node.js, then verifies its exported span. Add integration tests for your actual exporter, collector, and propagation configuration; an in-memory test cannot validate a remote pipeline.
+
+## Security and performance
+
+Do not record credentials, tokens, or unnecessary personal data in span attributes or exceptions. Review automatic instrumentation and collector processors for sensitive fields. Sampling, batching, retention, and backend limits affect both visibility and cost; measure dropped spans as well as export failures.
+
+## Common mistakes
+
+Avoid creating spans without ending them, initializing instrumentation too late, or assuming a standalone provider automatically propagates context. Avoid interpreting unsampled traces as proof that no error occurred.
+
+## Observability
+
+Monitor exporter failures, dropped spans, collector health, and backend ingestion. Check that representative requests produce connected traces and correlate them with service errors and latency.
+
+## Upgrade and migration notes
+
+Review the JavaScript SDK migration guide before a major upgrade. SDK 3 replaces the older trace-base package with `@opentelemetry/sdk-trace`; API and SDK versions have separate compatibility constraints. Test exporters and instrumentation together and retain a working lockfile.
+
+## Alternatives
+
+Structured logs and service metrics may be sufficient for a small service. Vendor-specific agents can reduce setup effort, but evaluate portability, data handling, and cost before adopting them.
+
+## Sources
+
+Accessed 2026-11-12:
+
+- [JavaScript instrumentation](https://opentelemetry.io/docs/languages/js/instrumentation/)
+- [Trace SDK package](https://github.com/open-telemetry/opentelemetry-js/blob/main/packages/sdk-trace/README.md)
+- [Exporters](https://opentelemetry.io/docs/languages/js/exporters/)
+- [Context propagation](https://opentelemetry.io/docs/concepts/context-propagation/)
+- [Sampling](https://opentelemetry.io/docs/concepts/sampling/)
+- [Handling sensitive data](https://opentelemetry.io/docs/security/handling-sensitive-data/)
+- [JavaScript SDK 3 migration](https://github.com/open-telemetry/opentelemetry-js/blob/main/doc/3.x/migration-guide.md)
+- [JavaScript SDK 3.1.1 release](https://github.com/open-telemetry/opentelemetry-js/releases/tag/v3.1.1)

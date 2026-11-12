@@ -1,0 +1,45 @@
+---
+import { getCollection, render } from 'astro:content';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+
+export async function getStaticPaths() {
+  const [guides, blueprints, posts] = await Promise.all([
+    getCollection('guides', ({ data }) => !data.draft),
+    getCollection('blueprints', ({ data }) => !data.draft),
+    getCollection('posts', ({ data }) => !data.draft),
+  ]);
+  return [...guides, ...blueprints, ...posts].map((entry) => ({
+    params: { collection: entry.collection, slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const sections = headings.filter((heading) => heading.depth === 2);
+const readingMinutes = entry.body
+  ? Math.max(1, Math.ceil(entry.body.trim().split(/\s+/).length / 200))
+  : null;
+const tags = entry.collection === 'guides' || entry.collection === 'posts' ? entry.data.tags : [];
+---
+
+<SiteLayout title={entry.data.title} description={entry.data.summary} image={`/og/${entry.collection}/${entry.id}.png`} article>
+  <article class:list={['prose mx-auto max-w-3xl', { 'print-guide': entry.collection === 'guides' }]}>
+    <a href={`/${entry.collection}/`}>← All {entry.collection}</a>
+    <h1 class="mt-5 text-4xl font-bold">{entry.data.title}</h1>
+    <p class="text-xl text-muted">{entry.data.summary}</p>
+    {readingMinutes && <p class="text-sm text-muted">{readingMinutes} min read</p>}
+    {tags.length > 0 && (
+      <p>Topics: {tags.map((tag, index) => (
+        <>{index > 0 && ', '}<a href={`/tags/${encodeURIComponent(tag)}/`}>{tag}</a></>
+      ))}</p>
+    )}
+    {sections.length > 0 && (
+      <nav aria-label="On this page" class="my-8 rounded-xl border border-slate-300/70 p-5 dark:border-slate-700">
+        <p class="m-0 font-bold">On this page</p>
+        <ol>{sections.map((section) => <li><a href={`#${section.slug}`}>{section.text}</a></li>)}</ol>
+      </nav>
+    )}
+    <Content />
+  </article>
+</SiteLayout>

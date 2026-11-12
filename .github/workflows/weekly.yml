@@ -1,0 +1,59 @@
+name: Weekly maintenance
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-maintenance
+  cancel-in-progress: false
+
+jobs:
+  review-report:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.3.10
+      - run: bun ci
+      - name: Generate and publish review report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          bun run stale-report --check-versions > "$RUNNER_TEMP/stale-report.md"
+          issue="$(gh issue list --state open --limit 100 --search '"Content review report" in:title' --json number,title --jq '.[] | select(.title == "Content review report") | .number' | head -n 1)"
+          if [ -n "$issue" ]; then
+            gh issue edit "$issue" --body-file "$RUNNER_TEMP/stale-report.md"
+          elif ! grep -Fxq 'No tool pages need review.' "$RUNNER_TEMP/stale-report.md"; then
+            gh issue create --title 'Content review report' --body-file "$RUNNER_TEMP/stale-report.md"
+          fi
+  full-links:
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://example.test
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.23.4
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.3.10
+      - run: bun ci
+      - run: bun run build
+      - uses: lycheeverse/lychee-action@649b0e4890508ea3e11ea6b3ee35ce899a25afd5
+        with:
+          args: --no-progress --include-fragments --root-dir dist "CLAUDE.md" "README.md" "docs/**/*.md" "src/**/*.md" "src/**/*.mdx"

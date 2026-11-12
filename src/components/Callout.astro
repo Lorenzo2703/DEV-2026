@@ -1,0 +1,53 @@
+---
+interface Props {
+  kind?: 'note' | 'warning' | 'security';
+  title: string;
+}
+
+const { kind = 'note', title } = Astro.props;
+---
+
+<aside
+  class={`my-6 rounded-lg border-l-4 p-5 callout-${kind}`}
+  aria-label={`${kind}: ${title}`}
+>
+  <h3 class="m-0 text-lg font-bold">{title}</h3>
+  <div class="mt-2"><slot /></div>
+</aside>
+
+<style>
+  .callout-note {
+    border-color: #0369a1;
+    background: #e0f2fe;
+    color: #0c2d48;
+  }
+
+  .callout-warning {
+    border-color: #b45309;
+    background: #fef3c7;
+    color: #451a03;
+  }
+
+  .callout-security {
+    border-color: #b91c1c;
+    background: #fee2e2;
+    color: #450a0a;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .callout-note {
+      background: #082f49;
+      color: #e0f2fe;
+    }
+
+    .callout-warning {
+      background: #422006;
+      color: #fef3c7;
+    }
+
+    .callout-security {
+      background: #450a0a;
+      color: #fee2e2;
+    }
+  }
+</style>

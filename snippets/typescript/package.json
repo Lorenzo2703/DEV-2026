@@ -1,0 +1,10 @@
+{
+  "name": "typescript-snippet",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "node ../../node_modules/typescript-7/bin/tsc --project tsconfig.json",
+    "run": "bun run sample.test.ts"
+  }
+}
