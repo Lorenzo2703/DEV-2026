@@ -1,0 +1,70 @@
+---
+title: Model Context Protocol (MCP)
+summary: Connect AI applications to tools and context through a versioned protocol.
+category: ai-dev
+maturity: stable
+radar: trial
+toolVersion: "2026-07-28"
+verifiedAt: 2026-11-13
+officialDocs: https://modelcontextprotocol.io/specification/2026-07-28
+repo: https://github.com/modelcontextprotocol/modelcontextprotocol
+license: "Apache-2.0 (specification; some prior contributions remain MIT)"
+pricing: free
+difficulty: advanced
+alternatives: []
+related: [claude-code, github-copilot]
+tags: [ai, protocol, tools]
+---
+
+## What it is, when to use it, when not to
+
+MCP is an open protocol for connecting AI applications with tools and context providers. Use it when multiple clients or servers need a shared interface; a direct API call may be simpler for a single integration.
+
+## Prerequisites and versions
+
+This guide covers the **2026-07-28** specification revision. Client and server SDKs adopt specification changes on their own schedules, so check both endpoints' compatibility.
+
+## Install and minimal setup
+
+Choose a maintained SDK for your language and transport, then begin with a local, non-sensitive server and one read-only capability.
+
+## Correct implementation
+
+Validate every tool input on the server, authorize each requested action, and return bounded results. Treat tool descriptions as discovery aids, not permission checks.
+
+## Integrate with the rest of the stack
+
+Document which identity and credential each server uses. Follow the selected revision's request metadata and capability rules, and explicitly handle unavailable tools and transport failures.
+
+## Test it
+
+Exercise request metadata, tool discovery, invalid inputs, denied actions, and interrupted connections against the SDK versions you deploy.
+
+## Security and performance
+
+Treat remote MCP servers as privileged integrations. Verify server identity, protect credentials, constrain network access, and request user approval for consequential actions.
+
+## Common mistakes
+
+Avoid trusting tool output, allowing broad tool access by default, or assuming a compatible protocol guarantees a trustworthy implementation.
+
+## Observability
+
+Record server identity, tool name, latency, failures, and authorization decisions while redacting sensitive arguments and results.
+
+## Upgrade and migration notes
+
+The 2026-07-28 specification changes session and request semantics. Read the changelog and test clients and servers together before upgrading.
+
+## Alternatives
+
+Direct HTTP APIs, function calling, or plugin interfaces may be simpler when protocol interoperability is not a requirement.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [MCP 2026-07-28 specification](https://modelcontextprotocol.io/specification/2026-07-28)
+- [MCP specification changelog](https://modelcontextprotocol.io/specification/2026-07-28/changelog)
+- [MCP 2026-07-28 release](https://github.com/modelcontextprotocol/modelcontextprotocol/releases/tag/2026-07-28)
+- [MCP project license](https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/LICENSE)

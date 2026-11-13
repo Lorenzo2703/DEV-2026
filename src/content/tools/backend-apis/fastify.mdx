@@ -1,0 +1,75 @@
+---
+title: Fastify
+summary: Build Node.js APIs with explicit schemas, encapsulated plugins, and predictable lifecycle handling.
+category: backend-apis
+maturity: stable
+radar: adopt
+toolVersion: "5.12.7"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://fastify.dev/docs/latest/
+repo: https://github.com/fastify/fastify
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [nodejs, zod, vitest]
+tags: [nodejs, api, http]
+---
+
+## What it is, when to use it, when not to
+
+Fastify is a Node.js HTTP framework with plugin encapsulation and schema-driven request validation and response serialization. Use it when an API needs structured routing, lifecycle hooks, and typed boundaries.
+
+For a small handler or a different runtime model, a lighter platform API may be enough.
+
+## Prerequisites and versions
+
+This guide covers stable Fastify **5.12.7**. The 6.x release line is pre-release in the references checked for this guide.
+
+## Install and minimal setup
+
+Install Fastify in a supported Node.js project. Define routes in registered plugins and bind the server to an explicitly configured address and port.
+
+## Correct implementation
+
+Declare JSON Schemas for request and response boundaries. Keep schemas trusted application code: Fastify compiles them, so never accept schemas from request data. Perform asynchronous checks in hooks or handlers after basic validation, and return controlled error responses.
+
+## Integrate with the rest of the stack
+
+Use Fastify as the HTTP layer on [Node.js](/tools/languages-runtimes/nodejs/). Add [Zod](/tools/backend-apis/zod/) only when its validation model or shared types are needed.
+
+## Test it
+
+Exercise success, malformed input, expected error responses, and shutdown behavior with Fastify's injection facility or an HTTP integration test.
+
+## Security and performance
+
+Bound request sizes and timeouts, validate all untrusted inputs, and avoid exposing internal errors. Keep plugins and schemas under review; schema compilation assumes trusted definitions.
+
+## Common mistakes
+
+- Database access during initial validation can create resource-exhaustion risks.
+- Undeclared response shapes make serialization and API contracts less predictable.
+- Unbounded payloads and long-lived requests can consume server resources.
+
+## Observability
+
+Use structured logs with request identifiers; exclude credentials and sensitive payloads. Track latency, status codes, saturation, and process shutdown outcomes.
+
+## Upgrade and migration notes
+
+Stay on the supported stable major and read its release notes, including security fixes. Do not adopt a pre-release major in production without an explicit compatibility plan.
+
+## Alternatives
+
+FastAPI fits Python services; other Node frameworks may suit teams with different routing or ecosystem needs.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Fastify documentation](https://fastify.dev/docs/latest/)
+- [Validation and serialization](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/)
+- [Fastify releases](https://github.com/fastify/fastify/releases)
+- [Fastify tags](https://github.com/fastify/fastify/tags)

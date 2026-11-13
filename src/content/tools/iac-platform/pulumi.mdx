@@ -1,0 +1,70 @@
+---
+title: Pulumi
+summary: Define infrastructure in familiar languages while protecting state and secrets.
+category: iac-platform
+maturity: stable
+radar: trial
+toolVersion: 3.276.0
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://www.pulumi.com/docs/
+repo: https://github.com/pulumi/pulumi
+license: Apache-2.0
+pricing: mixed
+difficulty: advanced
+alternatives: [opentofu, terraform]
+related: [typescript]
+tags: [iac, infrastructure, programming-languages]
+---
+
+## What it is, when to use it, when not to
+
+Pulumi manages infrastructure using general-purpose languages and provider SDKs. Choose it when language tooling and abstractions benefit the team; a declarative configuration language may be simpler for straightforward stacks.
+
+## Prerequisites and versions
+
+This guide covers Pulumi CLI **3.276.0**. Select a supported language runtime, provider, and state backend before building shared infrastructure.
+
+## Install and minimal setup
+
+Install the CLI and language SDK, create a small project, and inspect the preview before applying resources.
+
+## Correct implementation
+
+Keep stacks and configuration explicit, store secrets using the configured secrets provider, and separate reusable components from environment-specific values.
+
+## Integrate with the rest of the stack
+
+Run previews and tests in CI, use protected credentials for updates, and treat state backend access as privileged infrastructure access.
+
+## Test it
+
+Use previews, unit tests for component logic, and an isolated cloud account for integration checks. Test stack export and recovery.
+
+## Security and performance
+
+Protect state and secrets, pin SDK and provider versions, and review language dependencies as part of the infrastructure supply chain.
+
+## Common mistakes
+
+Avoid placing secrets in ordinary configuration, running updates with broad developer credentials, or hiding resource changes behind complex abstractions.
+
+## Observability
+
+Track previews, deployments, drift, provider failures, and state-backend health.
+
+## Upgrade and migration notes
+
+Review CLI, SDK, runtime, and provider release notes together; test state compatibility before upgrades.
+
+## Alternatives
+
+OpenTofu and Terraform use declarative configuration and have distinct licensing and ecosystem trade-offs.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Pulumi documentation](https://www.pulumi.com/docs/)
+- [Pulumi 3.276.0 release](https://github.com/pulumi/pulumi/releases/tag/v3.276.0)
+- [Pulumi license](https://github.com/pulumi/pulumi/blob/master/LICENSE)

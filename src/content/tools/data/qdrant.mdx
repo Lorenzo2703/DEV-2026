@@ -1,0 +1,74 @@
+---
+title: Qdrant
+summary: Build vector retrieval around explicit collections, payload filters, and measured indexing trade-offs.
+category: data
+maturity: stable
+radar: trial
+toolVersion: "1.20.0"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://qdrant.tech/documentation/
+repo: https://github.com/qdrant/qdrant
+license: Apache-2.0
+pricing: mixed
+difficulty: advanced
+alternatives: [pgvector]
+related: [postgresql, opentelemetry]
+tags: [vector-search, database, retrieval]
+---
+
+## What it is, when to use it, when not to
+
+Qdrant is a vector search engine for similarity and filtered retrieval. Use it when vector workloads need dedicated indexing, filtering, and deployment controls.
+
+For modest vector datasets that should stay with relational data, a PostgreSQL extension may be simpler.
+
+## Prerequisites and versions
+
+This guide references Qdrant **1.20.0**. Choose self-hosted Qdrant or Qdrant Cloud and follow the matching deployment guidance.
+
+## Install and minimal setup
+
+Create a collection with vector dimensions and distance matching the embedding model. Configure authentication and network boundaries before connecting application clients.
+
+## Correct implementation
+
+Design payload fields and indexes around filters, use stable point identifiers, and define update and deletion behavior. Evaluate indexing and quantization choices with real query and recall targets.
+
+## Integrate with the rest of the stack
+
+Use Qdrant for vector retrieval and keep authoritative business data in its appropriate source of truth. Connect retrieved results back to records only after application authorization checks.
+
+## Test it
+
+Check collection configuration, upserts, deletion, filters, nearest-neighbor quality, backup restoration, and behavior under representative load.
+
+## Security and performance
+
+Keep the API private or authenticated, restrict access to collections, and protect backups. Bound payload size and monitor memory, disk, indexing, and query capacity.
+
+## Common mistakes
+
+- Treating vector similarity as authorization can expose records a user cannot access.
+- Choosing index settings without recall and latency measurements produces unpredictable results.
+- Leaving an unauthenticated service reachable can expose or alter stored vectors and payloads.
+
+## Observability
+
+Monitor query latency, collection and segment health, resource consumption, replication, and backup status.
+
+## Upgrade and migration notes
+
+Review release notes for API changes and deprecations, and upgrade clients with the server when required. Test restore and compatibility before rollout.
+
+## Alternatives
+
+pgvector keeps vector search within PostgreSQL. A hosted vector service can reduce operations but adds provider and data-transfer dependencies.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Qdrant documentation](https://qdrant.tech/documentation/)
+- [Qdrant security documentation](https://qdrant.tech/documentation/security/)
+- [Qdrant releases](https://github.com/qdrant/qdrant/releases)

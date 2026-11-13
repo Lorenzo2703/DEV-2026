@@ -1,0 +1,10 @@
+{
+  "name": "spring-boot-snippet",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "node verify.mjs package",
+    "run": "node verify.mjs test"
+  }
+}

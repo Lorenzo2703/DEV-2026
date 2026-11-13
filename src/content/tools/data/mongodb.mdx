@@ -1,0 +1,230 @@
+---
+title: MongoDB
+summary: Model bounded documents, enforce BSON schemas and tenant-scoped indexes, prevent lost updates, and test with a real isolated MongoDB server.
+category: data
+maturity: stable
+radar: trial
+toolVersion: "9.0.8; Node.js driver 7.9.0"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://www.mongodb.com/docs/manual/
+repo: https://github.com/mongodb/mongo
+license: SSPL-1.0
+pricing: mixed
+difficulty: intermediate
+alternatives: [postgresql, supabase]
+related: [spring-boot, fastapi, nodejs, keycloak, redis, opentelemetry]
+tags: [mongodb, database, documents, validation, indexes, concurrency]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import client from '../../../../snippets/mongodb/client.ts?raw';
+import schema from '../../../../snippets/mongodb/schema.ts?raw';
+import tasks from '../../../../snippets/mongodb/tasks.ts?raw';
+import tests from '../../../../snippets/mongodb/example.test.ts?raw';
+import scripts from '../../../../snippets/mongodb/package.json?raw';
+
+## What it is, when to use it, when not to
+
+MongoDB is a document database that stores BSON records, supports secondary indexes and aggregation, and provides atomic single-document writes. BSON adds types such as dates and ObjectIds beyond ordinary JSON. A flexible schema means you design and evolve the shape of your data; it does not mean the data has no schema.
+
+Use it when your main operations read and update bounded document aggregates: for example, a catalog whose product types have different attributes, or records that are usually accessed together. Embed related values that share a lifecycle and remain bounded. Reference independently growing entities instead of appending every event, comment, or task to one parent document forever.
+
+Prefer [PostgreSQL](/tools/data/postgresql/) when joins, relational constraints, and cross-entity invariants dominate. Do not add MongoDB beside a working relational database just to preserve optionality.
+
+The recommendation here is **stable / trial**: MongoDB is established, but adopting it for a relational task portal should follow an access-pattern and operational proof, not a framework preference. The [Angular + Keycloak platform blueprint](/blueprints/angular-keycloak-platform/) still defaults to relational application data.
+
+**License and cost:** Community Server uses **SSPL-1.0**, a source-available license; do not describe it as permissive open source. The official Node.js driver uses Apache-2.0. Community software is free to use subject to its license, while hosting and operations still cost money. Atlas has free and paid offerings; check current limits, backup features, and pricing for the selected tier. Obtain appropriate license review if you intend to offer MongoDB functionality as a service.
+
+## Prerequisites and versions
+
+- **Community Server 9.0.8** is the current stable download verified on **2026-11-13**.
+- **Official Node.js driver 7.9.0** is pinned in this sample; its package requires **Node.js 20.19.0 or later**. Local validation uses **Node.js 22.23.4** and TypeScript **7.0.2**.
+- **Test harness:** `mongodb-memory-server-core` **11.3.0** downloads and starts a real `mongod` process. Despite its name, this sample uses **WiredTiger with a temporary data directory**, not a mocked database or an in-memory JavaScript substitute.
+- The first test run needs outbound HTTPS, enough disk space for the platform-specific server download and extraction, and a supported host OS/CPU. The Windows archive is roughly **946 MiB**, so do not promise an instant first run. Linux hosts also need the libraries required by the downloaded MongoDB binary.
+
+Server, driver, database tools, and Atlas are separately versioned. A successful driver test does not establish compatibility for every managed document service that speaks a similar protocol. Check the official compatibility guidance before changing any part of the deployment.
+
+## Install and minimal setup
+
+For this handbook sample, run `bun ci` at the repository root, then enter **`snippets/mongodb/`** and run `bun run typecheck` followed by `bun run run`. The scripts below are also discovered by the handbook's existing CI snippet runner.
+
+<CodeTabs id="mongodb-run" label="Run the MongoDB sample" items={[
+  { label: 'package.json', language: 'json', code: scripts },
+]} />
+
+The test runner creates its own loopback-only MongoDB **9.0.8** instance on a generated port, checks its reported version, applies the collection schema and indexes, exercises the repository, and closes the client and server. It does not connect to a supplied URI or erase an existing database. No Docker, global MongoDB installation, or Atlas account is needed.
+
+For a real application, provision a supported Community/Enterprise installation or Atlas deployment. Create separate least-privilege database users for the application and migrations, enable access control and TLS, restrict the network, and store the connection URI in your deployment's secret store. Do not deploy the unauthenticated test fixture.
+
+Create one long-lived `MongoClient` per application process, connect during startup, and close it during shutdown. Pass the URI from trusted server configuration; never from a browser request.
+
+<CodeTabs id="mongodb-client" label="Explicit MongoDB connection budgets" items={[
+  { label: 'client.ts', language: 'typescript', code: client },
+]} />
+
+The sample explicitly bounds server selection, connection establishment, pool checkout, and socket activity. These are **per-stage budgets**, not a single end-to-end deadline. Driver 7.8 and later deprecate `timeoutMS`/`timeoutMode` and give them no effect; do not copy older timeout examples without checking the installed driver.
+
+## Correct implementation
+
+### Model the record and enforce its shape in MongoDB
+
+The worked record is a task with a tenant, tenant-local slug, bounded title, completion state, revision counter, and creation time. ObjectIds and dates remain BSON values in storage; convert them intentionally when defining an HTTP response contract.
+
+TypeScript's `Collection<Task>` helps author queries but does **not** validate existing documents or untrusted input. The server-side validator below protects writes even when another client bypasses the TypeScript helper.
+
+<CodeTabs id="mongodb-schema" label="BSON validation and tenant-scoped indexes" items={[
+  { label: 'schema.ts', language: 'typescript', code: schema },
+]} />
+
+`validationLevel: 'strict'` and `validationAction: 'error'` make invalid writes fail. `additionalProperties: false` prevents undeclared fields; remember to allow MongoDB's `_id`. BSON integer, date, boolean, and ObjectId requirements are not interchangeable with arbitrary strings or floating-point values.
+
+This function is a **one-time bootstrap for a fresh collection**, not an idempotent migration runner. It intentionally fails if the collection already exists. For existing data, plan validator changes and backfills explicitly; do not catch that error and pretend the schema was installed.
+
+### Put tenant scope and uniqueness in the database operation
+
+The unique compound index on `tenantId` and `slug` allows the same slug in different tenants but rejects duplicates within one tenant. A “check whether it exists, then insert” sequence is not a uniqueness guarantee under concurrent requests.
+
+The current driver's three-argument `createIndex` form separates index-definition options from command options. Here `unique` and `name` describe the index, while `maxTimeMS` bounds the index-creation command. Set a deployment-appropriate migration budget rather than copying the sample's five seconds into a large production index build.
+
+The other compound index supports the bounded tenant filter and descending ObjectId order used by the list helper. ObjectId ordering is deterministic but is **not a global commit-time or exact creation-time guarantee** across clients; use a deliberate timestamp-plus-tie-breaker design if your contract requires that.
+
+<CodeTabs id="mongodb-tasks" label="Validated tenant-scoped reads and conflict-safe writes" items={[
+  { label: 'tasks.ts', language: 'typescript', code: tasks },
+]} />
+
+The repository accepts individual validated values, never an arbitrary query/update object. It constructs its own filters and operators. Strings are checked before converting IDs; operator-shaped objects such as `{ $ne: null }` are not accepted as identifiers.
+
+**The tenant argument is a trust boundary.** The API must authenticate the caller, resolve authorized tenant membership, and supply that trusted tenant value. A valid tenant-shaped string from the browser does not prove membership. MongoDB's database role and schema validator do not automatically implement row-level tenant authorization.
+
+The title helper permits at most **120 UTF-16 code units before trimming** and rejects blank values. The server validator also bounds the stored title. This is a conservative application input policy, not a grapheme-aware user-interface character counter. Enforce an HTTP body-size limit separately, before parsing a large request.
+
+### Prevent lost updates with a revision predicate
+
+`setCompleted` filters by tenant, ID, **and expected revision**, then changes the value and increments the revision in one `findOneAndUpdate` operation. Competing writes using the same revision cannot both match. `returnDocument: 'after'` returns the new state; `includeResultMetadata: false` makes the return contract explicit.
+
+A missing match raises `TaskConflictError` instead of returning apparent success. The message deliberately does not disclose whether a task exists in another tenant. In an API, map that outcome to a documented conflict/unavailable response and let the client refresh; do not silently overwrite newer data.
+
+Duplicate-key errors and validation failures propagate from the database. Translate known failures at the application's error boundary without exposing connection strings, raw MongoDB diagnostics, or rejected confidential values.
+
+### Know where atomicity ends
+
+A single-document update is atomic. An `updateMany` operation is not one all-or-nothing transaction across every matched record. Use a supported replica-set or sharded topology and the documented transaction API when an invariant truly spans documents.
+
+Keep transaction callbacks short and account for driver retries; do not send emails or perform irreversible external actions inside a callback that may run again. Use an outbox/idempotency design when coordinating database state and external work.
+
+The sample runs a **standalone** server and tests single-document concurrency only. It does not demonstrate multi-document transactions, failover, majority acknowledgment across replicas, or crash recovery.
+
+## Integrate with the rest of the stack
+
+- **[Spring Boot](/tools/backend-apis/spring-boot/):** use its Boot-managed MongoDB integration if Java is your backend. Do not copy the Node.js driver version into a Maven build. Preserve the same validator, index, tenant, and optimistic-concurrency contracts in Java integration tests.
+- **[FastAPI](/tools/backend-apis/fastapi/):** choose a currently supported Python driver and test its own sync/async behavior; this page's runnable code is Node.js/TypeScript, not a verified Python adapter.
+- **[Keycloak](/tools/auth/keycloak/):** authenticate in the API and map the verified identity to application membership. MongoDB stores business data; it is **not a replacement for Keycloak's supported relational database**.
+- **Angular or any browser frontend:** call the API, not MongoDB directly. Database credentials must never appear in a frontend bundle.
+- **[Redis](/tools/data/redis/):** optional when measurements justify caching or a designed distributed limiter. Scope cache keys by tenant and define invalidation; cached content must not bypass authorization.
+- **CI/CD:** execute schema/index changes with a reviewed migration identity, run the real-server tests, and check staging compatibility before deploying applications that require the changed schema.
+
+Choose a read preference and read/write concern for the real topology and business guarantees. Secondary reads may lag; “acknowledged” is not automatically “visible everywhere” or “recoverable after any failure.” Pool capacity is per server and per client process, so multiply the budget across application replicas and monitoring connections.
+
+## Test it
+
+The sample uses Node's test runner, the official driver, and a real isolated **MongoDB 9.0.8** process. It generates data inside its private test deployment and removes the temporary deployment after execution.
+
+<CodeTabs id="mongodb-tests" label="Real MongoDB regression tests" items={[
+  { label: 'example.test.ts', language: 'typescript', code: tests },
+]} />
+
+The **seven tests** cover:
+
+- Create, read, update, and read back a task using the trusted tenant.
+- Duplicate slugs rejected within a tenant but allowed across tenants.
+- Cross-tenant reads returning no record and cross-tenant writes leaving the record unchanged.
+- Two concurrent updates with one expected revision producing **exactly one winner**.
+- Direct database writes rejected for invalid BSON types, blank/oversized titles, invalid revisions, and undeclared fields.
+- Operator-shaped inputs, malformed IDs, invalid update values, and the **120 accepted / 121 rejected** title boundary.
+- A bounded, deterministic list containing only one tenant's records, with invalid page sizes rejected.
+
+This proves database writes and read-back behavior, not restart durability or production availability. Before adoption, add tests against your actual authenticated/TLS deployment for application authorization, transaction rollback, failover, timeout behavior, realistic query plans, and backup/restore. An unauthenticated local process is not evidence that production roles or network policy are correct.
+
+## Security and performance
+
+1. **Separate identities.** The application should not administer users, change validators, drop collections, or bypass document validation. Use a reviewed migration role for DDL and a separate backup role for recovery tooling.
+2. **Keep the database private.** Enable authentication and TLS, restrict incoming networks, and protect stored data and backups. Do not expose the default database port through the public web gateway.
+3. **Construct query shapes yourself.** Allowlist fields/operators and validate scalar values at the API boundary. Never spread a request body into a filter, update, or aggregation pipeline.
+4. **Bound documents and result sets.** BSON documents have a **16 MiB** size limit; stay comfortably below it. Move independently growing arrays into their own collections and use bounded pagination. The sample returns only a limited first page, not a full cursor-pagination implementation.
+5. **Verify indexes with real data.** Inspect `explain('executionStats')`, returned records, examined keys/documents, and sorting work. Creating an index does not prove the planner will choose it or that a latency target is met.
+6. **Budget connection pools and timeouts.** Reuse the client, avoid creating a pool per request, and bound the queue. A socket or acknowledgment timeout can leave a write outcome uncertain; do not retry non-idempotent operations blindly.
+7. **Treat replication and backup as different controls.** Replicas can copy accidental deletion. Select a backup method appropriate to the topology, secure it, and verify a restore independently.
+
+The test harness checks downloaded archive integrity with its MD5 mechanism. That detects corruption; it is not a substitute for trusted HTTPS sources, deployment artifact provenance, or your production supply-chain controls.
+
+### Prove that a backup can restore service
+
+Define an acceptable recovery point (how much recent data can be lost) and recovery time (how long the service may be unavailable). Choose the backup mechanism for the actual topology: MongoDB's tools can suit small deployments, while production replica sets or sharded deployments may need coordinated snapshots or managed cloud backups.
+
+`mongodump` and `mongorestore` are separately installed **Database Tools**, not the Node.js driver or a guaranteed part of the server package. Dumps can affect the running workload. Do not assume a dump of a database receiving writes is a consistent point-in-time snapshot; use the official procedure appropriate to the deployment.
+
+For a restore exercise:
+
+1. Restore into a new isolated deployment, not over the live database.
+2. Verify expected records, BSON types, indexes, validators, and application-level invariants; also restore or recreate access controls deliberately.
+3. Run the application's critical read/write and authorization flows with the restored data.
+4. Measure elapsed recovery time and the actual recovered data point against the agreed objectives.
+5. Record the result and safely dispose of the isolated restore after review.
+
+Encrypt backups, restrict restore credentials, and rehearse regularly. This guide does **not** claim a tested dump/restore or point-in-time recovery procedure for your deployment.
+
+## Common mistakes
+
+- **“Schemaless means no migration”:** validators, indexes, reader compatibility, and backfills still require a rollout plan.
+- **Storing all child records in one growing parent:** creates a size and contention problem rather than avoiding joins.
+- **Treating `Collection<Task>` as runtime validation:** TypeScript does not make another client's invalid BSON disappear.
+- **Using a global unique slug:** prevents different tenants from using the same business identifier.
+- **Filtering updates by ID alone:** can bypass tenant scope and silently overwrite concurrent changes.
+- **Calling a standalone test a replica-set test:** hides untested transaction and failover behavior.
+- **Copying old `timeoutMS` examples:** the current driver has deprecated that option and ignores it.
+- **Assuming a database role filters documents by tenant:** application membership checks are still required.
+- **Calling a successful dump a verified recovery plan:** only a restore exercise demonstrates usable recovery.
+
+## Observability
+
+Monitor query latency/error rates, connection checkout time, pool utilization, CPU/memory, storage headroom, replication lag when applicable, and backup/restore outcomes. Use route/query templates and low-cardinality labels rather than IDs or raw query values.
+
+The sample sets an `appName` for client identification but does not install a metrics exporter or trace SDK. If using [OpenTelemetry](/tools/observability/opentelemetry/), select supported instrumentation for the installed driver, avoid duplicate spans, and confirm that captured statements do not contain confidential data or credentials.
+
+Investigate slow queries using plans and representative data, not only a dashboard average. Limit access to profilers and logs because query predicates can contain personal or sensitive values. Alerts should identify user-visible failure and an owner who can act.
+
+## Upgrade and migration notes
+
+Read the exact server patch notes, driver release notes, compatibility changes, and topology-specific upgrade procedure. MongoDB **9.0.8** follows the **9.0.7** security/reliability release; do not stop at the major-version label when choosing a patch.
+
+The documented 9.0 upgrade guidance permits supported **8.0 or 8.3** starting releases; older deployments need the prescribed intermediate upgrades. Check the exact **feature compatibility version** requirements for your path and topology. Rehearse backup, staging upgrade, validation, and supported downgrade/recovery before changing production binaries or FCV.
+
+The **7.9.0** Node driver release fixes an OIDC callback/environment interaction that could leak bearer tokens in affected earlier releases. The **7.8** notes also document timeout and SRV validation changes. Even if you do not use those features, read the target release notes rather than assuming minor upgrades have no behavioral changes.
+
+Roll schema evolution forward compatibly: deploy readers that understand the new shape, migrate existing records in controlled batches, update indexes/validators deliberately, and only then remove legacy fields. A restrictive `additionalProperties` validator must be adjusted before writers introduce a new field.
+
+An exit path to a relational model needs deliberate mapping of BSON types, embedded arrays, indexes, uniqueness, and transactions. Keep business rules and public response contracts outside driver-specific calls to reduce coupling.
+
+## Alternatives
+
+- **[PostgreSQL](/tools/data/postgresql/):** prefer it for relational membership, joins, foreign-key constraints, and transaction-heavy cross-entity workflows. JSON support can meet some flexible-attribute requirements without a second database.
+- **[Supabase](/tools/data/supabase/):** a PostgreSQL-based managed platform, not a MongoDB-compatible replacement. Compare database permissions, recovery, platform services, and cost.
+- **An existing database or simpler store:** often the best choice when adding another operated data service creates more burden than benefit.
+
+Choose by access patterns, invariants, and recovery requirements. A familiar JSON syntax is not by itself a reason to migrate.
+
+## Sources
+
+Official sources accessed **2026-11-13**, except the separately identified test-harness documentation:
+
+- [MongoDB release index](https://www.mongodb.com/docs/manual/release-notes/), [9.0 patch notes](https://www.mongodb.com/docs/manual/release-notes/9.0/), and [Community Server downloads](https://www.mongodb.com/try/download/community).
+- [Node.js driver 7.9.0 release](https://github.com/mongodb/node-mongodb-native/releases/tag/v7.9.0), [driver documentation](https://www.mongodb.com/docs/drivers/node/current/), and [compatibility guidance](https://www.mongodb.com/docs/drivers/compatibility/?driver-language=javascript&javascript-driver-framework=nodejs).
+- [Data modeling](https://www.mongodb.com/docs/manual/data-modeling/), [documents and BSON](https://www.mongodb.com/docs/manual/core/document/), and [JSON Schema validation](https://www.mongodb.com/docs/manual/core/schema-validation/specify-json-schema/).
+- [Unique indexes](https://www.mongodb.com/docs/manual/core/index-unique/), [atomicity](https://www.mongodb.com/docs/manual/core/write-operations-atomicity/), and [compound driver operations](https://www.mongodb.com/docs/drivers/node/current/crud/compound-operations/).
+- [Transactions](https://www.mongodb.com/docs/manual/core/transactions/), [read consistency](https://www.mongodb.com/docs/manual/core/read-isolation-consistency-recency/), and [write concern](https://www.mongodb.com/docs/manual/reference/write-concern/).
+- [Connection options](https://www.mongodb.com/docs/drivers/node/current/connect/connection-options/), [pools](https://www.mongodb.com/docs/drivers/node/current/connect/connection-options/connection-pools/), and [per-stage timeouts](https://www.mongodb.com/docs/drivers/node/current/connect/connection-options/csot/).
+- [Security checklist](https://www.mongodb.com/docs/manual/administration/security-checklist/), [query-plan analysis](https://www.mongodb.com/docs/manual/tutorial/analyze-query-plan/), and [backup/restore tools](https://www.mongodb.com/docs/manual/tutorial/backup-and-restore-tools/).
+- [9.0 upgrade guidance](https://www.mongodb.com/docs/manual/release-notes/9.0-upgrade-standalone/) and [Node.js driver release notes](https://www.mongodb.com/docs/drivers/node/current/reference/release-notes/).
+- [Server-side public license](https://www.mongodb.com/legal/licensing/server-side-public-license), [driver license](https://raw.githubusercontent.com/mongodb/node-mongodb-native/v7.9.0/LICENSE.md), and [current pricing](https://www.mongodb.com/pricing).
+- Test harness: [mongodb-memory-server quick start](https://typegoose.github.io/mongodb-memory-server/docs/guides/quick-start-guide/) and [server options](https://typegoose.github.io/mongodb-memory-server/docs/api/interfaces/mongo-memory-server-opts/).

@@ -1,0 +1,104 @@
+---
+title: Python
+summary: Build maintainable Python projects with isolated environments, explicit dependencies, runtime validation, and tested boundaries.
+category: languages-runtimes
+maturity: stable
+radar: adopt
+toolVersion: 3.15.2
+verifiedAt: 2026-11-13
+officialDocs: https://docs.python.org/3.15/
+repo: https://github.com/python/cpython
+license: PSF-2.0
+pricing: free
+difficulty: beginner
+alternatives: []
+related: [uv, fastapi]
+tags: [python, runtime, packaging, typing, testing]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import configCode from '../../../../snippets/python/config.py?raw';
+import testCode from '../../../../snippets/python/test_config.py?raw';
+
+## What it is, when to use it, when not to
+
+Python is a general-purpose programming language with a large standard library and broad use in services, automation, data work, and scripting. Use it when its ecosystem and runtime fit the problem and deployment environment.
+
+It is not a good fit when the workload depends on unsupported native extensions or hard real-time guarantees. For CPU-bound work, profile first; asynchronous I/O does not make CPU-heavy code parallel.
+
+## Prerequisites and versions
+
+The latest stable release verified for this guide is **Python 3.15.2**, released on 2026-10-25. Select a maintained release that your dependencies and deployment platform support; check the Python Developer's Guide for each branch's current bug-fix, security, or end-of-life phase.
+
+The example uses only the standard library and runs on Python 3.12 or newer. It is also compatible with the verified 3.15 release.
+
+## Install and minimal setup
+
+Install Python from the [official downloads page](https://www.python.org/downloads/), then create an isolated environment for the project:
+
+```text
+python -m venv .venv
+```
+
+Activate `.venv` in your shell and use that environment's `python` and `pip` commands. On Windows, the activation script is under `.venv\Scripts`; on macOS and Linux, it is under `.venv/bin`. Keep the environment out of version control and recreate it from project metadata rather than copying it between machines.
+
+## Correct implementation
+
+Type annotations help static tools and editors, but Python does not enforce them when a program runs. Parse and validate values at boundaries such as environment variables, JSON, files, and network requests. The example treats its input as an arbitrary object, checks its shape and value ranges, and only then constructs an immutable configuration value.
+
+<CodeTabs id="python-config" label="Python configuration validation" items={[{ label: 'config.py', language: 'python', code: configCode }]} />
+
+For applications with dependencies, record project metadata and the supported Python range in `pyproject.toml`. Use a project environment and a dependency manager that can produce and enforce a lockfile in CI; the lockfile format and install command belong to that manager, not to Python itself. Keep development tools separate from runtime dependencies.
+
+## Integrate with the rest of the stack
+
+Pin a supported interpreter consistently across development, CI, and deployment. Use a project-level runtime manager such as [mise](https://mise.jdx.dev/) when several tools need coordinated pins. For an HTTP API, choose a framework such as FastAPI only when its routing and dependency-injection model helps the application; validate external input regardless of framework.
+
+## Test it
+
+The tests cover valid input, malformed values, empty names, and both inclusive port boundaries. They use the built-in `unittest` runner:
+
+<CodeTabs id="python-tests" label="Python configuration tests" items={[{ label: 'test_config.py', language: 'python', code: testCode }]} />
+
+Run `python -m unittest -v test_config` from the sample directory. The repository's `bun run snippets` command syntax-checks and executes the sample as part of CI.
+
+## Security and performance
+
+Treat parsed values as untrusted until their type and allowed range are checked. Do not use `pickle` or `shelve` with untrusted data; Python's security guidance documents their risks. Use `secrets`, not `random`, for security-sensitive tokens. Keep dependencies current and install them in an isolated environment.
+
+Avoid blocking an event loop with synchronous I/O in async services, and avoid assuming that `async` accelerates CPU-bound work. Measure the actual bottleneck before selecting threads, processes, or another runtime.
+
+## Common mistakes
+
+- **Installing dependencies into the system interpreter:** this can conflict with system-managed packages and other projects. Use a disposable project environment instead.
+- **Committing `.venv`:** environments contain machine-specific paths and are not portable. Recreate them from project metadata.
+- **Treating type hints as runtime validation:** annotations do not reject malformed input. Validate data before relying on it.
+- **Using `pip freeze` as a project design:** a snapshot alone does not state the intended supported Python range or dependency groups. Declare project metadata and choose a tool-specific lock workflow.
+- **Assuming asynchronous functions make CPU work concurrent:** CPU-bound code still consumes execution time; profile before choosing a concurrency model.
+
+## Observability
+
+Log actionable error context while excluding credentials and sensitive payloads. Track request latency, error rates, and resource use at the service boundary; monitor process memory and CPU in production. Record the Python version in deployment diagnostics so runtime drift is visible.
+
+## Upgrade and migration notes
+
+Review the Python version status page and the release changelog before upgrading. Test native extensions, dependency constraints, typing checks, and deployment images against the target interpreter. Python 3.15.2 includes security fixes; keep maintained patch releases current rather than pinning an old patch indefinitely.
+
+## Alternatives
+
+- **Node.js:** a mature option for JavaScript services and tooling, especially when sharing language and packages with a web client.
+- **Rust:** a compiled option when low-level resource control or CPU performance is central and its development trade-offs are acceptable.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Python 3.15.2 release](https://www.python.org/downloads/release/python-3152/)
+- [Python version status](https://devguide.python.org/versions/)
+- [Python 3.15 changelog](https://docs.python.org/release/3.15.2/whatsnew/changelog.html)
+- [Virtual environments](https://docs.python.org/3.15/library/venv.html)
+- [Type hints](https://docs.python.org/3.15/library/typing.html)
+- [Security considerations](https://docs.python.org/3.15/library/security_warnings.html)
+- [Python Packaging User Guide: `pyproject.toml`](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
+- [Python Packaging User Guide: tool recommendations](https://packaging.python.org/en/latest/guides/tool-recommendations/)
+- [CPython license](https://github.com/python/cpython/blob/main/LICENSE)

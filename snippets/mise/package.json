@@ -1,0 +1,9 @@
+{
+  "name": "mise-snippet",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "node --check verify.test.mjs && mise tasks ls",
+    "run": "mise run --skip-tools verify"
+  }
+}

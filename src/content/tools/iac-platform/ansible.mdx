@@ -1,0 +1,70 @@
+---
+title: Ansible
+summary: Configure hosts and services with repeatable, reviewable automation.
+category: iac-platform
+maturity: stable
+radar: adopt
+toolVersion: 2.22.0
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://docs.ansible.com/projects/ansible/latest/index.html
+repo: https://github.com/ansible/ansible
+license: GPL-3.0-or-later
+pricing: mixed
+difficulty: intermediate
+alternatives: []
+related: [opentofu]
+tags: [configuration-management, automation, operations]
+---
+
+## What it is, when to use it, when not to
+
+Ansible automates configuration and operations across hosts using inventories, modules, and playbooks. Use it for repeatable host and service tasks; avoid it when a managed platform already owns that lifecycle.
+
+## Prerequisites and versions
+
+This guide covers Ansible **2.22.0**. Check the supported Python, controller, target, and collection requirements for your environment.
+
+## Install and minimal setup
+
+Install Ansible in a pinned project environment, create a small inventory, and run a read-only check against a disposable host.
+
+## Correct implementation
+
+Write idempotent tasks, use roles for reusable responsibilities, and store credentials in an approved vault or secret manager. Keep privilege escalation limited to tasks that need it.
+
+## Integrate with the rest of the stack
+
+Use infrastructure provisioning to create hosts and Ansible to configure them; keep inventories and environment-specific variables reviewed and access-controlled.
+
+## Test it
+
+Run syntax checks and check mode, then validate changes on disposable systems before production rollout.
+
+## Security and performance
+
+Restrict SSH credentials, protect vault secrets, review third-party collections, and limit controller access to managed hosts.
+
+## Common mistakes
+
+Avoid non-idempotent shell commands, broad privilege escalation, and assuming check mode fully simulates every module.
+
+## Observability
+
+Capture play outcomes and changed/failed hosts, alert on repeated failures, and redact secret-bearing task output.
+
+## Upgrade and migration notes
+
+Review core and collection release notes separately; pin collections and test playbooks against the target runtime.
+
+## Alternatives
+
+Cloud-native configuration tools or immutable machine images can reduce drift for teams that prefer declarative host replacement.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Ansible documentation](https://docs.ansible.com/projects/ansible/latest/index.html)
+- [Ansible 2.22.0 release](https://github.com/ansible/ansible/releases/tag/v2.22.0)
+- [Ansible license](https://github.com/ansible/ansible/blob/devel/COPYING)

@@ -1,0 +1,10 @@
+{
+  "name": "nextjs-snippet",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "node --check app/layout.js && node --check app/page.js && node --check next.config.mjs",
+    "run": "node ../../node_modules/next/dist/bin/next build && node verify.mjs"
+  }
+}

@@ -1,0 +1,71 @@
+---
+title: PostHog
+summary: Collect product events and use analytics deliberately, with privacy and data-volume controls.
+category: analytics
+maturity: stable
+radar: trial
+toolVersion: Cloud is rolling; self-hosted has no tagged releases
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://posthog.com/docs
+license: MIT (core; EE separately licensed)
+pricing: mixed
+difficulty: intermediate
+related: [typescript, nextjs]
+tags: [analytics, product-analytics, events]
+draft: false
+---
+
+## What it is, when to use it, when not to
+
+PostHog combines product analytics with related product-development tools. Use it when funnels, retention, or feature usage will inform a concrete decision; avoid collecting events without a clear owner or purpose.
+
+## Prerequisites and versions
+
+PostHog Cloud is continuously updated, and its self-hosted deployment has no tagged releases or stable version number. SDKs are versioned independently. Self-hosting is officially unsupported; the current guidance is to use the latest Docker image and accept responsibility for operations and upgrades.
+
+## Install and minimal setup
+
+Create a project, choose the SDK for your runtime, and configure its project key and host from environment-specific settings. Send a small set of intentional events first. PostHog Cloud has a free monthly allowance with paid usage beyond plan limits; self-hosting is free software but requires you to operate the infrastructure.
+
+## Correct implementation
+
+Define an event vocabulary and required properties before instrumenting screens. Use stable, non-sensitive identifiers, document consent and retention, and configure capture and replay to match your privacy policy. Treat analytics as a decision aid, not the source of truth for billing or transactions.
+
+## Integrate with the rest of the stack
+
+Keep event names consistent with product and support workflows. Send server-side events for important business actions where client instrumentation may be blocked, but make ingestion asynchronous so an analytics outage does not block user requests.
+
+## Test it
+
+Use a development project to confirm expected events arrive once, with the intended identity and only approved properties. Check both browser and server instrumentation if using both.
+
+## Security and performance
+
+Review access roles, data region, retention, and replay masking. Do not send secrets, authentication tokens, or unnecessary personal data. Track event volume and property cardinality because they affect both cost and analytic usefulness.
+
+## Common mistakes
+
+Avoid capturing every interaction without a question to answer, putting personal data into arbitrary event properties, or relying on analytics as an authoritative transaction record. Avoid self-hosting for critical production workloads unless you can support an officially unsupported deployment.
+
+## Observability
+
+Monitor ingestion errors, event volume, data freshness, and spend alongside application health. Alert on missing or delayed events only when a downstream decision depends on them.
+
+## Upgrade and migration notes
+
+Upgrade SDKs independently after reviewing their release notes. For self-hosted deployments, PostHog does not publish tagged releases; follow its current upgrade guidance and use the latest image, understanding that the deployment is unsupported.
+
+## Alternatives
+
+Plausible and Umami focus on web analytics; PostHog may fit broader product-event analysis. Choose based on required data collection, hosting, and privacy controls.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [PostHog documentation](https://posthog.com/docs)
+- [PostHog changelog](https://posthog.com/changelog)
+- [Self-host PostHog: support, releases, and licensing](https://posthog.com/docs/self-host)
+- [PostHog pricing](https://posthog.com/pricing)
+- [PostHog core license](https://github.com/PostHog/posthog/blob/master/LICENSE)

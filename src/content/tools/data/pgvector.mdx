@@ -1,0 +1,74 @@
+---
+title: pgvector
+summary: Store and search vector embeddings in PostgreSQL while measuring index recall and query latency.
+category: data
+maturity: stable
+radar: trial
+toolVersion: "0.8.7"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://github.com/pgvector/pgvector
+repo: https://github.com/pgvector/pgvector
+license: PostgreSQL
+pricing: free
+difficulty: advanced
+alternatives: [qdrant]
+related: [postgresql, supabase]
+tags: [postgresql, vector-search, embeddings]
+---
+
+## What it is, when to use it, when not to
+
+pgvector adds vector storage and similarity search to PostgreSQL. Use it when embeddings belong alongside relational data and a single database simplifies joins and operations.
+
+Consider a dedicated vector service when scale, isolation, or specialized search requirements justify another system.
+
+## Prerequisites and versions
+
+This guide covers pgvector **0.8.7**, which supports PostgreSQL 13 and later. Confirm that your hosting provider supports the extension and required version.
+
+## Install and minimal setup
+
+Install the extension through your PostgreSQL provider or package, then enable it in the target database. Create vector dimensions that match the embedding model output.
+
+## Correct implementation
+
+Choose distance metric, index type, and query filters based on the retrieval workload. Benchmark approximate indexes against exact search using representative data and measure recall as well as latency.
+
+## Integrate with the rest of the stack
+
+Use pgvector as a PostgreSQL extension and preserve relational constraints and filtering. [Supabase](/tools/data/supabase/) offers hosted Postgres with extension support subject to its service settings.
+
+## Test it
+
+Validate dimensions, nearest-neighbor ordering, filtered queries, index usage, and behavior after extension upgrades.
+
+## Security and performance
+
+Restrict database access, parameterize inputs, and review embedding data for sensitive content. Index memory, build time, and filtered recall all need workload-specific measurement.
+
+## Common mistakes
+
+- Choosing an index without measuring recall can reduce result quality.
+- Filtering after a broad nearest-neighbor query can return too few relevant candidates.
+- A vector match is not itself an authorization check for the underlying document.
+
+## Observability
+
+Monitor query latency, index size, ingestion rate, recall evaluations, and database resource use.
+
+## Upgrade and migration notes
+
+Review release notes for index and storage changes. Version 0.8.7 includes fixes to IVFFlat index builds; test index health and recreate indexes when release guidance requires it.
+
+## Alternatives
+
+Qdrant is a dedicated vector database with separate scaling and operations. PostgreSQL without the extension may be enough for small exact-search datasets.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [pgvector README and installation guidance](https://github.com/pgvector/pgvector/blob/master/README.md)
+- [pgvector changelog](https://github.com/pgvector/pgvector/blob/master/CHANGELOG.md)
+- [pgvector tags](https://github.com/pgvector/pgvector/tags)

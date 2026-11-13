@@ -1,0 +1,9 @@
+{
+  "name": "python-snippet",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "python -m compileall -q config.py test_config.py",
+    "run": "python -m unittest -v test_config"
+  }
+}

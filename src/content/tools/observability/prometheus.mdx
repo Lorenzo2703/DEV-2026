@@ -1,0 +1,71 @@
+---
+title: Prometheus
+summary: Collect and query time-series metrics with deliberate labels and retention.
+category: observability
+maturity: stable
+radar: adopt
+toolVersion: 3.16.0
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://prometheus.io/docs/introduction/overview/
+repo: https://github.com/prometheus/prometheus
+license: Apache-2.0
+pricing: free
+difficulty: advanced
+related: [grafana, opentelemetry]
+tags: [observability, metrics, monitoring]
+---
+
+## What it is, when to use it, when not to
+
+Prometheus is an open-source metrics monitoring and alerting toolkit. Use it when time-series metrics and queryable alert conditions fit the service; avoid treating it as a general event or trace store.
+
+## Prerequisites and versions
+
+This guide covers Prometheus **3.16.0**. Plan for reachable scrape targets, persistent storage, and a retention policy before production use.
+
+## Install and minimal setup
+
+Choose a deployment model, configure a small set of scrape targets, and expose application metrics through an appropriate instrumentation library. Restrict access to administrative endpoints.
+
+## Correct implementation
+
+Choose counters, gauges, and histograms according to their semantics. Keep labels bounded and stable; put per-user or per-request values in logs or traces instead.
+
+## Integrate with the rest of the stack
+
+Use Grafana or another compatible client for dashboards and an alerting path for notifications. Correlate metrics with traces without using trace identifiers as unbounded labels.
+
+## Test it
+
+Confirm the target is scraped, queries return expected values, and an alert rule behaves as intended in a controlled environment. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Protect metrics endpoints and limit cardinality, retention, and query load. Plan for storage growth and failure modes in the monitoring system itself.
+
+## Common mistakes
+
+Avoid high-cardinality labels, misleading metric names, and alerts that fire on symptoms without an actionable response.
+
+## Observability
+
+Monitor target availability, scrape errors, rule evaluation, storage, and alert delivery.
+
+## Upgrade and migration notes
+
+Review release notes and compatibility of exporters, rule files, and remote storage before upgrading.
+
+## Alternatives
+
+OpenTelemetry metrics can feed multiple backends. Managed monitoring can reduce operations work but may alter retention, portability, and cost.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Prometheus overview](https://prometheus.io/docs/introduction/overview/)
+- [Prometheus 3.16.0 release](https://github.com/prometheus/prometheus/releases/tag/v3.16.0)
+- [Prometheus license](https://github.com/prometheus/prometheus/blob/main/LICENSE)
+
+Confirm storage and retention requirements against your workload before deployment.

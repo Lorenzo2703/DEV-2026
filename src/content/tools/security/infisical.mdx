@@ -1,0 +1,71 @@
+---
+title: Infisical
+summary: Manage application secrets through controlled access, rotation, and delivery workflows.
+category: security
+maturity: stable
+radar: trial
+toolVersion: 0.167.10
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://infisical.com/docs/documentation/getting-started/introduction
+repo: https://github.com/Infisical/infisical
+license: MIT
+pricing: mixed
+difficulty: intermediate
+related: [github-actions]
+tags: [security, secrets, configuration]
+---
+
+## What it is, when to use it, when not to
+
+Infisical provides workflows for managing secrets and related security data. Use a central secret manager when access, rotation, and auditability are difficult to maintain with deployment-native secrets alone.
+
+## Prerequisites and versions
+
+This guide covers Infisical **0.167.10**. Choose the hosted or self-hosted model and identify who administers access, upgrades, and recovery.
+
+## Install and minimal setup
+
+Choose hosted or self-managed use, create a non-production project, and configure a narrowly scoped machine identity for one application.
+
+## Correct implementation
+
+Separate environments and access roles, rotate credentials deliberately, and retrieve secrets at runtime through supported integrations. Keep bootstrap credentials out of source control and logs.
+
+## Integrate with the rest of the stack
+
+Use CI integrations only for the specific deployment secrets needed by a job. Prefer short-lived or scoped identities where supported.
+
+## Test it
+
+Verify that authorized workloads can retrieve a test secret and that unauthorized identities are denied. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Protect the management plane, encryption keys, recovery path, and audit logs. Establish rotation and revocation procedures before production adoption.
+
+## Common mistakes
+
+Avoid copying retrieved secrets into build artifacts, broad shared service accounts, or logging secret values on failure.
+
+## Observability
+
+Review access events, authentication failures, rotation status, and service availability.
+
+## Upgrade and migration notes
+
+Back up required state, review migration notes, and validate integrations before upgrading a self-hosted service.
+
+## Alternatives
+
+Cloud-provider secret managers integrate closely with their platforms; compare portability, access policy, operations, and pricing.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Infisical introduction](https://infisical.com/docs/documentation/getting-started/introduction)
+- [Infisical 0.167.10 release](https://github.com/Infisical/infisical/releases/tag/v0.167.10)
+- [Infisical license](https://github.com/Infisical/infisical/blob/main/LICENSE)
+
+Check current plan and edition limits for the features you intend to use.

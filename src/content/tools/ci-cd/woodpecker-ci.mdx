@@ -1,0 +1,71 @@
+---
+title: Woodpecker CI
+summary: Run container-oriented CI pipelines with isolated workers and protected secrets.
+category: ci-cd
+maturity: stable
+radar: trial
+toolVersion: 3.20.1
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://woodpecker-ci.org/docs/usage/intro
+repo: https://github.com/woodpecker-ci/woodpecker
+license: Apache-2.0
+pricing: free
+difficulty: intermediate
+related: [github-actions, docker]
+tags: [ci-cd, pipelines, containers]
+---
+
+## What it is, when to use it, when not to
+
+Woodpecker is a CI/CD system designed around pipelines and containerized execution. Consider it when self-managed CI fits your operational model; prefer hosted CI when maintaining runners would be unnecessary work.
+
+## Prerequisites and versions
+
+This guide covers Woodpecker **3.20.1**. Select a supported repository provider and plan the server, agent, and build isolation boundaries.
+
+## Install and minimal setup
+
+Follow the official server and agent setup for your source-control provider. Begin with a pipeline that builds and checks a non-production branch.
+
+## Correct implementation
+
+Separate trusted release workflows from untrusted contributions, scope secrets to the smallest required pipeline, and isolate agents from sensitive infrastructure.
+
+## Integrate with the rest of the stack
+
+Connect repository events, artifact storage, and deployment credentials through explicit reviewed pipeline steps. Keep build and deploy permissions distinct.
+
+## Test it
+
+Run a harmless pipeline and verify logs, artifact handling, and cancellation behavior. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Treat pipeline code as executable code. Isolate runners, avoid exposing privileged host mounts, and rotate credentials used by jobs.
+
+## Common mistakes
+
+Avoid granting every pipeline deployment credentials or running untrusted changes on privileged workers.
+
+## Observability
+
+Monitor server and agent availability, queue time, job failures, and storage usage.
+
+## Upgrade and migration notes
+
+Back up configuration and state, review release notes, and upgrade server and agents according to supported compatibility guidance.
+
+## Alternatives
+
+GitHub Actions offers a hosted workflow ecosystem; other self-hosted CI systems may suit different runner and governance requirements.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Woodpecker first pipeline](https://woodpecker-ci.org/docs/usage/intro)
+- [Woodpecker 3.20.1 release](https://github.com/woodpecker-ci/woodpecker/releases/tag/v3.20.1)
+- [Woodpecker license](https://github.com/woodpecker-ci/woodpecker/blob/main/LICENSE)
+
+Review current hosting and support terms when selecting a deployment model.

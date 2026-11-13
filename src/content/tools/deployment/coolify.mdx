@@ -1,0 +1,72 @@
+---
+title: Coolify
+summary: Self-host application deployments while planning for control-plane security and recovery.
+category: deployment
+maturity: stable
+radar: assess
+toolVersion: 4.7.5
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://coolify.io/docs
+repo: https://github.com/coollabsio/coolify
+license: Apache-2.0
+pricing: mixed
+difficulty: intermediate
+related: [docker, cloudflare]
+tags: [deployment, self-hosting, platform]
+---
+
+## What it is, when to use it, when not to
+
+Coolify is a platform for deploying applications and services on infrastructure you operate. Consider it when a self-managed platform matches your team’s needs; do not equate convenient deployment with removing server operations.
+
+## Prerequisites and versions
+
+This guide covers Coolify **4.7.5**. Choose a supported server and establish backup, update, and administrative access procedures before deploying production workloads.
+
+## Install and minimal setup
+
+Select a supported host, follow the official setup path, and deploy a disposable application before connecting production domains or data.
+
+## Correct implementation
+
+Separate platform administration from application access, use narrowly scoped deployment credentials, and document backups for configuration and persistent data.
+
+## Integrate with the rest of the stack
+
+Connect source control and container builds through reviewed deployment settings. Plan DNS, TLS, storage, database backup, and recovery independently.
+
+## Test it
+
+Exercise deploy, rollback, backup, and restore workflows with a non-production service. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Protect the management interface, patch the host, restrict exposed ports, and isolate workloads. A platform compromise may grant broad access to deployed applications.
+
+## Common mistakes
+
+Avoid exposing administrative services publicly without strong controls or assuming platform backups include all application data.
+
+## Observability
+
+Monitor host resources, deployment outcomes, certificate expiry, backups, and platform availability.
+
+## Upgrade and migration notes
+
+Back up configuration and state, review release notes, and upgrade in a maintenance window with a tested recovery path.
+
+## Alternatives
+
+Managed application platforms reduce host maintenance; direct Docker deployment offers control with more manual operations.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Coolify documentation](https://coolify.io/docs)
+- [Coolify changelog](https://coolify.io/changelog)
+- [Coolify 4.7.5 release](https://github.com/coollabsio/coolify/releases/tag/v4.7.5)
+- [Coolify license](https://github.com/coollabsio/coolify/blob/main/LICENSE)
+
+Review current hosted-service plans and self-hosting requirements before choosing a deployment model.

@@ -1,0 +1,75 @@
+---
+title: Turso
+summary: Evaluate Turso's SQLite-compatible embedded and managed database offerings against consistency and deployment needs.
+category: data
+maturity: stable
+radar: assess
+toolVersion: "Turso platform (rolling); verify component versions"
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://docs.turso.tech/
+repo: https://github.com/tursodatabase/turso
+license: MIT (embedded database core)
+pricing: mixed
+difficulty: intermediate
+alternatives: [sqlite, postgresql]
+related: [typescript, python]
+tags: [database, sqlite, edge]
+---
+
+## What it is, when to use it, when not to
+
+Turso now covers an embedded SQLite-compatible database, synchronization, and a managed cloud platform. Consider it when local database execution or distributed SQLite workflows fit the application.
+
+Do not assume that SQLite compatibility guarantees identical behavior, transaction semantics, or operational limits across every Turso component.
+
+## Prerequisites and versions
+
+There is no single version for the whole Turso offering: the embedded engine, CLI, SDKs, sync service, and cloud platform have separate release cycles. Version and pricing details need verification for the specific deployment you choose.
+
+## Install and minimal setup
+
+Choose either the embedded database path or Turso Cloud, then follow that component's current quickstart. Pin SDK and CLI versions independently.
+
+## Correct implementation
+
+Document which component owns data, how writes synchronize, and what consistency guarantees the application requires. Establish migrations, backup/export, and recovery steps before production use.
+
+## Integrate with the rest of the stack
+
+Use a compatible client in the application and keep persistence logic behind a repository boundary. Compare with [SQLite](/tools/data/sqlite/) for local-only deployment.
+
+## Test it
+
+Exercise offline behavior, synchronization conflicts, migration, and recovery against the actual selected product path.
+
+## Security and performance
+
+Protect service credentials and database files, restrict cloud access, and review data retention and network exposure. Measure the latency and resource cost of remote synchronization.
+
+## Common mistakes
+
+- Treating the cloud and embedded products as interchangeable ignores distinct operational behavior.
+- Assuming sync is conflict-free can lead to lost or surprising updates.
+- Relying on SQLite compatibility alone does not prove that extensions or SQL features match.
+
+## Observability
+
+Monitor sync lag and errors, database availability, request latency, and backup health. Keep local and cloud telemetry distinguishable.
+
+## Upgrade and migration notes
+
+Review release notes for the exact engine, CLI, SDK, and hosted service in use. The product surface is evolving; confirm maturity and compatibility before adoption.
+
+## Alternatives
+
+SQLite is a simpler embedded option. PostgreSQL fits centralized relational services with established server operations.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Turso documentation](https://docs.turso.tech/)
+- [Turso Database overview](https://docs.turso.tech/introduction)
+- [Turso database repository and changelog](https://github.com/tursodatabase/turso)
+- [Turso releases](https://github.com/tursodatabase/turso/releases)

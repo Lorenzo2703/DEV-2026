@@ -1,0 +1,70 @@
+---
+title: OpenTofu
+summary: Provision infrastructure with versioned configuration and protected state.
+category: iac-platform
+maturity: stable
+radar: adopt
+toolVersion: 1.13.9
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://opentofu.org/docs/
+repo: https://github.com/opentofu/opentofu
+license: MPL-2.0
+pricing: free
+difficulty: advanced
+alternatives: [terraform, pulumi]
+related: []
+tags: [iac, infrastructure, state]
+---
+
+## What it is, when to use it, when not to
+
+OpenTofu is an infrastructure-as-code tool that plans and applies declarative changes. Use it when a reviewed plan and reusable configuration help manage infrastructure; avoid applying changes without understanding state and provider behavior.
+
+## Prerequisites and versions
+
+This guide covers OpenTofu **1.13.9**. Pin the CLI and provider versions and choose a remote state backend with locking and recovery support.
+
+## Install and minimal setup
+
+Install the official CLI, initialize a small project, and inspect its plan before creating any resources.
+
+## Correct implementation
+
+Keep state encrypted and access-controlled, pin providers and modules, and review plans through code review. Separate environments without copying state files manually.
+
+## Integrate with the rest of the stack
+
+Run formatting, validation, and plan review in CI; store credentials in the CI secret manager and use short-lived cloud identity when supported.
+
+## Test it
+
+Validate configurations and provider behavior in an isolated account; test state recovery and lock behavior before production use.
+
+## Security and performance
+
+Treat state as sensitive because it may contain resource attributes and secrets. Restrict backend access and review provider provenance.
+
+## Common mistakes
+
+Avoid committing state, applying unreviewed plans, and allowing concurrent state writers without locking.
+
+## Observability
+
+Record plan and apply outcomes, drift checks, state-backend health, and provider errors.
+
+## Upgrade and migration notes
+
+Review release notes and provider constraints; test migrations and state changes against a backup.
+
+## Alternatives
+
+[Terraform](/tools/iac-platform/terraform/) shares much of the workflow but differs in licensing and ecosystem details; Pulumi uses general-purpose languages.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [OpenTofu documentation](https://opentofu.org/docs/)
+- [OpenTofu 1.13.9 release](https://github.com/opentofu/opentofu/releases/tag/v1.13.9)
+- [OpenTofu license](https://github.com/opentofu/opentofu/blob/main/LICENSE)

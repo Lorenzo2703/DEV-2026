@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">An application behind a protected gateway</title>
+  <desc id="desc">Original illustration of a browser, an identity shield, and private services connected through an HTTPS gateway.</desc>
+  <defs>
+    <linearGradient id="background" x2="1" y2="1">
+      <stop stop-color="#101923"/>
+      <stop offset="1" stop-color="#173642"/>
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#9de3ef" stroke-opacity=".08"/>
+    </pattern>
+  </defs>
+  <rect width="1200" height="560" rx="24" fill="url(#background)"/>
+  <rect width="1200" height="560" rx="24" fill="url(#grid)"/>
+  <g fill="none" stroke="#9de3ef" stroke-width="3">
+    <path d="M330 285H490M710 285H855M600 210V150" stroke-dasharray="8 10"/>
+    <circle cx="410" cy="285" r="7" fill="#9de3ef"/>
+    <circle cx="780" cy="285" r="7" fill="#9de3ef"/>
+  </g>
+  <g>
+    <rect x="80" y="190" width="250" height="190" rx="14" fill="#18212f" stroke="#9de3ef" stroke-width="2"/>
+    <path d="M80 228H330" stroke="#9de3ef"/>
+    <g fill="#9de3ef"><circle cx="103" cy="209" r="4"/><circle cx="119" cy="209" r="4"/><circle cx="135" cy="209" r="4"/></g>
+    <rect x="104" y="252" width="70" height="102" rx="5" fill="#173642"/>
+    <rect x="194" y="252" width="111" height="16" rx="4" fill="#9de3ef"/>
+    <rect x="194" y="284" width="85" height="9" rx="4" fill="#bbc8d5"/>
+    <rect x="194" y="305" width="111" height="9" rx="4" fill="#bbc8d5"/>
+    <rect x="194" y="337" width="65" height="17" rx="4" fill="#9de3ef"/>
+  </g>
+  <g>
+    <path d="M600 56L657 77V115C657 154 628 177 600 188C572 177 543 154 543 115V77Z" fill="#173642" stroke="#9de3ef" stroke-width="3"/>
+    <path d="M580 119L594 133L625 99" fill="none" stroke="#9de3ef" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="490" y="210" width="220" height="150" rx="16" fill="#18212f" stroke="#9de3ef" stroke-width="2"/>
+    <rect x="576" y="253" width="48" height="42" rx="6" fill="#9de3ef"/>
+    <path d="M586 253V241A14 14 0 01614 241V253" fill="none" stroke="#9de3ef" stroke-width="5"/>
+    <circle cx="600" cy="271" r="4" fill="#18212f"/>
+    <path d="M600 275V282" stroke="#18212f" stroke-width="3"/>
+  </g>
+  <g fill="#18212f" stroke="#9de3ef" stroke-width="2">
+    <rect x="855" y="190" width="245" height="52" rx="9"/>
+    <rect x="855" y="260" width="245" height="52" rx="9"/>
+    <rect x="855" y="330" width="245" height="52" rx="9"/>
+  </g>
+  <g fill="#9de3ef"><circle cx="880" cy="216" r="6"/><circle cx="880" cy="286" r="6"/><circle cx="880" cy="356" r="6"/></g>
+  <g fill="#f2f6fa" font-family="Segoe UI, sans-serif" text-anchor="middle">
+    <text x="205" y="427" font-size="23">Application</text>
+    <text x="600" y="330" font-size="22">HTTPS gateway</text>
+    <text x="985" y="223" font-size="18">API</text>
+    <text x="985" y="293" font-size="18">Data</text>
+    <text x="985" y="363" font-size="18">Operations</text>
+    <text x="978" y="427" font-size="23">Private services</text>
+    <text x="600" y="507" font-size="18" fill="#bbc8d5">One identity provider. One backend. Optional complexity.</text>
+  </g>
+</svg>

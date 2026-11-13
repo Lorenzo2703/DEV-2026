@@ -1,0 +1,216 @@
+---
+title: Spring Boot
+summary: Build a stateless Java API with validated DTOs, issuer-and-audience-checked JWTs, safe errors, restricted Actuator endpoints, and real HTTP tests.
+category: backend-apis
+maturity: stable
+radar: adopt
+toolVersion: "4.1.2"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://docs.spring.io/spring-boot/
+repo: https://github.com/spring-projects/spring-boot
+license: Apache-2.0
+pricing: free
+difficulty: intermediate
+alternatives: [fastapi, fastify]
+related: [angular, keycloak, traefik, postgresql, github-actions, mise, opentelemetry, signoz]
+tags: [java, spring, api, oauth2, validation, security]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import build from '../../../../snippets/spring-boot/pom.xml?raw';
+import application from '../../../../snippets/spring-boot/src/main/java/dev/handbook/Application.java?raw';
+import controller from '../../../../snippets/spring-boot/src/main/java/dev/handbook/GreetingController.java?raw';
+import security from '../../../../snippets/spring-boot/src/main/java/dev/handbook/SecurityConfig.java?raw';
+import errors from '../../../../snippets/spring-boot/src/main/java/dev/handbook/ApiErrors.java?raw';
+import config from '../../../../snippets/spring-boot/src/main/resources/application.properties?raw';
+import environment from '../../../../snippets/spring-boot/.env.example?raw';
+import tests from '../../../../snippets/spring-boot/src/test/java/dev/handbook/ApplicationTest.java?raw';
+import windowsVerify from '../../../../snippets/spring-boot/verify.ps1?raw';
+import shellVerify from '../../../../snippets/spring-boot/verify.sh?raw';
+
+## What it is, when to use it, when not to
+
+Spring Boot assembles a Spring application with dependency-managed starters, configuration-driven defaults, an embedded server, and operational endpoints. It does not replace Spring Security, design your domain, or decide which users may access a record.
+
+Use it for Java business APIs when your team benefits from the Spring ecosystem, explicit service boundaries, validation, and established operational tooling. The recommendation here is **stable / adopt for JVM APIs**, not “every application needs Spring.” Spring MVC is a straightforward starting point for a conventional request/response service.
+
+Do not add a JVM service to a static site just to use the framework. Prefer [FastAPI](/tools/backend-apis/fastapi/) for a Python-first service or [Fastify](/tools/backend-apis/fastify/) for a Node.js-first team when those ecosystems already solve your requirements. Reactive programming is not a free performance upgrade.
+
+## Prerequisites and versions
+
+- **Verified framework:** Spring Boot **4.1.2**, released as the latest stable version when checked on **2026-11-13**.
+- **Boot compatibility:** Java **17–27**, Spring Framework **7.0.10 or later**, Maven **3.6.3 or later**; supported Gradle versions include **8.14+ and 9.x**. Use Boot's dependency management rather than independently upgrading its framework libraries.
+- **This runnable sample:** a full **JDK 21**, not only a JRE. It was compiled and tested locally with **Java 21.0.12**. The Maven wrapper pins **3.10.0** and checks the distribution's SHA-256 before a fresh installation.
+- **Web stack:** Spring MVC with Boot's embedded Tomcat. Boot 4 uses the Servlet **6.1** baseline; a legacy Servlet container is not interchangeable.
+- **Live authentication:** a reachable HTTPS OpenID Connect issuer, its public signing keys, and an access token issued for your API audience with the required scope.
+
+The local tests need no Docker, database, running Keycloak, or saved private key. They start a real embedded API server and a small discovery/JWKS fixture, generate temporary RSA keys, and send signed tokens over HTTP. Network access is needed for the first Maven and dependency download.
+
+## Install and minimal setup
+
+Start from this repository's **`snippets/spring-boot/` directory**. Set `JAVA_HOME` to your installed JDK if the wrapper cannot find it. You do not need a global Maven installation, Bun, or mise to run the standalone Java sample.
+
+For a first working run, execute `.\verify.ps1` from PowerShell, or `sh ./verify.sh` from a POSIX shell. These scripts run Maven's `verify` lifecycle: compile application and tests, execute the HTTP tests, and package an executable JAR. The initial dependency download determines whether this fits into five minutes.
+
+<CodeTabs id="spring-boot-verify" label="Verify the Spring Boot sample" items={[
+  { label: 'PowerShell', language: 'powershell', code: windowsVerify },
+  { label: 'POSIX shell', language: 'bash', code: shellVerify },
+]} />
+
+For a new application rather than this sample, generate a Maven/Java project with **Spring Web, Validation, OAuth2 Resource Server, and Actuator**. Review the generated build against the installed Boot release. In Boot 4, use the explicit web MVC and security OAuth2 starter names below; several older starter aliases are deprecated.
+
+<CodeTabs id="spring-boot-build" label="Dependency-managed Spring Boot build" items={[
+  { label: 'pom.xml', language: 'xml', code: build },
+]} />
+
+To start the packaged application, provide real `OIDC_ISSUER` and `OIDC_AUDIENCE` environment variables, then run `java -jar target/spring-boot-snippet-1.0.0.jar`. The sample listens on loopback at port **8080**. `GET /actuator/health` is public; `POST /api/greetings` requires a bearer access token and `greetings:write`. No login form or token-issuing endpoint is included.
+
+## Correct implementation
+
+### Keep bootstrap, HTTP boundaries, security, and errors separate
+
+The application class sits in `dev.handbook`, above its controllers and configuration, so component scanning includes them. For a larger application, group related features into packages and keep business rules in services rather than growing a controller into a workflow engine. Inject dependencies through constructors; do not construct repositories or remote clients inside endpoint methods.
+
+<CodeTabs id="spring-boot-application" label="Spring Boot application and HTTP contract" items={[
+  { label: 'Application.java', language: 'java', code: application },
+  { label: 'GreetingController.java', language: 'java', code: controller },
+]} />
+
+The request contract is a JSON object with a `name` string: nonblank and at most **80 UTF-16 code units before trimming**, not 80 grapheme clusters. A successful response has exactly `message` and `subject`; the subject comes from the authenticated token, never from a browser-supplied user ID.
+
+`@Valid` triggers validation of the request record. Java types alone do not reject blank strings, and `@Valid` alone is not a constraint. Here the constraints are `@NotBlank` and `@Size`. This is not a user-registration policy or a Unicode-normalization algorithm.
+
+### Validate the token and authorize the operation
+
+The resource server uses Boot's **automatic JWT decoder**, not a custom decoder that accidentally drops issuer or timestamp checks. Configuration supplies the canonical issuer, intended audience, and an explicit **RS256** algorithm policy.
+
+Spring Security maps the token's scope claim to `SCOPE_` authorities, so `greetings:write` becomes `SCOPE_greetings:write`. Authentication without that authority returns **403**; missing or invalid authentication returns **401**. All other routes are denied.
+
+<CodeTabs id="spring-boot-security" label="Bearer-only stateless API security" items={[
+  { label: 'SecurityConfig.java', language: 'java', code: security },
+  { label: 'application.properties', language: 'properties', code: config },
+  { label: '.env.example', language: 'dotenv', code: environment },
+]} />
+
+**CSRF boundary:** this chain disables CSRF only for an API that accepts explicitly supplied bearer headers, does not use authentication cookies, HTTP Basic, or form login, and creates no session. Do not copy that choice into a browser application whose credentials are sent automatically. If you add cookie-based authentication or a backend-for-frontend, redesign the security chain and restore the appropriate CSRF protection.
+
+Replace the example issuer with the provider's exact published issuer, including its realm path. The backend must reach discovery and JWKS through trusted DNS/TLS. `OIDC_AUDIENCE` is the API's audience value, not automatically the Angular client's identifier. Configure your provider to issue matching access tokens; ID tokens are not API access tokens.
+
+The `.env.example` file documents values; **Spring Boot does not automatically load it**. Supply environment variables through your shell, IDE, container, or deployment secret store. Missing required values are a configuration failure, not a reason to bypass authentication.
+
+**Scopes are not object ownership.** Before adding `/projects/{id}`, resolve membership using the verified identity and enforce it in the service/database query. Deny access before returning the record. Include the issuer in identity mapping when accepting multiple issuers, define your required subject-claim contract, and test cross-user and cross-tenant access.
+
+### Return safe, explicit errors
+
+The advice handles two known client-error paths: invalid DTOs and unreadable JSON. Both return **400** with an RFC **9457** problem response, not a success-shaped fallback. Neither sends back the rejected input, parser internals, or a stack trace.
+
+<CodeTabs id="spring-boot-errors" label="Safe validation and JSON errors" items={[
+  { label: 'ApiErrors.java', language: 'java', code: errors },
+]} />
+
+Do not add a catch-all that translates every exception into 200 or 400. Unexpected failures remain server errors; report them through your standard redacted logs and incident tooling. Authentication failures occur in the security filter chain, so this MVC advice does not turn every 401/403 into a problem document.
+
+### Add persistence only when there is persistent state
+
+This sample intentionally has no repository or database. A real business API should define its transaction boundaries, schema migrations, paging limits, and record-level permissions before adding persistence. Do not return JPA entities directly as public response contracts.
+
+For relational business data, start with [PostgreSQL](/tools/data/postgresql/) when it fits the access patterns. Bound connection pools against the database's total connection budget, including all replicas. Cache only measured bottlenecks; a cache must not become an alternate authorization source.
+
+## Integrate with the rest of the stack
+
+- **[Angular](/tools/frontend/angular/):** render explicit loading, success, and error states; attach an access token only to the intended API. The backend still validates and authorizes every protected request.
+- **[Keycloak](/tools/auth/keycloak/):** configure the issuer, API audience, and scopes. Nested realm/client roles do not automatically become the required Spring authorities; implement and test a deliberate mapping if you choose roles instead of scopes. Do not install a legacy Keycloak-specific Spring adapter.
+- **[Traefik](/tools/deployment/traefik/):** terminate HTTPS, preserve the agreed `/api` routing, and keep the backend private. Forwarded headers are a trust decision, not a reason to accept headers from arbitrary clients.
+- **[GitHub Actions](/tools/ci-cd/github-actions/):** install a supported JDK, run the committed Maven wrapper, execute tests, package once, and promote that artifact after staging checks. Keep deployment credentials out of pull-request jobs.
+- **[mise](/tools/package-management/mise/):** optional for a mixed Java/Node.js toolchain. The Maven wrapper already owns Maven's version; do not introduce a second conflicting pin.
+
+See the [Angular + Keycloak application platform blueprint](/blueprints/angular-keycloak-platform/) for the larger trust-boundary design and optional data/observability choices. A tested standalone API does **not** establish compatibility of the entire blueprint.
+
+## Test it
+
+The checked-in suite uses `@SpringBootTest` with **`RANDOM_PORT`**, JDK `HttpClient`, and real RSA-signed JWTs. It does not replace the security chain with a mocked principal or install a test-only decoder: discovery, signature verification, issuer, audience, and timestamp behavior exercise the application's configured resource server.
+
+The **12 test cases** cover:
+
+- A successful greeting with the exact response shape, trimmed name, token subject, and no session cookie.
+- Missing authentication and a token lacking the write scope.
+- Wrong issuer, wrong audience, expired token, future `nbf`, and an untrusted signing key.
+- Blank names, the **80 accepted / 81 rejected** length boundary, and malformed JSON.
+- A status-only public health response and denied access to another management endpoint.
+
+<CodeTabs id="spring-boot-tests" label="Real HTTP and JWT regression tests" items={[
+  { label: 'ApplicationTest.java', language: 'java', code: tests },
+]} />
+
+Run the verification script shown above. In this handbook's CI, the existing snippet runner also calls this package's `typecheck` and `run` scripts; Java setup is explicit rather than relying on the runner image's incidental JDK.
+
+**What this proves:** the sample boots, serves actual HTTP requests, applies its real security configuration, and returns the asserted responses. **What it does not prove:** a live Keycloak login/refresh/logout flow, signing-key rotation during requests, proxy/TLS behavior, database authorization, or deployment readiness. Add those tests at the relevant integration boundary before production.
+
+## Security and performance
+
+1. **Keep credentials out of the API payload and logs.** The backend verifies public signing keys; it does not need the identity provider's signing private key. Never log bearer headers, cookies, or raw request bodies.
+2. **Protect management twice.** Endpoint exposure and authorization are separate controls. The sample exposes only health and returns no component details. Boot 4.1's automatically enabled probe groups are explicitly disabled here because this local sample promises only the root status endpoint. For deployment, re-enable and securely route liveness/readiness probes; do not blindly publish all of `/actuator`.
+3. **Do not confuse string validation with a request-size limit.** `@Size(max = 80)` runs after JSON parsing. Enforce a bounded JSON body at the trusted edge and verify **413** behavior through that deployment. The sample does not configure or test a byte-level body cap.
+4. **Bound work, not just requests.** Set explicit downstream timeouts, pagination limits, and pool budgets when adding clients or persistence. Measure p95/p99 latency, memory, garbage collection, and saturation before adding Redis or switching programming models.
+5. **Trust proxy headers only from the proxy.** A loopback-only listener is useful for local development, not a container deployment recipe. Intentionally change the bind address for the deployment network and keep it unreachable from public clients except through the gateway.
+6. **Coordinate shutdown.** Graceful shutdown is enabled by default in this Boot generation. The sample sets a **20-second** shutdown-phase budget; your platform must stop routing new work and allow enough termination time. This is configuration, not a measured shutdown guarantee.
+
+For live identity integration, test behavior during discovery/JWKS outages and signing-key rotation. Do not disable validation or serve protected data as a fallback when authentication infrastructure fails.
+
+## Common mistakes
+
+- **Pinning every Spring dependency independently:** defeats the tested dependency set provided by the Boot parent/BOM.
+- **Copying Boot 3 starter/import names without checking Boot 4:** ignores the newer modular layout and deprecated aliases.
+- **Accepting any signed token from the issuer:** a token issued for another audience must not authorize this API.
+- **Treating realm roles as Spring scopes:** the claim layout and authority conversion differ.
+- **Disabling CSRF because “REST is stateless”:** stateless cookie or Basic authentication can still involve automatically supplied browser credentials.
+- **Using `@Valid` without constraints:** activates validation of a model that may have nothing to validate.
+- **Changing tests to use a mocked JWT to avoid a decoder failure:** hides a broken production authentication path.
+- **Publishing every Actuator endpoint:** may expose configuration or enable administrative operations.
+- **Calling the sample production-ready:** there is no persistence, per-record authorization, proxy test, or live identity flow here.
+
+## Observability
+
+Begin with redacted application logs and health checks. Track request count, error rate, duration, resource saturation, and dependency failures with an owner and an actionable alert policy.
+
+Boot's observability integrates with **Micrometer Observation**. Prefer the documented Boot-managed metrics/tracing integration rather than assembling unrelated library versions. The checked-in sample does **not** export metrics or traces and denies public management endpoints other than health.
+
+[OpenTelemetry](/tools/observability/opentelemetry/) and [SigNoz](/tools/observability/signoz/) are useful when correlated traces, metrics, and logs solve a real investigation gap. Choose one instrumentation path deliberately to avoid duplicate spans; test trace propagation through the gateway and downstream calls.
+
+Use low-cardinality dimensions such as route templates and status classes for metrics. Do not use raw URLs, user IDs, email addresses, or tokens as metric labels. Micrometer distinguishes low-cardinality attributes used for metrics/traces from high-cardinality attributes used only for traces; privacy requirements still apply to both.
+
+## Upgrade and migration notes
+
+Read the target release notes and Spring Boot's migration guide before changing the parent version. For an existing Boot 3 application, the documented path starts with the latest **3.5.x**, removal of deprecated APIs, and then the Boot 4 changes. Review starter/module changes, package moves, the Jakarta/Servlet baseline, and JSON-library integration rather than assuming a parent-version edit is sufficient.
+
+Do not upgrade Java and every framework dependency in one unexplained jump. Establish a passing baseline, change one compatibility boundary at a time, and rerun HTTP contracts, authorization failures, migrations, and deployment health checks.
+
+For this sample, update the Boot parent deliberately and verify its managed libraries. Update the Maven wrapper and distribution checksum together when changing Maven. Keep test-runtime warnings under review instead of treating compatibility with every newer JDK as proven by a successful JDK 21 run.
+
+An exit path should preserve the API contract and domain rules independently of controllers. Replacing the framework does not remove the need to revalidate authentication, transactions, operational behavior, and clients.
+
+## Alternatives
+
+- **[FastAPI](/tools/backend-apis/fastapi/):** a natural choice for Python-oriented teams, especially when the service shares that ecosystem. Compare deployment, concurrency, typing, and identity integration using your workload.
+- **[Fastify](/tools/backend-apis/fastify/):** useful for a Node.js team seeking schema-driven HTTP APIs and plugin boundaries. Keep server runtime and plugin compatibility explicit.
+- **A smaller Java service or no additional service:** reasonable when you do not need Spring's integration ecosystem. Avoid introducing a separately operated backend for a feature your existing platform already handles.
+
+Prefer the stack your team can test and operate. Neither Spring Boot nor its alternatives automatically provide multi-tenant authorization or production observability.
+
+## Sources
+
+Official documentation and release information accessed **2026-11-13**:
+
+- [Spring Boot 4.1.2 release](https://github.com/spring-projects/spring-boot/releases/tag/v4.1.2) and [system requirements](https://docs.spring.io/spring-boot/system-requirements.html).
+- [Build systems and starters](https://docs.spring.io/spring-boot/reference/using/build-systems.html).
+- [Spring Security JWT resource server](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html).
+- [Spring Security CSRF protection](https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html).
+- [Spring MVC request validation](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html) and [REST error responses](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html).
+- [External configuration](https://docs.spring.io/spring-boot/reference/features/external-config.html).
+- [Testing Spring Boot applications](https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html).
+- [Actuator endpoints and probes](https://docs.spring.io/spring-boot/reference/actuator/endpoints.html).
+- [Graceful shutdown](https://docs.spring.io/spring-boot/reference/web/graceful-shutdown.html) and [observability](https://docs.spring.io/spring-boot/reference/actuator/observability.html).
+- [Spring Boot 4.0 migration guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide).
+- [Maven downloads](https://maven.apache.org/download.cgi), [Maven Wrapper](https://maven.apache.org/tools/wrapper/), and [wrapper generation options](https://maven.apache.org/tools/wrapper/maven-wrapper-plugin/wrapper-mojo.html).
+- [Spring Boot license](https://github.com/spring-projects/spring-boot/blob/v4.1.2/LICENSE.txt).

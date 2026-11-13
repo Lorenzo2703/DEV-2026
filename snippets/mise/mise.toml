@@ -1,0 +1,6 @@
+[tools]
+node = "22.23.4"
+
+[tasks.verify]
+description = "Run the example checks"
+run = "node --test verify.test.mjs"

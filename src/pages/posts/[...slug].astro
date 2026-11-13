@@ -1,0 +1,10 @@
+---
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('guides', ({ data }) => !data.draft && data.publishedAt);
+  return posts.map((entry) => ({ params: { slug: entry.id } }));
+}
+
+return Astro.redirect(`/guides/${Astro.params.slug}/`);
+---

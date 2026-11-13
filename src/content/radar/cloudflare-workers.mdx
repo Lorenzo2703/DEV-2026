@@ -1,0 +1,20 @@
+---
+title: Cloudflare Workers static assets
+summary: Trial this hosting path for the handbook while retaining static output and a provider exit path.
+status: trial
+tools:
+  - deployment/cloudflare
+verifiedAt: 2026-11-13
+---
+
+## Decision
+
+Cloudflare Workers static assets is a trial deployment target, not a requirement of the content architecture. The site should remain a static build that can be moved to another host.
+
+## Why
+
+The [Cloudflare guide](/tools/deployment/cloudflare/) covers Wrangler configuration, dry runs, credentials, and deployment checks. The [static handbook blueprint](/blueprints/static-handbook/) keeps the generated output separate from provider-specific configuration.
+
+## Revisit when
+
+Review current platform limits, account controls, and pricing before relying on the service for production traffic. Verify the deployed domain and assets after each release; a dry run is not a live deployment.

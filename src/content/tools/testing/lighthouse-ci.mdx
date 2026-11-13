@@ -1,0 +1,79 @@
+---
+title: Lighthouse CI
+summary: Track repeatable Lighthouse measurements and gate regressions with carefully chosen assertions.
+category: testing
+maturity: stable
+radar: trial
+toolVersion: "0.16.1"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://googlechrome.github.io/lighthouse-ci/
+repo: https://github.com/GoogleChrome/lighthouse-ci
+license: Apache-2.0
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [github-actions, playwright]
+tags: [performance, ci, lighthouse]
+---
+
+## What it is, when to use it, when not to
+
+Lighthouse CI collects Lighthouse reports, compares them, and can assert against configured budgets. Use it to catch performance trends in CI, not as a substitute for real-user measurements.
+
+Avoid brittle gates based on one noisy run or on a composite score alone.
+
+## Prerequisites and versions
+
+This guide covers Lighthouse CI **0.16.1**. Run the CLI after building the same production artifact you plan to deploy. If you self-host the report server, its current deployment guide requires Node.js 22 LTS and persistent SQLite, MySQL, or PostgreSQL storage.
+
+## Install and minimal setup
+
+Add `@lhci/cli` as a development dependency, pin it in the lockfile, and configure collection, assertions, and report upload in a Lighthouse CI configuration file. Run `lhci autorun` after the production build for the default collect/assert/upload workflow. Use separate configuration for a static build directory versus an application that needs its own server command.
+
+## Correct implementation
+
+Audit representative routes from the production build. Use `staticDistDir` for static output or `startServerCommand` for an application server; do not point both at different versions of the site. Collect multiple runs per URL (the default is three) to reduce run-to-run noise.
+
+Start with the `lighthouse:recommended` assertions preset, then add a small set of explicit audit or metric thresholds that reflect user impact. Use `warn` while establishing a baseline and promote stable, actionable checks to `error`. Resource budgets can be checked with a budgets file. Avoid gating solely on the composite performance score: lab results vary with runner load, browser state, and network conditions.
+
+## Integrate with the rest of the stack
+
+Run after the production build in CI, such as [GitHub Actions](/tools/ci-cd/github-actions/), and audit the same artifact used by deployment. Choose the upload target deliberately: filesystem output is useful for local review, temporary public storage is convenient but report links are visible to anyone who has them and expire after a few days, while a self-hosted LHCI server provides longer-lived history and access control.
+
+## Test it
+
+Run collection and assertions against a repeatable preview, inspect the underlying reports, and confirm a deliberate threshold violation fails the job. Compare the same routes and build environment over time; use real-user data separately to validate whether lab trends reflect production experience.
+
+## Security and performance
+
+Keep upload credentials in CI secrets and restrict their access. Never put an LHCI admin token in CI; the build token is sufficient for uploads. The self-hosted server allows anyone with HTTP access to view and create data by default, so protect the server at the network or authentication layer. Treat reports as potentially sensitive: temporary public storage exposes them to anyone with the link.
+
+## Common mistakes
+
+- Single-run scores fluctuate with machine and network conditions.
+- A score-only threshold can conceal regressions in the metrics users experience.
+- Testing a different artifact from the one deployed weakens the result.
+
+## Observability
+
+Retain report history and compare trends with field data such as Core Web Vitals. Investigate repeatable user-impacting changes rather than optimizing an isolated score.
+
+## Upgrade and migration notes
+
+Review Lighthouse CI and Lighthouse release notes for changes to collection, report storage, and assertions. Rebaseline only after understanding changed measurements and preserving the same route set and production build conditions.
+
+## Alternatives
+
+Real-user monitoring provides field context; browser performance tests can target specific user flows. Use lab checks for repeatable diagnostics and field data for actual experience.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Lighthouse CI documentation](https://googlechrome.github.io/lighthouse-ci/)
+- [Lighthouse CI 0.16.1 release](https://github.com/GoogleChrome/lighthouse-ci/releases/tag/v0.16.1)
+- [Getting started](https://googlechrome.github.io/lighthouse-ci/docs/getting-started.html)
+- [Configuration](https://googlechrome.github.io/lighthouse-ci/docs/configuration.html)
+- [LHCI Server deployment and security](https://googlechrome.github.io/lighthouse-ci/docs/server.html)
+- [Lighthouse CI license](https://github.com/GoogleChrome/lighthouse-ci/blob/main/LICENSE)

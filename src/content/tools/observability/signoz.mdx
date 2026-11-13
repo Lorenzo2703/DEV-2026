@@ -1,0 +1,72 @@
+---
+title: SigNoz
+summary: Collect traces, metrics, and logs in one observability workflow.
+category: observability
+maturity: stable
+radar: trial
+toolVersion: 0.150.0
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://signoz.io/docs/introduction/
+license: MIT (core; EE separately licensed)
+pricing: mixed
+difficulty: advanced
+related: [opentelemetry]
+tags: [observability, opentelemetry, tracing]
+draft: false
+---
+
+## What it is, when to use it, when not to
+
+SigNoz is an observability platform for traces, metrics, and logs, built around OpenTelemetry. Choose it when a unified telemetry backend fits your workflow; avoid self-hosting if your team cannot operate the storage and ingestion stack.
+
+## Prerequisites and versions
+
+This guide covers SigNoz **0.150.0** for self-hosted installations. SigNoz Cloud is managed and updated by the provider. The core repository is MIT-licensed; enterprise components have separate licensing. Community self-hosting is free, while Cloud and enterprise options are paid.
+
+## Install and minimal setup
+
+Choose SigNoz Cloud or the supported self-hosted setup. For a local or single-machine trial, follow the Docker Standalone guide; for managed installations, use Foundry rather than the deprecated repository-bundled deployment files. Instrument one service with OpenTelemetry and verify a trace before onboarding production traffic.
+
+## Correct implementation
+
+Start with service-level RED metrics, traces, and actionable logs. Use OpenTelemetry semantic conventions and bounded attributes. Protect ingestion and administrative endpoints, set retention deliberately, and keep secrets and high-cardinality identifiers out of telemetry.
+
+## Integrate with the rest of the stack
+
+Prefer OpenTelemetry SDKs and collectors so application instrumentation is not tied to SigNoz. Validate exporters, collectors, and backend versions together, and avoid duplicating collection when another agent already exports the same signals.
+
+## Test it
+
+Verify that a known request produces correlated traces, metrics, and logs, and that a controlled error is discoverable. Check ingestion and query behavior with representative attributes and volume before adding production services.
+
+## Security and performance
+
+Restrict network access to ingestion and administration, use supported authentication and TLS configurations, and review sensitive data handling. Estimate disk, memory, and query costs from representative traffic; self-hosting transfers capacity planning and backups to your team.
+
+## Common mistakes
+
+Avoid unbounded attributes, leaving test telemetry in production dashboards, or assuming that a green dashboard proves every service is instrumented. Do not use the deprecated `install.sh` or bundled `deploy/` Compose files for new deployments.
+
+## Observability
+
+Track ingestion failures, missing telemetry, query latency, storage growth, and backend health.
+
+## Upgrade and migration notes
+
+Check the release notes and backup/restore guidance before upgrading. Review storage and schema migration notices: recent releases have included log-storage changes that temporarily require additional disk capacity and API schema migrations.
+
+## Alternatives
+
+Prometheus and Grafana provide a composable metrics stack; commercial observability services may reduce operating effort. Compare signal coverage and total cost.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [SigNoz documentation](https://signoz.io/docs/introduction/)
+- [SigNoz 0.150.0 release](https://github.com/SigNoz/signoz/releases/tag/v0.150.0)
+- [SigNoz changelog](https://signoz.io/changelog/)
+- [Docker Standalone installation](https://signoz.io/docs/install/docker/)
+- [SigNoz pricing](https://signoz.io/pricing/)
+- [SigNoz core license](https://github.com/SigNoz/signoz/blob/main/LICENSE)

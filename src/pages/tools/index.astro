@@ -1,57 +1,92 @@
 ---
 import { getCollection } from 'astro:content';
+import registrySource from '../../../docs/tool-registry.md?raw';
 import ToolCard from '../../components/ToolCard.astro';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 
 const entries = await getCollection('tools', ({ data }) => !data.draft);
-entries.sort((a, b) => a.data.title.localeCompare(b.data.title));
-const filters = [
-  { key: 'category', label: 'Category' },
-  { key: 'maturity', label: 'Maturity' },
-  { key: 'radar', label: 'Radar' },
-  { key: 'pricing', label: 'Pricing' },
-  { key: 'difficulty', label: 'Difficulty' },
-] as const;
+const registryTools = [
+  ...registrySource.matchAll(/^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*`([^`]+)`\s*\|/gm),
+].map((match) => {
+  const [, category, title, slug] = match;
+  if (category === undefined || title === undefined || slug === undefined) {
+    throw new Error('A tool registry row is missing its category, title, or slug.');
+  }
+  return { category: category.trim(), title: title.trim(), slug };
+});
+const publishedEntries = new Map(entries.map((entry) => [entry.id, entry]));
+const catalog = registryTools.map((tool) => ({
+  ...tool,
+  entry: publishedEntries.get(`${tool.category}/${tool.slug}`),
+}));
+const registeredIds = new Set(catalog.map((tool) => `${tool.category}/${tool.slug}`));
+for (const entry of entries) {
+  if (!registeredIds.has(entry.id)) {
+    catalog.push({
+      category: entry.data.category,
+      title: entry.data.title,
+      slug: entry.id.slice(entry.id.lastIndexOf('/') + 1),
+      entry,
+    });
+  }
+}
+catalog.sort((a, b) => a.title.localeCompare(b.title));
+const categories = [...new Set(catalog.map((tool) => tool.category))].sort();
 ---
 
 <SiteLayout title="Tools" description="Source-verified implementation guides for software tools.">
-  <h1 class="text-4xl font-bold">Tool guides</h1>
+  <h1 class="text-4xl font-bold">All tools</h1>
   <p class="mt-4 max-w-2xl text-lg text-muted">
-    Practical setup and production guidance, with verified versions and runnable examples.
+    Browse all {catalog.length} tools in the registry. Published guides are linked; planned guides
+    are marked.
   </p>
   {
-    entries.length > 0 ? (
+    catalog.length > 0 ? (
       <>
       <form id="tool-filters" class="mt-10" hidden>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {filters.map(({ key, label }) => (
-            <label class="flex flex-col gap-2 font-semibold" for={`filter-${key}`}>
-              {label}
-              <select id={`filter-${key}`} name={key} class="rounded-lg border border-slate-400 bg-paper p-2 text-ink">
-                <option value="">All</option>
-                {[...new Set(entries.map((entry) => entry.data[key]))].sort().map((value) => (
-                  <option value={value}>{value.replaceAll('-', ' ')}</option>
-                ))}
-              </select>
+        <fieldset class="m-0 border-0 p-0">
+          <legend class="mb-3 font-semibold">Category</legend>
+          <div class="flex flex-wrap gap-2">
+            <label class="category-chip">
+              <input class="sr-only" type="radio" name="category" value="" checked />
+              <span>All</span>
             </label>
-          ))}
-        </div>
-        <div class="mt-4 flex flex-wrap items-center gap-4">
-          <button type="reset" class="rounded-lg border border-current px-4 py-2">Clear filters</button>
-          <p id="filter-count" role="status" aria-live="polite"></p>
-        </div>
+            {categories.map((category) => (
+              <label class="category-chip">
+                <input class="sr-only" type="radio" name="category" value={category} />
+                <span>{category.replaceAll('-', ' ')}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+        <p id="filter-count" class="mt-3 text-sm text-muted" role="status" aria-live="polite"></p>
       </form>
       <ul id="tool-list" class="mt-10 grid list-none gap-6 p-0 md:grid-cols-2">
-        {entries.map((entry) => (
-          <li data-tool data-category={entry.data.category} data-maturity={entry.data.maturity} data-radar={entry.data.radar} data-pricing={entry.data.pricing} data-difficulty={entry.data.difficulty}>
-            <ToolCard entry={entry} />
+        {catalog.map((tool) => (
+          <li
+            data-tool
+            data-category={tool.category}
+          >
+            {tool.entry ? (
+              <ToolCard entry={tool.entry} />
+            ) : (
+              <article class="rounded-xl border border-slate-300/70 bg-white/70 p-6 dark:border-slate-700 dark:bg-slate-900">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <p class="m-0 text-sm text-muted">{tool.category}</p>
+                  <span class="rounded-full bg-brand-soft px-3 py-1 text-sm font-semibold text-ink">
+                    Guide planned
+                  </span>
+                </div>
+                <h2 class="mt-4 text-2xl font-bold">{tool.title}</h2>
+              </article>
+            )}
           </li>
         ))}
       </ul>
       </>
     ) : (
       <p class="mt-10 rounded-xl border border-dashed border-slate-400 p-8 text-muted">
-        No tool guides have been published yet.
+        No tools have been added to the registry yet.
       </p>
     )
   }
@@ -60,26 +95,23 @@ const filters = [
 <script>
   const form = document.querySelector<HTMLFormElement>('#tool-filters');
   if (form) {
-    const selects = [...form.querySelectorAll<HTMLSelectElement>('select')];
+    const filterForm = form;
     const tools = [...document.querySelectorAll<HTMLElement>('[data-tool]')];
     const count = document.querySelector<HTMLElement>('#filter-count');
 
     function updateFilters() {
+      const selected = filterForm.querySelector<HTMLInputElement>('input[name="category"]:checked');
+      if (!selected) throw new Error('No category filter is selected.');
       let visible = 0;
       for (const tool of tools) {
-        const matches = selects.every((select) => !select.value || tool.dataset[select.name] === select.value);
+        const matches = !selected.value || tool.dataset.category === selected.value;
         tool.hidden = !matches;
         if (matches) visible++;
       }
-      if (count) count.textContent = `${visible} ${visible === 1 ? 'guide' : 'guides'} found.`;
+      if (count) count.textContent = `${visible} ${visible === 1 ? 'tool' : 'tools'} found.`;
     }
 
     form.addEventListener('change', updateFilters);
-    form.addEventListener('reset', (event) => {
-      event.preventDefault();
-      for (const select of selects) select.value = '';
-      updateFilters();
-    });
     updateFilters();
     form.hidden = false;
   }

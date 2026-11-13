@@ -1,0 +1,71 @@
+---
+title: Arize Phoenix
+summary: Inspect and evaluate AI application traces with an OpenTelemetry-oriented workflow.
+category: observability
+maturity: stable
+radar: trial
+toolVersion: 21.1.0
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://arize.com/docs/phoenix
+license: Elastic License 2.0 (ELv2)
+pricing: free-tier
+difficulty: intermediate
+related: [opentelemetry, langfuse]
+tags: [ai, observability, evaluation]
+draft: false
+---
+
+## What it is, when to use it, when not to
+
+Phoenix is an AI observability and evaluation platform for inspecting traces, evaluating outputs, and iterating on AI applications. Use it when AI-specific debugging and evaluation are needed; ordinary OpenTelemetry tracing may be enough for simpler services.
+
+## Prerequisites and versions
+
+This guide covers Arize Phoenix **21.1.0**. The self-hosted software is free under the Elastic License 2.0 (ELv2), which is source-available but not OSI-approved and restricts offering Phoenix as a hosted or managed service. Phoenix SDKs and clients are versioned separately.
+
+## Install and minimal setup
+
+Follow the official self-hosting or managed-service instructions for the intended environment. Connect a development application with supported OpenTelemetry instrumentation and verify the receiver endpoint and authentication before sending data.
+
+## Correct implementation
+
+Trace meaningful model, retrieval, and tool operations. Build evaluations from representative inputs and known failure cases, and treat scores as evidence for investigation rather than guarantees. Redact prompts and outputs before they leave the application boundary.
+
+## Integrate with the rest of the stack
+
+Use OpenTelemetry-compatible instrumentation and correlate traces with application request identifiers. Avoid duplicating collection if an existing backend already supports the required AI views; do not assume Phoenix license terms permit providing a hosted Phoenix service.
+
+## Test it
+
+Verify that a sample trace is received and that a known bad result can be found with the chosen evaluation workflow. Ensure the evaluation dataset is stable enough to make comparisons meaningful.
+
+## Security and performance
+
+Prompts, outputs, and retrieved documents may contain sensitive data. Limit access and retention, and consider the storage and processing cost of trace capture. Phoenix 21 enables authentication for non-loopback network listeners and binds to loopback by default; configure authentication before exposing the service.
+
+## Common mistakes
+
+Avoid recording raw production content without policy, comparing evaluations across inconsistent datasets, or treating a single score as proof of quality. Do not expose a Phoenix instance without access controls or operate it as a third-party hosted service under ELv2.
+
+## Observability
+
+Monitor ingestion, instrumentation coverage, evaluation throughput, and backend resource use.
+
+## Upgrade and migration notes
+
+Review Phoenix and client-library release notes together. Phoenix 21 changes network defaults and enables authentication by default for non-loopback listeners; check deployment health checks and client credentials when upgrading.
+
+## Alternatives
+
+Langfuse provides a related LLM tracing workflow. General-purpose tracing may be simpler when AI-specific evaluation is not required.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Arize Phoenix documentation](https://arize.com/docs/phoenix)
+- [Arize Phoenix 21.1.0 release](https://github.com/Arize-ai/phoenix/releases/tag/arize-phoenix-v21.1.0)
+- [Phoenix release notes](https://arize.com/docs/phoenix/release-notes)
+- [Phoenix license and self-hosting terms](https://arize.com/docs/phoenix/self-hosting/license)
+- [Phoenix license file](https://github.com/Arize-ai/phoenix/blob/main/LICENSE)

@@ -1,0 +1,192 @@
+---
+interface Props {
+  kind: 'architecture' | 'identity' | 'delivery';
+}
+
+const { kind } = Astro.props;
+const diagrams = {
+  architecture: {
+    title: 'Architecture: public edge, private services',
+    caption:
+      'Traefik routes traffic; the API authorizes access. Databases and management interfaces are not public routes.',
+    steps: [
+      ['Browser / Angular', 'Static application, forms, and an in-memory access token.'],
+      [
+        'Traefik / HTTPS',
+        'app.example.test serves the UI and /api; id.example.test serves public identity endpoints.',
+      ],
+      [
+        'Spring Boot OR FastAPI',
+        'Validate issuer, signature, lifetime, and API audience; enforce resource ownership.',
+      ],
+      [
+        'Application database',
+        'Supabase PostgreSQL OR MongoDB, if business data needs persistence.',
+      ],
+    ],
+    companions: [
+      [
+        'Keycloak',
+        'Separate identity service and its own supported relational database. Not the application database.',
+      ],
+      [
+        'Optional operations',
+        'Redis for measured caching needs; SigNoz for service telemetry; Sentry for browser errors.',
+      ],
+    ],
+  },
+  identity: {
+    title: 'Identity flow: authorization code + PKCE',
+    caption:
+      'Login is a browser redirect, not an API password exchange. Every protected API request still needs validation and authorization.',
+    steps: [
+      ['1 / Angular → Keycloak', 'The adapter starts login with PKCE and state protection.'],
+      [
+        '2 / Keycloak → Angular',
+        'After login, return an authorization code to the exact registered redirect URI.',
+      ],
+      [
+        '3 / Angular → Keycloak',
+        'The adapter exchanges the code with its verifier and keeps tokens in memory.',
+      ],
+      [
+        '4 / Angular → Traefik → API',
+        'Refresh before sending an access token to the allowed /api origin only.',
+      ],
+      [
+        '5 / API → database → Angular',
+        'Validate the token, check permission and ownership, then return the permitted data.',
+      ],
+    ],
+    companions: [],
+  },
+  delivery: {
+    title: 'Delivery: verify once, promote by digest',
+    caption:
+      'The same immutable images move from staging to production. Database compatibility determines whether an application rollback is safe.',
+    steps: [
+      [
+        'Pull request',
+        'Locked installs, frontend/backend tests, authorization cases, and dependency/image checks.',
+      ],
+      [
+        'Build',
+        'Compile Angular; package the chosen API; publish scanned images with the commit identity.',
+      ],
+      [
+        'Staging',
+        'Apply backward-compatible migrations; deploy image digests; test real login and proxy routing.',
+      ],
+      [
+        'Protected production',
+        'Approve, promote the tested digests, check health and error rates, then complete rollout.',
+      ],
+    ],
+    companions: [],
+  },
+};
+const diagram = diagrams[kind];
+---
+
+<figure class="stack-diagram" aria-label={diagram.title} data-stack-diagram={kind}>
+  <figcaption>
+    <strong>{diagram.title}</strong>
+    <span>{diagram.caption}</span>
+  </figcaption>
+  <ol class="stack-flow">
+    {diagram.steps.map(([title, detail], index) => (
+      <li class="stack-node" style={`--step: ${index}`} data-stack-node>
+        <strong>{title}</strong>
+        <span>{detail}</span>
+      </li>
+    ))}
+  </ol>
+  {diagram.companions.length > 0 && (
+    <ul class="stack-companions">
+      {diagram.companions.map(([title, detail]) => (
+        <li><strong>{title}</strong><span>{detail}</span></li>
+      ))}
+    </ul>
+  )}
+</figure>
+
+<style>
+  .stack-diagram {
+    margin: 2rem 0;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+    border-radius: 1rem;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    background: color-mix(in srgb, var(--color-brand-soft) 45%, var(--color-paper));
+  }
+  figcaption strong,
+  figcaption span,
+  li strong,
+  li span {
+    display: block;
+  }
+  figcaption strong {
+    font-size: 1.1rem;
+  }
+  figcaption span,
+  li span {
+    margin-top: 0.5rem;
+    line-height: 1.6;
+  }
+  .stack-flow,
+  .stack-companions {
+    padding: 0;
+    list-style: none;
+  }
+  .stack-flow {
+    display: grid;
+    gap: 1.75rem;
+    margin: 1.5rem 0 0;
+  }
+  .stack-node {
+    position: relative;
+    border: 1px solid color-mix(in srgb, var(--color-brand) 40%, transparent);
+    border-left: 4px solid var(--color-brand);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    background: var(--color-paper);
+  }
+  .stack-node:not(:last-child)::after {
+    position: absolute;
+    bottom: -1.5rem;
+    left: 1rem;
+    content: "↓";
+    color: var(--color-brand);
+    font-size: 1.25rem;
+    line-height: 1;
+  }
+  .stack-companions {
+    display: grid;
+    gap: 1rem;
+    margin: 1.5rem 0 0;
+    border-top: 1px dashed var(--color-muted);
+    padding-top: 1rem;
+  }
+  @media (min-width: 40rem) {
+    .stack-companions {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .stack-node {
+      animation: stack-arrive 600ms ease-out both;
+      animation-delay: calc(var(--step) * 120ms);
+    }
+    @keyframes stack-arrive {
+      from { opacity: 0; transform: translateY(0.5rem); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  }
+  @media print {
+    .stack-node {
+      animation: none;
+    }
+    .stack-diagram {
+      break-inside: avoid;
+    }
+  }
+</style>

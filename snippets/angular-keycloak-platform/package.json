@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "node --check verify.test.mjs",
+    "run": "node --test verify.test.mjs"
+  }
+}

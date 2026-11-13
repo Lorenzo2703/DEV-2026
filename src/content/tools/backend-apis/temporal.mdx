@@ -1,0 +1,75 @@
+---
+title: Temporal
+summary: Run long-lived business processes as durable workflows with explicit retries and version-safe changes.
+category: backend-apis
+maturity: stable
+radar: assess
+toolVersion: "1.25.0 (TypeScript SDK)"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://docs.temporal.io/
+repo: https://github.com/temporalio/sdk-typescript
+license: MIT
+pricing: mixed
+difficulty: advanced
+alternatives: []
+related: [nodejs, opentelemetry]
+tags: [workflow, orchestration, typescript]
+---
+
+## What it is, when to use it, when not to
+
+Temporal coordinates durable workflows that can wait, retry, and resume after failures. Use it for business processes that must continue across service or worker restarts.
+
+It adds a service and operational model; a normal request handler or simple queue may be enough for short-lived work.
+
+## Prerequisites and versions
+
+This guide covers the TypeScript SDK **1.25.0**. Temporal can be self-hosted or used through its paid cloud service.
+
+## Install and minimal setup
+
+Install matching `@temporalio/*` packages and connect a worker to a development or production Temporal service. Keep SDK package versions aligned.
+
+## Correct implementation
+
+Keep workflow code deterministic and put external side effects in Activities. Set timeouts and retry policies intentionally, make Activities idempotent where possible, and use the SDK's workflow versioning techniques for changes that affect running executions.
+
+## Integrate with the rest of the stack
+
+Use Temporal beside a service runtime such as [Node.js](/tools/languages-runtimes/nodejs/). Instrument workers and activities, and decide how workflow state and payloads are protected.
+
+## Test it
+
+Test workflow logic with time-skipping or test-environment support, then run representative workflows against the actual service deployment.
+
+## Security and performance
+
+Restrict namespace and worker credentials, encrypt sensitive payloads, and control retention and payload size. Durable histories are long-lived data, not transient logs.
+
+## Common mistakes
+
+- Nondeterministic workflow operations can break replay.
+- Retrying non-idempotent Activities may duplicate external effects.
+- Using durable orchestration for trivial work adds unnecessary infrastructure.
+
+## Observability
+
+Monitor workflow backlog, execution failures, task latency, worker health, and service capacity. Correlate workflow identifiers with application traces without putting sensitive values in identifiers.
+
+## Upgrade and migration notes
+
+Review TypeScript SDK release notes and workflow versioning guidance before changing code that may replay for existing executions.
+
+## Alternatives
+
+A queue with ordinary workers is simpler for short tasks. Consider Temporal when durable state, retries, and long-running coordination justify its operational cost.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Temporal documentation](https://docs.temporal.io/)
+- [TypeScript workflows](https://docs.temporal.io/develop/typescript/workflows)
+- [TypeScript SDK releases](https://github.com/temporalio/sdk-typescript/releases)
+- [Temporal Cloud pricing](https://temporal.io/pricing)

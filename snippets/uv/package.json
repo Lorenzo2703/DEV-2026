@@ -1,0 +1,9 @@
+{
+  "name": "uv-snippet",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "uv lock --check --offline && uv run --locked --offline python -m py_compile test_example.py",
+    "run": "uv run --locked --offline python -m unittest -v test_example"
+  }
+}

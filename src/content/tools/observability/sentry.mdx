@@ -1,0 +1,72 @@
+---
+title: Sentry
+summary: Capture application errors and performance signals with careful data filtering.
+category: observability
+maturity: stable
+radar: adopt
+toolVersion: 26.10.1 (self-hosted server; SDKs versioned separately)
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://docs.sentry.io/
+license: FSL-1.1-Apache-2.0 (web app); Apache-2.0 (other components)
+pricing: mixed
+difficulty: intermediate
+related: [opentelemetry]
+tags: [observability, errors, performance]
+draft: false
+---
+
+## What it is, when to use it, when not to
+
+Sentry is an application monitoring platform for errors, performance, and related telemetry. Use it when grouped issues and application context will speed diagnosis; avoid duplicate collection unless each system has a distinct workflow.
+
+## Prerequisites and versions
+
+The latest self-hosted Sentry server release verified for this guide is **26.10.1**; SDKs release independently and must match the runtime. Sentry Cloud is continuously managed. The web application uses the Functional Source License FSL-1.1-Apache-2.0, which is not OSI-approved and restricts competing commercial services; other components may use Apache-2.0.
+
+## Install and minimal setup
+
+Create a project for the target runtime, install its supported SDK, and configure the DSN through deployment settings. Start with error capture; add tracing, replay, or profiling only when those signals have a clear operational purpose. Choose Cloud or follow the supported self-hosted deployment guide.
+
+## Correct implementation
+
+Initialize the SDK early, attach release and environment context that match deployed artifacts, and configure filtering and sampling to match privacy policy. Scrub sensitive data before transmission and avoid sending credentials or raw request bodies.
+
+## Integrate with the rest of the stack
+
+Connect issues to source control and deployment workflows where useful. Ensure release identifiers and source maps match the shipped artifacts, and correlate Sentry events with existing OpenTelemetry traces where appropriate.
+
+## Test it
+
+Trigger a controlled development error and verify grouping, source context, release attribution, and filtering. Confirm that a test event does not include fields prohibited by your data policy.
+
+## Security and performance
+
+Review event scrubbing, source-map access, user-data capture, and project permissions. Keep upload tokens out of browser bundles; use a restricted token in build systems. Sampling and replay settings affect privacy, volume, and cost.
+
+## Common mistakes
+
+Avoid exposing upload credentials in client bundles, uploading unprotected source maps, or assuming an event's absence means an error did not occur. Sentry's FSL web-app license is not an OSI open-source license; review the terms before redistributing or offering a competing service.
+
+## Observability
+
+Monitor event ingestion, SDK failures, issue volume, and alert delivery. Tune alerts to page on actionable impact.
+
+## Upgrade and migration notes
+
+Upgrade runtime SDKs independently after checking their migration notes and compatibility with the application framework. For self-hosted Sentry, follow server upgrade guidance and back up the database and uploaded files before upgrading.
+
+## Alternatives
+
+OpenTelemetry paired with a backend offers portability; choose based on required diagnostic workflows, operating overhead, and pricing.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Sentry documentation](https://docs.sentry.io/)
+- [Sentry 26.10.1 release](https://github.com/getsentry/sentry/releases/tag/26.10.1)
+- [Sentry changelog](https://sentry.io/changelog/)
+- [Sentry pricing and billing](https://sentry.io/pricing/)
+- [Sentry licensing overview](https://open.sentry.io/licensing/)
+- [Sentry self-hosted deployment](https://develop.sentry.dev/self-hosted/)

@@ -1,0 +1,74 @@
+---
+title: Auth.js
+summary: Add framework-integrated authentication using standard protocols and explicitly configured session storage.
+category: auth
+maturity: stable
+radar: trial
+toolVersion: "4.24.15 (stable; v5.0.0-beta.32 is prerelease)"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://authjs.dev/getting-started
+repo: https://github.com/nextauthjs/next-auth
+license: ISC
+pricing: free
+difficulty: intermediate
+alternatives: [clerk, better-auth, keycloak]
+related: [nextjs, supabase]
+tags: [authentication, oauth, sessions]
+---
+
+## What it is, when to use it, when not to
+
+Auth.js is a framework-integrated JavaScript authentication library supporting OAuth, email, credentials, and WebAuthn flows. Use it when you want authentication behavior in your application and are comfortable managing its configuration and session strategy.
+
+Prefer a hosted provider when your team does not want to own auth operations.
+
+## Prerequisites and versions
+
+The latest stable release verified is **4.24.15**. The official current documentation covers `next-auth` 5.0.0 beta and later; treat that line as prerelease until a stable release is confirmed.
+
+## Install and minimal setup
+
+Choose the package and setup guide for your framework. Configure providers, callback URLs, and secret values separately for development and production.
+
+## Correct implementation
+
+Use maintained providers and the documented framework integration. Choose JWT or database-backed sessions intentionally, validate provider callbacks, and enforce authorization in server-side application code.
+
+## Integrate with the rest of the stack
+
+Use its framework-specific integration, such as with [Next.js](/tools/frontend/nextjs/). Add a database adapter only when persistent user or session records are required.
+
+## Test it
+
+Cover sign-in, callback failures, session expiry, sign-out, and denied access. Verify authorization at protected server routes.
+
+## Security and performance
+
+Protect authentication secrets and provider credentials, restrict redirect destinations, and avoid logging tokens. Review provider scopes and session lifetime.
+
+## Common mistakes
+
+- Authentication alone does not authorize access to application resources.
+- Unsafe redirect configuration can turn sign-in flows into open redirects.
+- Adopting a prerelease major without checking compatibility increases migration risk.
+
+## Observability
+
+Monitor callback errors, provider availability, and session failures. Exclude credentials and token contents from logs.
+
+## Upgrade and migration notes
+
+The v5 documentation and releases are beta; consult the migration guide before moving from v4. Review the release notes for security updates.
+
+## Alternatives
+
+Clerk provides managed auth, Better Auth provides an application-integrated alternative, and Keycloak is a separately operated identity platform.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Auth.js getting started](https://authjs.dev/getting-started)
+- [Auth.js repository releases](https://github.com/nextauthjs/next-auth/releases)
+- [Auth.js license](https://github.com/nextauthjs/next-auth/blob/main/LICENSE)

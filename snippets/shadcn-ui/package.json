@@ -1,0 +1,10 @@
+{
+  "name": "shadcn-ui-snippet",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "node --check action.mjs && node --check button.mjs && node --check action.test.mjs",
+    "run": "node --test action.test.mjs"
+  }
+}

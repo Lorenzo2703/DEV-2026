@@ -1,0 +1,75 @@
+---
+title: Supabase
+summary: Build on managed PostgreSQL with integrated authentication, storage, realtime, and edge functions.
+category: data
+maturity: stable
+radar: adopt
+toolVersion: "Managed platform (rolling; CLI and services version independently)"
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://supabase.com/docs
+repo: https://github.com/supabase/supabase
+license: "Open-source components with component-specific licenses"
+pricing: mixed
+difficulty: intermediate
+alternatives: [postgresql, keycloak]
+related: [postgresql, pgvector]
+tags: [postgresql, platform, backend]
+---
+
+## What it is, when to use it, when not to
+
+Supabase is a platform built around PostgreSQL, with managed database, authentication, storage, realtime, and edge functions. Use it when those integrated services fit and you want a managed path.
+
+Choose a self-managed database or separate services when control, portability, or specialized requirements outweigh integration convenience.
+
+## Prerequisites and versions
+
+The hosted platform is continuously updated and has no single product version; CLI and self-hosted components version independently. Review plan limits and component-specific terms before production.
+
+## Install and minimal setup
+
+Create a project, configure local development and migrations, and use the supported client for your application. Keep service-role credentials on the server.
+
+## Correct implementation
+
+Treat the database as PostgreSQL. Apply migrations through a reviewed workflow, enable Row Level Security for client-accessible tables, and define policies for each operation and role.
+
+## Integrate with the rest of the stack
+
+Use its Postgres database with the platform APIs that the application needs. See [PostgreSQL](/tools/data/postgresql/) and [pgvector](/tools/data/pgvector/) for database and vector-specific guidance.
+
+## Test it
+
+Test RLS policies as both allowed and denied roles, verify migrations in a clean environment, and confirm backup restoration and storage behavior.
+
+## Security and performance
+
+Never expose service-role keys to clients. Distinguish public client keys from privileged secrets, restrict access with RLS, and review backup coverage and plan limits.
+
+## Common mistakes
+
+- Client-side keys do not replace correct RLS policies.
+- Storage objects are not included in database backups by default.
+- Manual production SQL changes can cause drift from migration history.
+
+## Observability
+
+Monitor database capacity, slow queries, auth errors, function failures, and logs usage. Keep alerts aligned with the plan's quotas and retention.
+
+## Upgrade and migration notes
+
+Platform services and CLI have independent release cycles. Review current changelog notices and update self-hosted components using their matching upgrade instructions.
+
+## Alternatives
+
+Managed PostgreSQL can provide a narrower service. A self-hosted stack offers more control but requires operating auth, storage, networking, and backups separately.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Supabase documentation](https://supabase.com/docs)
+- [Database overview and security links](https://supabase.com/docs/guides/database/overview)
+- [Supabase changelog](https://supabase.com/changelog)
+- [Supabase releases](https://github.com/supabase/supabase/releases)

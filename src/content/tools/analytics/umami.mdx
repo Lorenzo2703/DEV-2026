@@ -1,0 +1,70 @@
+---
+title: Umami
+summary: Track web and product analytics with hosted or self-managed deployment.
+category: analytics
+maturity: stable
+radar: trial
+toolVersion: 3.5.0
+verifiedAt: 2026-11-13
+officialDocs: https://docs.umami.is/docs
+repo: https://github.com/umami-software/umami
+license: MIT
+pricing: mixed
+difficulty: intermediate
+alternatives: [plausible]
+related: []
+tags: [analytics, privacy, self-hosting]
+---
+
+## What it is, when to use it, when not to
+
+Umami is a web and product analytics platform available as a hosted service or self-hosted software. Use it when its event and reporting model fits your needs; a static-site search or simple server metrics do not require a separate analytics platform.
+
+## Prerequisites and versions
+
+This guide covers Umami **3.5.0**. Umami v3 has separate documentation from v2; hosted plan limits and self-hosted requirements differ.
+
+## Install and minimal setup
+
+Choose Cloud or self-hosting, follow the version-specific setup instructions, and add one website before enabling event collection.
+
+## Correct implementation
+
+Track a small, documented set of events and avoid personal or secret data in URLs and properties. For self-hosting, operate the supported database, backups, and upgrades as production dependencies.
+
+## Integrate with the rest of the stack
+
+Use the documented tracker or API where appropriate, and ensure analytics failure cannot block application functionality.
+
+## Test it
+
+Verify pageview and event delivery, access controls, data retention, and restore procedures for a self-hosted deployment.
+
+## Security and performance
+
+Restrict dashboard access, keep the deployment patched, protect database credentials, and review what event data is collected.
+
+## Common mistakes
+
+Avoid mixing v2 instructions with v3 deployments, logging sensitive properties, or assuming self-hosting eliminates maintenance and privacy responsibilities.
+
+## Observability
+
+Monitor tracker availability, ingestion errors, database health, backup completion, and event volume.
+
+## Upgrade and migration notes
+
+Read the release notes and migration steps before upgrading, especially when moving from v2; back up the database first.
+
+## Alternatives
+
+[Plausible](/tools/analytics/plausible/) focuses on web analytics; PostHog may be a better fit for broader product analytics.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Umami v3 documentation](https://docs.umami.is/docs)
+- [Umami 3.5.0 release](https://github.com/umami-software/umami/releases/tag/v3.5.0)
+- [Umami Cloud pricing](https://umami.is/pricing)
+- [Umami license](https://github.com/umami-software/umami/blob/master/LICENSE)

@@ -1,0 +1,19 @@
+---
+title: Kubernetes for the static handbook
+summary: Hold off on cluster orchestration for a site that can be published as static assets.
+status: hold
+tools: []
+verifiedAt: 2026-11-13
+---
+
+## Decision
+
+Do not introduce Kubernetes to publish this handbook's static output. Its current deployment boundary is a built site and a static asset host.
+
+## Why
+
+The [static handbook blueprint](/blueprints/static-handbook/) describes the current build-and-publish path. A cluster would add an operational layer without satisfying a documented request-time service requirement.
+
+## Revisit when
+
+Reassess only if the product gains a workload that requires orchestration and the team is prepared to operate cluster upgrades, access controls, resource limits, and recovery.

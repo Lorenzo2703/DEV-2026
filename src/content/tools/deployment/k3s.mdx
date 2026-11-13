@@ -1,0 +1,71 @@
+---
+title: k3s
+summary: Run a lightweight Kubernetes distribution where a full cluster footprint is unnecessary.
+category: deployment
+maturity: stable
+radar: trial
+toolVersion: 1.37.2+k3s1
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://docs.k3s.io/
+repo: https://github.com/k3s-io/k3s
+license: Apache-2.0
+pricing: free
+difficulty: advanced
+related: [kubernetes, docker]
+tags: [deployment, kubernetes, edge]
+---
+
+## What it is, when to use it, when not to
+
+k3s is a lightweight Kubernetes distribution intended for resource-constrained and operationally small environments. Consider it for edge or modest clusters; verify whether its bundled choices fit production requirements.
+
+## Prerequisites and versions
+
+This guide covers k3s **1.37.2+k3s1**. Check release notes for its Kubernetes version, embedded components, supported platforms, and upgrade requirements.
+
+## Install and minimal setup
+
+Follow the official installation guide for the target operating system and initialize an isolated test cluster. Secure the generated cluster credentials immediately.
+
+## Correct implementation
+
+Choose the datastore and topology based on availability and recovery requirements. Protect join tokens, back up cluster state, and plan node replacement and certificate rotation.
+
+## Integrate with the rest of the stack
+
+Check compatibility of Kubernetes APIs, storage, networking, ingress, and observability components. Keep manifests portable where distribution-specific features are not required.
+
+## Test it
+
+Exercise workload deployment, node failure, restore, and upgrade in a representative environment. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Restrict API access, patch nodes, use least-privilege RBAC, and monitor resource constraints. Lightweight packaging does not eliminate cluster security responsibilities.
+
+## Common mistakes
+
+Avoid treating a single-node installation as highly available or assuming all default components match the intended threat model.
+
+## Observability
+
+Monitor node readiness, datastore health, workload scheduling, storage, and certificate expiry.
+
+## Upgrade and migration notes
+
+Review k3s release guidance and Kubernetes version skew, back up state, and rehearse upgrades before changing production clusters.
+
+## Alternatives
+
+Full Kubernetes distributions may offer different operational defaults; managed Kubernetes is preferable when control-plane operations are out of scope.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [k3s documentation](https://docs.k3s.io/)
+- [k3s 1.37.2+k3s1 release](https://github.com/k3s-io/k3s/releases/tag/v1.37.2+k3s1)
+- [k3s license](https://github.com/k3s-io/k3s/blob/main/LICENSE)
+
+Follow the upgrade notices for the specific Kubernetes minor version bundled by k3s.

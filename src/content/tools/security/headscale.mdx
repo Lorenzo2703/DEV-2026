@@ -1,0 +1,71 @@
+---
+title: Headscale
+summary: Operate a self-hosted control server for a Tailscale-compatible private network.
+category: security
+maturity: stable
+radar: assess
+toolVersion: 0.29.7
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://headscale.net/stable/
+repo: https://github.com/juanfont/headscale
+license: BSD-3-Clause
+pricing: free
+difficulty: advanced
+related: [tailscale, netbird]
+tags: [networking, self-hosting, vpn]
+---
+
+## What it is, when to use it, when not to
+
+Headscale is a self-hosted implementation of the Tailscale control server. Consider it when control-plane hosting is a deliberate requirement; do not choose it solely to avoid operating a managed service without planning maintenance.
+
+## Prerequisites and versions
+
+This guide covers Headscale **0.29.7**. Check the supported client version and plan persistent storage, identity integration, backups, and secure public access.
+
+## Install and minimal setup
+
+Follow the current deployment guide on a protected host and configure TLS, persistent state, and backups. Test client enrollment with non-production devices first.
+
+## Correct implementation
+
+Restrict control-plane access, protect identity and node state, and plan key rotation and recovery. Confirm compatibility with every client type and feature your environment requires.
+
+## Integrate with the rest of the stack
+
+Document DNS, routing, firewall, and identity-provider boundaries. Keep application-level authorization independent of network membership.
+
+## Test it
+
+Verify enrollment, policy enforcement, connectivity, revocation, and restore procedures in an isolated environment. Automated tests are intentionally omitted.
+
+## Security and performance
+
+You operate a security-sensitive control plane. Patch promptly, limit administrative access, secure backups, and monitor exposed endpoints.
+
+## Common mistakes
+
+Avoid exposing administrative interfaces publicly or assuming feature compatibility with the managed control plane.
+
+## Observability
+
+Monitor control-server availability, enrollment failures, policy changes, and connectivity across representative clients.
+
+## Upgrade and migration notes
+
+Read migration notes and supported client versions before upgrading. Back up state and rehearse rollback and restore.
+
+## Alternatives
+
+Tailscale provides a managed control plane; NetBird is another option with hosted and self-managed deployment paths.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Headscale stable documentation](https://headscale.net/stable/)
+- [Headscale 0.29.7 release](https://github.com/juanfont/headscale/releases/tag/v0.29.7)
+- [Headscale license](https://github.com/juanfont/headscale/blob/main/LICENSE)
+
+Confirm client compatibility for the specific features you plan to use.

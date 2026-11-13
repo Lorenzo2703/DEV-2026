@@ -1,0 +1,91 @@
+---
+title: Angular
+summary: Structure and test component-based applications with Angular.
+category: frontend
+maturity: stable
+radar: trial
+toolVersion: 22.2.6
+verifiedAt: 2026-11-13
+officialDocs: https://angular.dev/installation
+repo: https://github.com/angular/angular
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: [astro, nextjs]
+related: [typescript]
+tags: [frontend, components, typescript]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import component from '../../../../snippets/angular/app.mjs?raw';
+import test from '../../../../snippets/angular/app.test.mjs?raw';
+
+## What it is, when to use it, when not to
+
+Angular is a framework for component-based web applications with integrated routing, dependency injection, and forms. It suits teams that value shared conventions across a substantial application.
+
+For a small static content site, its application framework may be more machinery than necessary. Choose based on team experience and the application's interaction requirements.
+
+## Prerequisites and versions
+
+This guide uses Angular **22.2.6**. Angular 22 supports specific Node.js, TypeScript, and RxJS ranges; check the [compatibility table](https://angular.dev/reference/versions) before creating or upgrading a project. In particular, Angular 22 requires TypeScript 6.0 rather than this handbook's TypeScript 7.
+
+## Install and minimal setup
+
+Follow the [installation guide](https://angular.dev/installation) to install the CLI, create a project with `ng new`, and start the generated application. Use the versions supported by your chosen Angular release rather than upgrading TypeScript independently.
+
+## Correct implementation
+
+Components combine a class, metadata, and a template. This small, standalone JavaScript example applies the component decorator as a function so it can be executed directly without changing the handbook's TypeScript compiler:
+
+<CodeTabs id="angular-component" label="Angular component" items={[{ label: 'app.mjs', language: 'javascript', code: component }]} />
+
+CLI-generated projects normally use TypeScript decorator syntax and Angular's build pipeline. Keep feature logic in components or injectable services with clear responsibilities; use the router for application navigation and an appropriate forms approach for user input.
+
+## Integrate with the rest of the stack
+
+Use the official router for navigation and Angular's dependency injection for shared services. Choose reactive or template-driven forms according to the application's needs, and validate data again at the server boundary.
+
+## Test it
+
+This test bootstraps the actual component and renders it with Angular's server renderer. It uses just-in-time compilation to keep the example independent of the site's TypeScript 7 toolchain:
+
+<CodeTabs id="angular-test" label="Angular rendering test" items={[{ label: 'app.test.mjs', language: 'javascript', code: test }]} />
+
+Run `bun run snippets` to execute it. Add browser and interaction tests for routing, forms, and accessibility in a real project; this rendering test does not cover them.
+
+## Security and performance
+
+Treat user input and API responses as untrusted, enforce authorization on the server, and avoid bypassing Angular's sanitization without a reviewed reason. Measure bundle size and runtime behavior; do not assume server rendering or client rendering is always faster.
+
+## Common mistakes
+
+- **Ignoring version compatibility:** unsupported compiler or runtime versions can break builds.
+- **Trusting client validation alone:** validate and authorize on the server too.
+- **Bypassing sanitization indiscriminately:** doing so can expose users to unsafe content.
+
+## Observability
+
+Monitor build failures, application errors, navigation failures, and user-facing performance. Redact sensitive values from client and server logs.
+
+## Upgrade and migration notes
+
+Review the [22.2.6 release notes](https://github.com/angular/angular/releases/tag/v22.2.6) and compatibility table before upgrading. Upgrade related Angular packages together and test routing, forms, and deployment behavior.
+
+## Alternatives
+
+[Next.js](/tools/frontend/nextjs/) offers a React-based application framework; [Astro](/tools/frontend/astro/) is a strong option for content-first sites. Compare ecosystem fit and team requirements rather than assuming one framework is universally better.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Installation](https://angular.dev/installation)
+- [Components](https://angular.dev/guide/components)
+- [Dependency injection](https://angular.dev/guide/di)
+- [Forms](https://angular.dev/guide/forms)
+- [Routing](https://angular.dev/guide/routing)
+- [Server rendering API](https://angular.dev/api/platform-server/renderApplication)
+- [Version compatibility](https://angular.dev/reference/versions)
+- [Release 22.2.6](https://github.com/angular/angular/releases/tag/v22.2.6)
+- [License](https://github.com/angular/angular/blob/main/LICENSE)

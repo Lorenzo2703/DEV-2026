@@ -1,0 +1,57 @@
+---
+import { getCollection, render } from 'astro:content';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('radar', ({ data }) => !data.draft);
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content, headings } = await render(entry);
+const sections = headings.filter((heading) => heading.depth === 2);
+const tools = await getCollection('tools', ({ data }) => !data.draft);
+const toolsById = new Map(tools.map((tool) => [tool.id, tool]));
+const relatedTools = entry.data.tools.map((id) => {
+  const tool = toolsById.get(id);
+  if (!tool) {
+    throw new Error(`Radar entry "${entry.id}" references unpublished or missing tool "${id}".`);
+  }
+  return tool;
+});
+---
+
+<SiteLayout
+  title={entry.data.title}
+  description={entry.data.summary}
+  image={`/og/radar/${entry.id}.png`}
+  article
+>
+  <article class="prose mx-auto max-w-3xl">
+    <a href="/radar/">← Technology radar</a>
+    <h1 class="mt-5 text-4xl font-bold">{entry.data.title}</h1>
+    <p class="text-xl text-muted">{entry.data.summary}</p>
+    <p class="text-sm text-muted">
+      Ring: <span class="font-semibold capitalize">{entry.data.status}</span>
+      {' · '}Reviewed <time datetime={entry.data.verifiedAt.toISOString()}>{entry.data.verifiedAt.toISOString().slice(0, 10)}</time>
+    </p>
+    {relatedTools.length > 0 && (
+      <p>
+        Related tools:{' '}
+        {relatedTools.map((tool, index) => (
+          <>{index > 0 && ', '}<a href={`/tools/${tool.id}/`}>{tool.data.title}</a></>
+        ))}
+      </p>
+    )}
+    {sections.length > 0 && (
+      <nav aria-label="On this page" class="table-of-contents">
+        <p class="m-0 font-bold">On this page</p>
+        <ol>{sections.map((section) => <li><a href={`#${section.slug}`}>{section.text}</a></li>)}</ol>
+      </nav>
+    )}
+    <Content />
+  </article>
+</SiteLayout>

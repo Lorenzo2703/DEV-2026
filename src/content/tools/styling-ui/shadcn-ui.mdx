@@ -1,0 +1,89 @@
+---
+title: shadcn/ui
+summary: Own and maintain composable React UI components distributed as source code.
+category: styling-ui
+maturity: stable
+radar: trial
+toolVersion: 4.23.0
+verifiedAt: 2026-11-13
+officialDocs: https://ui.shadcn.com/docs
+repo: https://github.com/shadcn-ui/ui
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [nextjs, tailwind-css]
+tags: [react, components, accessibility]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import action from '../../../../snippets/shadcn-ui/action.mjs?raw';
+import button from '../../../../snippets/shadcn-ui/button.mjs?raw';
+import test from '../../../../snippets/shadcn-ui/action.test.mjs?raw';
+
+## What it is, when to use it, when not to
+
+shadcn/ui distributes component source for React projects, allowing a team to own and adapt its UI code. It is useful when a shared design system needs custom behavior and styling rather than an opaque component package.
+
+Owning the code also means owning maintenance and accessibility. For an application that does not use React, or a team that cannot maintain its own components, a different approach may fit better.
+
+## Prerequisites and versions
+
+This guide records **4.23.0** of the shadcn CLI, not a version shared by every generated component. Follow the setup instructions for your framework and selected component base. The examples below use React.
+
+## Install and minimal setup
+
+Follow the [installation guide](https://ui.shadcn.com/docs/installation) for your project. Initialize the CLI configuration and add a button with the [documented CLI](https://ui.shadcn.com/docs/cli). Review the generated files and dependencies before committing them.
+
+## Correct implementation
+
+Treat added components as application source: review their variants, semantics, styling, and updates. The following original example demonstrates consuming an owned button with an outline variant:
+
+<CodeTabs id="shadcn-action" label="Owned button usage" items={[{ label: 'action.mjs', language: 'javascript', code: action }, { label: 'button.mjs', language: 'javascript', code: button }]} />
+
+The local button is a small illustrative stand-in, **not** a shadcn-generated component. In a real project, import the button added by the CLI and check its actual props and behavior. Its styling needs the project's Tailwind setup; test focus, contrast, disabled state, and keyboard behavior after customization.
+
+## Integrate with the rest of the stack
+
+Use the framework-specific setup for a React application such as [Next.js](/tools/frontend/nextjs/) and configure [Tailwind CSS](/tools/styling-ui/tailwind-css/) as directed. Preserve the selected underlying component base and review its dependencies alongside generated code.
+
+## Test it
+
+The sample test renders the local stand-in and checks its label, button type, and disabled state:
+
+<CodeTabs id="shadcn-test" label="Button rendering test" items={[{ label: 'action.test.mjs', language: 'javascript', code: test }]} />
+
+Run `bun run snippets` to execute it. This does not test the CLI or generated components. Add browser, keyboard, and accessibility tests against your actual components.
+
+## Security and performance
+
+Review component and registry source before adding it, especially from third-party registries. Avoid injecting untrusted HTML, keep dependencies updated, and measure client bundle size. Component defaults do not replace testing the accessibility of your composed application.
+
+## Common mistakes
+
+- **Assuming components update automatically:** copied source is owned by your project.
+- **Overwriting customized files during updates:** inspect diffs and preserve intentional changes.
+- **Assuming a rendered button is fully accessible:** verify focus, keyboard interaction, labels, and visual states.
+
+## Observability
+
+Track frontend errors and user-facing performance after component changes. Use accessibility testing and user feedback to detect regressions that error logs cannot reveal.
+
+## Upgrade and migration notes
+
+Read the [CLI release notes](https://github.com/shadcn-ui/ui/releases/tag/shadcn%404.23.0) before updating. Review changes to generated code and underlying dependencies, then run your component and browser tests.
+
+## Alternatives
+
+A maintained React component library can reduce ownership burden when its design constraints are acceptable. A small set of native HTML controls may be sufficient for a simple interface.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Introduction](https://ui.shadcn.com/docs)
+- [Installation](https://ui.shadcn.com/docs/installation)
+- [CLI](https://ui.shadcn.com/docs/cli)
+- [Button](https://ui.shadcn.com/docs/components/base/button)
+- [CLI release 4.23.0](https://github.com/shadcn-ui/ui/releases/tag/shadcn%404.23.0)
+- [License](https://github.com/shadcn-ui/ui/blob/main/LICENSE.md)

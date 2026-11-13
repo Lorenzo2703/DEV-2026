@@ -1,0 +1,10 @@
+{
+  "name": "mongodb-snippet",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "node ../../node_modules/typescript-7/bin/tsc --project tsconfig.json",
+    "run": "node --experimental-strip-types --test example.test.ts"
+  }
+}

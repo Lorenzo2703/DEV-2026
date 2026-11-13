@@ -1,0 +1,70 @@
+---
+title: Motion
+summary: Add expressive React animations while respecting user motion preferences.
+category: styling-ui
+maturity: stable
+radar: trial
+toolVersion: 14.12.0
+verifiedAt: 2026-11-13
+officialDocs: https://motion.dev/docs/react
+repo: https://github.com/motiondivision/motion
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [typescript]
+tags: [animation, react, accessibility]
+---
+
+## What it is, when to use it, when not to
+
+Motion is an animation library for React and JavaScript. Use it for transitions, gestures, and layout animation that improve feedback; simple CSS transitions are often enough for decorative effects.
+
+## Prerequisites and versions
+
+This guide covers Motion **14.12.0**. The current React package is imported from `motion/react`; older Framer Motion examples may use a different package name and API.
+
+## Install and minimal setup
+
+Install the `motion` package in a React project and begin with a small state transition or entrance animation. Keep essential information available without animation.
+
+## Correct implementation
+
+Animate state changes that communicate cause and effect. Prefer transforms and opacity for frequently updated elements, and use Motion's reduced-motion support for users who request less animation.
+
+## Integrate with the rest of the stack
+
+Keep animation behavior in the component that owns the state change. Use typed props to make animation state explicit, and confirm server-rendered markup remains useful before animation initializes.
+
+## Test it
+
+Check the animated state change in a browser, with keyboard interaction, and with reduced motion enabled. Verify layout stability at narrow and wide viewport sizes.
+
+## Security and performance
+
+Do not use animation to obscure controls or delay access to content. Avoid animating large layout regions on every frame; profile complex scenes on target devices.
+
+## Common mistakes
+
+Avoid motion that communicates information only visually, long blocking transitions, and ignoring reduced-motion preferences.
+
+## Observability
+
+Watch for interaction delays, dropped frames, layout shifts, and animation-related errors in real-user monitoring.
+
+## Upgrade and migration notes
+
+Use the official upgrade guide when moving from Framer Motion or an earlier Motion major. Review React-specific notes before adopting a new major version.
+
+## Alternatives
+
+CSS transitions and the Web Animations API cover simpler effects with fewer dependencies.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Motion for React](https://motion.dev/docs/react)
+- [Motion changelog](https://motion.dev/changelog)
+- [Motion upgrade guide](https://motion.dev/docs/upgrade-guide)
+- [Motion package on npm](https://www.npmjs.com/package/motion?activeTab=versions)

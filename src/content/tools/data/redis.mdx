@@ -1,0 +1,74 @@
+---
+title: Redis
+summary: Select Redis data structures and persistence policies for caching and low-latency server workloads.
+category: data
+maturity: stable
+radar: assess
+toolVersion: "8.10.2"
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://redis.io/docs/latest/
+repo: https://github.com/redis/redis
+license: "AGPL-3.0 / RSALv2 / SSPLv1 (verify applicable terms)"
+pricing: mixed
+difficulty: intermediate
+alternatives: [valkey]
+related: [nodejs, postgresql]
+tags: [database, cache, key-value]
+---
+
+## What it is, when to use it, when not to
+
+Redis is an in-memory data platform with data structures, persistence, replication, and additional query capabilities. Use it for low-latency cache, coordination, or data-structure workloads that suit its operational model.
+
+Use a relational system when the workload depends on durable relational queries and constraints.
+
+## Prerequisites and versions
+
+Redis **8.10.2** is the latest stable server release verified here; 8.12 release candidates are prerelease. Redis licensing changed in recent generations, so verify the terms that apply to your intended use.
+
+## Install and minimal setup
+
+Choose Redis Open Source or Redis Cloud, follow its installation guidance, and configure private network access and a supported client.
+
+## Correct implementation
+
+Choose key and data-structure patterns based on access and expiration behavior. Define persistence, replication, and recovery requirements before storing state that cannot be rebuilt.
+
+## Integrate with the rest of the stack
+
+Keep Redis behind a trusted application service and use it alongside a durable database where appropriate. Compare [Valkey](/tools/data/valkey/) for compatible workloads.
+
+## Test it
+
+Exercise expiration, failover, restart, memory pressure, and client reconnection against the selected deployment mode.
+
+## Security and performance
+
+Restrict the network, configure ACLs and TLS where needed, and set memory and connection limits. Confirm license obligations and service costs before adoption.
+
+## Common mistakes
+
+- Exposing the Redis port to the public internet can allow destructive commands.
+- Treating a cache as durable without configuring and testing recovery risks data loss.
+- Ignoring licensing can create avoidable distribution or deployment constraints.
+
+## Observability
+
+Track latency, memory, evictions, rejected connections, replication, and persistence health. Alert on capacity trends before eviction or failure affects users.
+
+## Upgrade and migration notes
+
+Read release notes for security fixes and behavior changes; test client compatibility and restore procedures. Recheck license terms when changing version or distribution.
+
+## Alternatives
+
+Valkey offers a Redis-compatible open-source option. Managed Redis reduces operational work but carries provider and pricing trade-offs.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Redis developer documentation](https://redis.io/docs/latest/develop/)
+- [Redis security guidance](https://redis.io/docs/latest/operate/oss_and_stack/management/security/)
+- [Redis releases](https://github.com/redis/redis/releases)

@@ -9,11 +9,11 @@ export function getStaticPaths() {
 
 export const GET: APIRoute = async ({ params, site }) => {
   if (!site) throw new Error('SITE_URL is required to generate feeds and the sitemap.');
-  const [tools, guides, blueprints, posts] = await Promise.all([
+  const [tools, guides, blueprints, radar] = await Promise.all([
     getCollection('tools', ({ data }) => !data.draft),
     getCollection('guides', ({ data }) => !data.draft),
     getCollection('blueprints', ({ data }) => !data.draft),
-    getCollection('posts', ({ data }) => !data.draft),
+    getCollection('radar', ({ data }) => !data.draft),
   ]);
   if (params.feed === 'rss') {
     return rss({
@@ -27,11 +27,13 @@ export const GET: APIRoute = async ({ params, site }) => {
           link: `/tools/${entry.id}/`,
           categories: entry.data.tags,
         })),
-        ...[...guides, ...blueprints, ...posts].map((entry) => ({
+        ...[...guides, ...blueprints].map((entry) => ({
           title: entry.data.title,
           description: entry.data.summary,
           link: `/${entry.collection}/${entry.id}/`,
-          ...(entry.collection === 'posts' ? { pubDate: entry.data.publishedAt } : {}),
+          ...(entry.collection === 'guides' && entry.data.publishedAt
+            ? { pubDate: entry.data.publishedAt }
+            : {}),
         })),
       ],
       customData: '<language>en</language>',
@@ -40,18 +42,23 @@ export const GET: APIRoute = async ({ params, site }) => {
 
   if (params.feed !== 'sitemap') throw new Error(`Unknown XML endpoint: ${params.feed}`);
   const paths = [
-    ...['/', '/tools/', '/guides/', '/blueprints/', '/posts/', '/radar/', '/search/'].map(
-      (path) => ({ path }),
-    ),
-    ...tools.map((entry) => ({ path: `/tools/${entry.id}/`, lastmod: entry.data.verifiedAt })),
-    ...[...guides, ...blueprints, ...posts].map((entry) => ({
-      path: `/${entry.collection}/${entry.id}/`,
+    ...['/', '/tools/', '/guides/', '/blueprints/', '/radar/', '/search/'].map((path) => ({
+      path,
     })),
-    ...[...new Set([...tools, ...guides, ...posts].flatMap((entry) => entry.data.tags))].map(
-      (tag) => ({
-        path: `/tags/${encodeURIComponent(tag)}/`,
-      }),
-    ),
+    ...tools.map((entry) => ({ path: `/tools/${entry.id}/`, lastmod: entry.data.verifiedAt })),
+    ...[...guides, ...blueprints].map((entry) => ({
+      path: `/${entry.collection}/${entry.id}/`,
+      ...(entry.collection === 'guides' && entry.data.publishedAt
+        ? { lastmod: entry.data.publishedAt }
+        : {}),
+    })),
+    ...radar.map((entry) => ({
+      path: `/radar/${entry.id}/`,
+      lastmod: entry.data.verifiedAt,
+    })),
+    ...[...new Set([...tools, ...guides].flatMap((entry) => entry.data.tags))].map((tag) => ({
+      path: `/tags/${encodeURIComponent(tag)}/`,
+    })),
   ];
   if (paths.length > 50_000) throw new Error('Sitemap exceeds the 50,000 URL limit.');
   const urls = paths.map(({ path, ...metadata }) => {

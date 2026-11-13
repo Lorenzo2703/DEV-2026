@@ -1,0 +1,70 @@
+---
+title: Terraform
+summary: Plan and manage infrastructure declaratively with explicit state controls.
+category: iac-platform
+maturity: stable
+radar: trial
+toolVersion: 1.17.2
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://developer.hashicorp.com/terraform/docs
+repo: https://github.com/hashicorp/terraform
+license: BSL-1.1
+pricing: mixed
+difficulty: advanced
+alternatives: [opentofu, pulumi]
+related: []
+tags: [iac, infrastructure, state]
+---
+
+## What it is, when to use it, when not to
+
+Terraform describes and manages infrastructure through providers and state. Use it when its ecosystem and workflow fit your organization; compare licensing and hosted-service terms before selecting it over alternatives.
+
+## Prerequisites and versions
+
+This guide covers Terraform **1.17.2**. Pin the CLI, providers, and modules, and select a remote backend with locking and recovery.
+
+## Install and minimal setup
+
+Install the official CLI, initialize a minimal configuration, and review the plan before creating resources.
+
+## Correct implementation
+
+Store state remotely with encryption and restricted access, commit dependency locks, and require review of plans before apply. Keep credentials outside configuration and state access tightly scoped.
+
+## Integrate with the rest of the stack
+
+Run formatting, validation, and plan review in CI. Use protected environments and short-lived cloud credentials for applies.
+
+## Test it
+
+Validate in an isolated account, exercise provider upgrades, and test state backup and restoration.
+
+## Security and performance
+
+State may contain sensitive values; protect it like a credential store. Verify provider sources and restrict backend and workspace permissions.
+
+## Common mistakes
+
+Avoid committing state, using unpinned providers, and allowing concurrent applies without locking.
+
+## Observability
+
+Track plan/apply outcomes, drift, provider errors, and backend access or availability.
+
+## Upgrade and migration notes
+
+Review release and provider notes before upgrades; assess license and compatibility implications before moving between Terraform and OpenTofu.
+
+## Alternatives
+
+[OpenTofu](/tools/iac-platform/opentofu/) is a community alternative; Pulumi defines infrastructure in general-purpose languages.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Terraform documentation](https://developer.hashicorp.com/terraform/docs)
+- [Terraform 1.17.2 release](https://github.com/hashicorp/terraform/releases/tag/v1.17.2)
+- [Terraform license](https://github.com/hashicorp/terraform/blob/main/LICENSE)

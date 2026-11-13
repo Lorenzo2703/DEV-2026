@@ -60,7 +60,7 @@ const toolEnums: Record<string, readonly string[]> = {
   ],
   maturity: ['frontier', 'stable', 'legacy', 'deprecated'],
   radar: ['adopt', 'trial', 'assess', 'hold'],
-  pricing: ['oss', 'free-tier', 'paid', 'mixed'],
+  pricing: ['free', 'free-tier', 'paid', 'mixed'],
   difficulty: ['beginner', 'intermediate', 'advanced'],
 };
 
@@ -70,7 +70,11 @@ export function parseFrontmatter(source: string): ParsedContent {
     throw new Error('Missing YAML frontmatter delimiters.');
   }
 
-  const parsed: unknown = parse(match[1] ?? '');
+  const parsed: unknown = parse(match[1] ?? '', {
+    customTags: ['timestamp'],
+    merge: true,
+    schema: 'core',
+  });
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
     throw new Error('Frontmatter must be a YAML object.');
   }

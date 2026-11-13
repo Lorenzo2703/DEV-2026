@@ -1,0 +1,74 @@
+---
+title: Langfuse
+summary: Trace and evaluate LLM application behavior while controlling sensitive prompt data.
+category: observability
+maturity: stable
+radar: trial
+toolVersion: 4.80.0
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://langfuse.com/docs
+license: MIT (core; enterprise features separately licensed)
+pricing: mixed
+difficulty: intermediate
+related: [opentelemetry]
+tags: [ai, observability, llm]
+draft: false
+---
+
+## What it is, when to use it, when not to
+
+Langfuse is an AI engineering platform for tracing, prompt management, and evaluation. Use it when model calls, tool execution, and agent behavior need to be debugged or compared; avoid adding it when existing telemetry answers those questions.
+
+## Prerequisites and versions
+
+This guide covers self-hosted Langfuse **v4.80.0**. Langfuse Cloud is continuously managed; SDK versions are separate and must be compatible with the server. Core self-hosted features are MIT-licensed and free; Cloud has free and paid plans, and enterprise self-hosted features are separately licensed.
+
+## Install and minimal setup
+
+Choose Langfuse Cloud or follow the self-hosting guide for your infrastructure. Install a supported SDK, configure credentials and the base URL through environment settings, and instrument a non-sensitive development flow first.
+
+## Correct implementation
+
+Trace meaningful model, retrieval, and tool operations. Keep prompt versions tied to reviewed changes, and use evaluations against representative datasets to investigate regressions rather than treating scores as guarantees. Define redaction, access, and retention policies before sending production inputs.
+
+## Integrate with the rest of the stack
+
+Correlate LLM traces with application request IDs and OpenTelemetry telemetry. Keep model-provider credentials in the application’s secret store, never in trace attributes.
+
+## Test it
+
+Check that a representative call appears with the expected hierarchy, timing, and status, and verify that sensitive fields are excluded. Use a fixed evaluation dataset when comparing prompt or model changes.
+
+## Security and performance
+
+Prompts, outputs, and retrieved documents can contain user data or secrets. Apply least-privilege access, retention limits, and redaction. Estimate the storage and processing cost of high-volume traces before enabling broad capture.
+
+## Common mistakes
+
+Avoid logging full prompts by default, treating evaluation scores as objective truth, or assuming sampled traces represent every request. Do not upgrade SDKs without checking the server compatibility matrix.
+
+## Observability
+
+Monitor SDK/export failures, trace volume, ingestion delay, and data retention.
+
+## Upgrade and migration notes
+
+Langfuse v4 is generally available for self-hosting. Existing Cloud projects must complete any Migration Assistant actions before **November 16, 2026**, when Cloud becomes v4-only and legacy APIs and ingestion paths are removed. Self-hosted v3 has no forced cutover date and receives security patches through January 2027. Follow the v3-to-v4 migration guide and compatibility matrix before upgrading.
+
+## Alternatives
+
+Arize Phoenix offers open-source AI observability workflows; general tracing platforms may be enough when LLM-specific views are unnecessary.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Langfuse documentation](https://langfuse.com/docs)
+- [Langfuse v4.80.0 release](https://github.com/langfuse/langfuse/releases/tag/v4.80.0)
+- [Langfuse versions and compatibility](https://langfuse.com/docs/compatibility)
+- [Langfuse v4 changelog and Cloud transition](https://langfuse.com/changelog/2026-08-17-langfuse-v4)
+- [Self-hosted v3-to-v4 migration guide](https://langfuse.com/self-hosting/upgrade/upgrade-guides/upgrade-v3-to-v4)
+- [Langfuse pricing](https://langfuse.com/pricing)
+- [Langfuse self-hosted pricing and license](https://langfuse.com/pricing-self-host)
+- [Langfuse core license](https://github.com/langfuse/langfuse/blob/main/LICENSE)

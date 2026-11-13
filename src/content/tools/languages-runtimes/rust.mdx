@@ -1,0 +1,89 @@
+---
+title: Rust
+summary: Build reliable native software with Cargo, explicit errors, and a pinned toolchain.
+category: languages-runtimes
+maturity: stable
+radar: trial
+toolVersion: 1.100.0
+verifiedAt: 2026-11-13
+officialDocs: https://doc.rust-lang.org/book/
+repo: https://github.com/rust-lang/rust
+license: MIT OR Apache-2.0
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [python, nodejs]
+tags: [language, native, cargo]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import example from '../../../../snippets/rust/src/lib.rs?raw';
+import toolchain from '../../../../snippets/rust/rust-toolchain.toml?raw';
+
+## What it is, when to use it, when not to
+
+Rust is a compiled language with ownership-based memory management. Consider it for native services, command-line tools, or libraries where predictable resource use and memory safety are important.
+
+It has a learning curve and longer compile cycles than some alternatives. For a small integration script or an application dominated by existing ecosystem libraries, a higher-level language may be a simpler choice.
+
+## Prerequisites and versions
+
+This guide uses stable Rust **1.100.0** and Cargo. Install the compiler and Cargo with rustup; Windows development also needs the appropriate Visual Studio C++ build tools.
+
+## Install and minimal setup
+
+Follow the [official installation instructions](https://www.rust-lang.org/tools/install), then check `rustc --version` and `cargo --version`. Create a library project with `cargo new --lib service-config` and run `cargo test` inside it.
+
+## Correct implementation
+
+Pin a tested toolchain in the project so developers and CI use the same release:
+
+<CodeTabs id="rust-toolchain" label="Rust toolchain" items={[{ label: 'rust-toolchain.toml', language: 'toml', code: toolchain }]} />
+
+Represent invalid input as an error instead of silently choosing a default. This small library validates a nonzero TCP port:
+
+<CodeTabs id="rust-example" label="Rust configuration validation" items={[{ label: 'src/lib.rs', language: 'rust', code: example }]} />
+
+For applications, commit `Cargo.lock` and run `cargo test --locked` in CI. Review dependency changes before updating the lockfile. Treat release profiles as a measurement choice: benchmark the real workload before changing optimization settings.
+
+## Integrate with the rest of the stack
+
+Rust can provide a standalone service or command-line program alongside an existing [Python](/tools/languages-runtimes/python/) or [Node.js](/tools/languages-runtimes/nodejs/) system. Define and test the interface between processes; do not assume memory safety covers network input or external dependencies.
+
+## Test it
+
+The sample includes tests for a valid port and malformed, zero, negative, and out-of-range values. Run `cargo test --locked` in the sample directory, or run the repository's `bun run snippets` with the pinned Rust toolchain installed.
+
+## Security and performance
+
+Validate untrusted input at boundaries, review dependencies and their sources, and avoid logging credentials. Rust's safe code does not prevent authorization errors or denial of service; review any `unsafe` code and establish resource limits separately. Measure release builds rather than assuming an optimization improves every workload.
+
+## Common mistakes
+
+- **Using `unwrap` on external input:** propagate an error or handle it explicitly instead of terminating unexpectedly.
+- **Ignoring the lockfile:** CI can otherwise resolve a different dependency graph.
+- **Using unreviewed `unsafe` code:** its invariants need explicit review and tests.
+
+## Observability
+
+Record build and toolchain versions with deployments, report failures at the application boundary, and monitor latency and error rates. Avoid including raw secrets or sensitive input in logs.
+
+## Upgrade and migration notes
+
+Read the [release announcement](https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/) before changing the pinned toolchain. Update it deliberately, run tests on supported platforms, and measure release builds before deploying.
+
+## Alternatives
+
+Python and Node.js can be more productive for I/O-oriented services and scripting when their runtime characteristics meet the requirements. Choose based on team experience, library availability, and measured operational needs.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Installation](https://www.rust-lang.org/tools/install)
+- [Rust book](https://doc.rust-lang.org/book/)
+- [Toolchain overrides](https://rust-lang.github.io/rustup/overrides.html)
+- [Cargo lockfiles](https://doc.rust-lang.org/cargo/guide/cargo-toml-vs-cargo-lock.html)
+- [Testing with Cargo](https://doc.rust-lang.org/cargo/guide/tests.html)
+- [Cargo profiles](https://doc.rust-lang.org/cargo/reference/profiles.html)
+- [Rust 1.100.0 release](https://blog.rust-lang.org/2026/11/12/Rust-1.100.0/)

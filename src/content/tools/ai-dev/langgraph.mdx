@@ -1,0 +1,70 @@
+---
+title: LangGraph
+summary: Orchestrate stateful agent workflows with durable checkpoints and explicit control flow.
+category: ai-dev
+maturity: stable
+radar: trial
+toolVersion: 1.2.21
+verifiedAt: 2026-11-13
+officialDocs: https://docs.langchain.com/oss/python/langgraph/overview
+repo: https://github.com/langchain-ai/langgraph
+license: MIT
+pricing: free
+difficulty: advanced
+alternatives: [langchain]
+related: [langchain]
+tags: [ai, orchestration, state]
+---
+
+## What it is, when to use it, when not to
+
+LangGraph is a low-level framework and runtime for long-running, stateful agent workflows. Use it when durable execution, explicit branching, or human approval matters; simple stateless tasks may not need graph orchestration.
+
+## Prerequisites and versions
+
+This guide covers LangGraph **1.2.21** for Python. Choose a checkpointer and persistence backend based on expected workload and recovery needs.
+
+## Install and minimal setup
+
+Begin with a small graph that has explicit state, nodes, and transitions. Add persistence only when the workflow needs to resume or retain state.
+
+## Correct implementation
+
+Make nodes safe to retry, define clear state transitions, and put human approval at consequential actions. Treat checkpoints and stores as application data with an explicit retention policy.
+
+## Integrate with the rest of the stack
+
+Use LangChain model and tool integrations where useful, but keep application authorization and side effects under explicit control.
+
+## Test it
+
+Test branching, retries, interruption and resume, duplicate execution, and recovery from persisted checkpoints.
+
+## Security and performance
+
+Protect persisted state and credentials, bound graph loops and retries, and prevent untrusted state from authorizing actions.
+
+## Common mistakes
+
+Avoid adding a graph to a linear workflow, assuming retries are harmless, or treating checkpoint persistence as a substitute for backups.
+
+## Observability
+
+Trace node transitions, duration, retry counts, checkpoint failures, and human-approval outcomes.
+
+## Upgrade and migration notes
+
+Review release notes before upgrades that affect state or checkpoint formats; test resume behavior using copied production-like state.
+
+## Alternatives
+
+LangChain's higher-level agent interface is simpler for many applications; workflow engines may fit non-LLM orchestration better.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [LangGraph overview](https://docs.langchain.com/oss/python/langgraph/overview)
+- [LangGraph persistence](https://docs.langchain.com/oss/python/langgraph/persistence)
+- [LangGraph 1.2.21 release](https://github.com/langchain-ai/langgraph/releases/tag/1.2.21)
+- [LangGraph license](https://github.com/langchain-ai/langgraph/blob/main/LICENSE)

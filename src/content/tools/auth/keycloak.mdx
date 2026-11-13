@@ -1,0 +1,75 @@
+---
+title: Keycloak
+summary: Operate a self-hosted identity provider and integrate applications through standard federation protocols.
+category: auth
+maturity: stable
+radar: trial
+toolVersion: "26.8.2"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://www.keycloak.org/documentation
+repo: https://github.com/keycloak/keycloak
+license: Apache-2.0
+pricing: free
+difficulty: advanced
+alternatives: []
+related: [clerk, better-auth]
+tags: [identity, oauth, oidc, saml]
+---
+
+## What it is, when to use it, when not to
+
+Keycloak is a self-hosted identity and access management server supporting OpenID Connect, OAuth 2.0, and SAML. Use it when centralized identity, federation, or infrastructure control justify operating an identity platform.
+
+Choose a managed identity service if your team cannot responsibly maintain the service, upgrades, backups, and incident response.
+
+## Prerequisites and versions
+
+This guide references Keycloak **26.8.2** documentation. Use its matching server and upgrade guidance.
+
+## Install and minimal setup
+
+Deploy using the official production configuration guide, create a realm and client, and configure the application as a standard OIDC or SAML client. Do not expose administrative access publicly.
+
+## Correct implementation
+
+Configure issuer, redirect URIs, and client type deliberately. Validate tokens at the application boundary, enforce authorization in the application, and use least-privilege service accounts. Keep realm configuration reproducible and reviewed.
+
+## Integrate with the rest of the stack
+
+Connect applications through a supported OIDC or SAML library. Keep identity-provider operations separate from application-specific authorization rules.
+
+## Test it
+
+Exercise login, logout, token expiry, role changes, account recovery, and failure cases in a non-production realm.
+
+## Security and performance
+
+Protect admin endpoints and credentials, configure TLS and secure proxy handling, and maintain tested backups. Review session lifetimes, signing keys, and federation access.
+
+## Common mistakes
+
+- Treating a realm role as complete authorization for every resource can leave access checks too broad.
+- Exposing the admin console increases risk.
+- Unreviewed upgrades can disrupt authentication or federation.
+
+## Observability
+
+Monitor authentication errors, server health, database and cache behavior, and administrative events. Alert on unexpected failures without logging tokens.
+
+## Upgrade and migration notes
+
+Read the version-specific upgrade guide and release notes before each upgrade. Test realm imports, extensions, and identity-provider integrations against a staging copy.
+
+## Alternatives
+
+Managed identity providers reduce operational burden. [Clerk](/tools/auth/clerk/) and [Better Auth](/tools/auth/better-auth/) are application-oriented alternatives with different hosting and ownership trade-offs.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Keycloak documentation](https://www.keycloak.org/documentation)
+- [Server administration guide](https://www.keycloak.org/docs/latest/server_admin/)
+- [Keycloak 26.8.0 release notes](https://www.keycloak.org/2026/10/keycloak-2680-released)
+- [Keycloak license](https://github.com/keycloak/keycloak/blob/main/LICENSE.txt)

@@ -1,0 +1,92 @@
+---
+title: Next.js
+summary: Build React applications with file-based routes and explicit rendering boundaries.
+category: frontend
+maturity: stable
+radar: trial
+toolVersion: 16.4.6
+verifiedAt: 2026-11-13
+officialDocs: https://nextjs.org/docs/app/getting-started/installation
+repo: https://github.com/vercel/next.js
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: [astro]
+related: [typescript, nodejs]
+tags: [frontend, react, rendering]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import page from '../../../../snippets/nextjs/app/page.js?raw';
+import layout from '../../../../snippets/nextjs/app/layout.js?raw';
+import config from '../../../../snippets/nextjs/next.config.mjs?raw';
+
+## What it is, when to use it, when not to
+
+Next.js is a React framework with file-based routing and multiple rendering options. Consider it for React applications that need server rendering, route handlers, or a mixture of static and dynamic pages.
+
+For content-led sites with little client-side interaction, a static-first framework such as Astro may be simpler. Static export also limits which Next.js features are available.
+
+## Prerequisites and versions
+
+This guide uses Next.js **16.4.6** and React. The official installation guide requires Node.js 20.9 or later; check the current compatibility requirements before upgrading.
+
+## Install and minimal setup
+
+Use the [official installation guide](https://nextjs.org/docs/app/getting-started/installation) to create a project with `create-next-app`. Run its development server and open the local address it prints.
+
+## Correct implementation
+
+The App Router uses a root layout and page files. This example uses React's `createElement` rather than JSX so the small JavaScript sample can also be syntax-checked directly:
+
+<CodeTabs id="nextjs-page" label="Next.js page and layout" items={[{ label: 'app/page.js', language: 'javascript', code: page }, { label: 'app/layout.js', language: 'javascript', code: layout }]} />
+
+The sample explicitly opts into static export:
+
+<CodeTabs id="nextjs-config" label="Next.js configuration" items={[{ label: 'next.config.mjs', language: 'javascript', code: config }]} />
+
+Layouts and pages are Server Components by default. Add Client Components only where interactivity or browser APIs require them. Decide caching and invalidation deliberately for each data boundary; the current caching documentation distinguishes Cache Components from the previous model.
+
+## Integrate with the rest of the stack
+
+Use the [Node.js](/tools/languages-runtimes/nodejs/) runtime for server deployment or a static host for a static export. Add a [TypeScript](/tools/languages-runtimes/typescript/) project for typed application code. A static export cannot use features requiring a running Next.js server.
+
+## Test it
+
+Run `bun run snippets` to build this example and check the exported HTML. This verifies a static route, not server-side authentication or dynamic rendering; test those separately in a deployed-like environment.
+
+## Security and performance
+
+Authorize sensitive operations on the server, validate external input, and keep secrets out of client bundles and exported HTML. When self-hosting a server, follow the official reverse-proxy guidance. Measure the effect of client components and caching on real workloads.
+
+## Common mistakes
+
+- **Sending private data to a Client Component:** anything passed to the browser must be treated as exposed.
+- **Assuming static export supports server features:** check deployment requirements before choosing an output mode.
+- **Caching user-specific data without a clear boundary:** confirm isolation and invalidation behavior.
+
+## Observability
+
+Monitor build failures, request errors and latency on server deployments, and client-side performance. Include release identifiers in deployment telemetry without logging secrets.
+
+## Upgrade and migration notes
+
+Review the [16.4.6 release notes](https://github.com/vercel/next.js/releases/tag/v16.4.6) and migration guidance before updating. Test rendering, caching, routing, and the hosting configuration together.
+
+## Alternatives
+
+[Astro](/tools/frontend/astro/) is a strong choice for content-first static sites. A client-only React application can be simpler when a server-rendering framework is unnecessary.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Installation](https://nextjs.org/docs/app/getting-started/installation)
+- [Layouts and pages](https://nextjs.org/docs/app/getting-started/layouts-and-pages)
+- [Server and Client Components](https://nextjs.org/docs/app/getting-started/server-and-client-components)
+- [Caching](https://nextjs.org/docs/app/getting-started/caching)
+- [Static exports](https://nextjs.org/docs/app/guides/static-exports)
+- [Data security](https://nextjs.org/docs/app/guides/data-security)
+- [Self-hosting](https://nextjs.org/docs/app/guides/self-hosting)
+- [Release 16.4.6](https://github.com/vercel/next.js/releases/tag/v16.4.6)
+- [License](https://github.com/vercel/next.js/blob/canary/license.md)

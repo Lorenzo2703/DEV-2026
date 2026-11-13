@@ -1,0 +1,75 @@
+---
+title: Clerk
+summary: Add hosted authentication and user management while keeping authorization checks in your application.
+category: auth
+maturity: stable
+radar: trial
+toolVersion: "See current Clerk SDK release notes"
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://clerk.com/docs
+license: "Proprietary (hosted service)"
+pricing: mixed
+difficulty: intermediate
+alternatives: [keycloak, better-auth]
+related: [nextjs]
+tags: [authentication, sessions, users]
+---
+
+## What it is, when to use it, when not to
+
+Clerk is a hosted authentication and user-management service with framework SDKs. Use it when managed sign-in flows and user administration are preferable to operating identity infrastructure.
+
+Consider a self-hosted provider when data residency, control-plane ownership, or vendor constraints require it.
+
+## Prerequisites and versions
+
+Clerk continuously releases SDKs rather than a single product version; the current changelog is the version reference. Pricing includes free and paid plans. This page is flagged for verification because the Next.js SDK's exact latest stable version was not independently confirmed.
+
+## Install and minimal setup
+
+Follow the current framework quickstart, configure development and production instances separately, and store publishable and secret keys in their intended locations.
+
+## Correct implementation
+
+Use the SDK to establish identity, then enforce resource authorization on the server for every protected operation. Verify tokens according to the framework's guidance and keep server secrets out of client bundles.
+
+## Integrate with the rest of the stack
+
+Use the matching SDK for the app framework, such as [Next.js](/tools/frontend/nextjs/). Design roles and permissions around application resources rather than relying only on UI visibility.
+
+## Test it
+
+Test sign-up, sign-in, session expiry, sign-out, and denied access. Verify server-side authorization independently of hidden or disabled UI controls.
+
+## Security and performance
+
+Protect secret keys, configure allowed redirect and origin settings, and review session lifetime and webhook verification. Check the current plan limits before relying on a feature.
+
+## Common mistakes
+
+- Hiding a button is not authorization.
+- Trusting client-provided user identifiers can expose another user's data.
+- Copying development keys into production can bind the app to the wrong instance.
+
+## Observability
+
+Monitor auth errors, webhook delivery, session failures, and provider availability. Never log raw tokens or secret keys.
+
+## Upgrade and migration notes
+
+Review the SDK-specific release notes and migration guides before upgrades. Plan user and session migration explicitly when changing providers.
+
+## Alternatives
+
+Keycloak offers self-hosting and protocol control. Better Auth offers an application-integrated open-source option but leaves more operations with the application team.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Clerk documentation](https://clerk.com/docs)
+- [Next.js quickstart](https://clerk.com/docs/nextjs/getting-started/quickstart)
+- [Clerk changelog](https://clerk.com/changelog)
+- [Clerk pricing](https://clerk.com/pricing)
+- [Clerk service terms](https://clerk.com/legal/standard-terms)

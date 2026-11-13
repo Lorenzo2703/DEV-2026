@@ -1,0 +1,74 @@
+---
+title: ClickHouse
+summary: Design columnar analytical storage and queries for large event and aggregate workloads.
+category: data
+maturity: stable
+radar: adopt
+toolVersion: "26.10"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://clickhouse.com/docs/
+repo: https://github.com/ClickHouse/ClickHouse
+license: Apache-2.0
+pricing: mixed
+difficulty: advanced
+alternatives: [postgresql]
+related: [opentelemetry]
+tags: [analytics, database, columnar]
+---
+
+## What it is, when to use it, when not to
+
+ClickHouse is a column-oriented database designed for analytical queries over large datasets. Use it for event analytics, observability, and aggregations where its storage and query model fit.
+
+It is not a default replacement for an application database with frequent transactional updates and relational constraints.
+
+## Prerequisites and versions
+
+This guide references ClickHouse **26.10**. ClickHouse Cloud and self-managed deployments have different operational responsibilities and costs.
+
+## Install and minimal setup
+
+Choose ClickHouse Cloud or a self-managed deployment, create a database and least-privilege user, and select a client supported by the deployment.
+
+## Correct implementation
+
+Design table ordering keys, partitions, and retention around the queries you actually run. Use bulk ingestion where suitable and inspect query plans and resource use before scaling.
+
+## Integrate with the rest of the stack
+
+Use ClickHouse for analytical workloads and retain a transactional database such as [PostgreSQL](/tools/data/postgresql/) where the application needs relational updates.
+
+## Test it
+
+Validate ingestion volume, query correctness, retention, and recovery using representative data distributions and queries.
+
+## Security and performance
+
+Restrict network and user privileges, encrypt connections, set resource limits, and control retention. Avoid high-cardinality or poorly ordered layouts that inflate storage and query cost.
+
+## Common mistakes
+
+- Copying an OLTP schema without considering columnar query patterns can waste resources.
+- Upgrading mixed-version clusters without checking compatibility can change query behavior.
+- Unbounded event retention or ingestion can create unexpected storage costs.
+
+## Observability
+
+Monitor query latency, resource utilization, insert backlog, part counts, replication, and disk growth. Review system logs after upgrades.
+
+## Upgrade and migration notes
+
+The 26.10 changelog includes analyzer and system metric-log changes. Follow the documented sequencing for mixed-version clusters and test compatibility before production upgrades.
+
+## Alternatives
+
+PostgreSQL suits transactional relational data and smaller analytical loads. Managed analytics services can reduce operational work but change portability and cost.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [ClickHouse documentation](https://clickhouse.com/docs/)
+- [Installation guidance](https://clickhouse.com/docs/get-started/setup/install)
+- [ClickHouse 2026 changelog](https://clickhouse.com/docs/resources/changelogs/oss/2026)

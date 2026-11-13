@@ -1,0 +1,35 @@
+---
+title: Choose a stack by its boundaries
+summary: Select the smallest coherent set of tools by tracing where content, state, trust, and operations actually live.
+tags: [architecture, decision-making, operations]
+---
+
+## Start with the workload
+
+Write down what a request or publishing action must do: render content, accept user input, persist state, call an external service, or run a background task. Separate build-time work from request-time work. A static content site and a personalized application may share a language without sharing a runtime architecture.
+
+## Draw the trust and state boundaries
+
+Mark which inputs are controlled by users, which values are secrets, and which state must survive a process restart. Validate data at the boundary where it enters the system. Keep private credentials on the server and keep them out of source control and generated static assets.
+
+For static publishing, Astro can produce the pages at build time, but private or request-specific work needs a server-side boundary. See the [static handbook blueprint](/blueprints/static-handbook/) for that split.
+
+## Choose one tool per responsibility
+
+Pick a runtime and package manager that your deployment environment supports. Add a framework when it removes real routing, validation, or lifecycle complexity. Add persistence only for durable application state; add an observability backend only after deciding what telemetry is useful and where it will be retained.
+
+Avoid overlapping tools that perform the same job unless a migration or compatibility constraint justifies the overlap. Keep the chosen tools' pins and lockfiles consistent across development, CI, and production.
+
+## Make the stack verifiable
+
+For each boundary, write a test that would catch the failure you care about: malformed input, a failed database transaction, a missing static asset, a broken deployment, or a user flow that no longer works. Run the same examples and checks in CI that developers use locally. A passing type check does not prove runtime input is valid; a successful build does not prove the deployed route or domain is correct.
+
+## Plan an exit path
+
+Record which output is portable and which configuration is provider-specific. Keep content, application logic, and secrets separate from hosting configuration. For every managed service, identify the data export or replacement step before that dependency becomes difficult to change.
+
+## Examples from this handbook
+
+- [Static handbook site](/blueprints/static-handbook/) keeps published content in generated static output and uses a measured browser layer.
+- [Node.js service foundation](/blueprints/node-service/) separates runtime validation, persistence, telemetry, and deployment checks.
+- The [technology radar](/radar/) shows which approaches this handbook adopts, trials, assesses, or holds rather than recommending every tool by default.

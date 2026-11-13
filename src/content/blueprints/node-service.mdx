@@ -1,0 +1,42 @@
+---
+title: Node.js service foundation
+summary: A small Node.js service with explicit runtime boundaries, relational persistence, telemetry, and CI verification.
+tools:
+  - languages-runtimes/nodejs
+  - languages-runtimes/typescript
+  - data/postgresql
+  - observability/opentelemetry
+  - ci-cd/github-actions
+  - testing/playwright
+difficulty: advanced
+---
+
+## Who this blueprint is for
+
+Use this foundation when you need a long-running JavaScript service, relational persistence, and operational signals. It keeps the runtime, database, test, and deployment responsibilities explicit instead of introducing a framework or hosting abstraction before the service needs one.
+
+It is a starting architecture, not a complete production service. Add a router, authentication, and request schemas only after their requirements and operational implications are understood.
+
+## Stack shape
+
+- **Runtime and boundaries:** [Node.js](/tools/languages-runtimes/nodejs/) with an explicitly chosen module format; use [TypeScript](/tools/languages-runtimes/typescript/) for compile-time checks, not as a substitute for input validation.
+- **Persistence:** [PostgreSQL](/tools/data/postgresql/) with migrations, parameterized operations, and deliberate transaction boundaries.
+- **Telemetry:** [OpenTelemetry](/tools/observability/opentelemetry/) for correlated service traces without coupling instrumentation to one backend.
+- **Delivery:** [GitHub Actions](/tools/ci-cd/github-actions/) for least-privilege checks and protected deployment.
+- **Verification:** [Playwright](/tools/testing/playwright/) for browser-facing journeys when the service is part of a user-facing application; use focused service tests for API contracts.
+
+## Build sequence
+
+1. Pin a supported Node.js line and declare ESM or CommonJS intentionally.
+2. Define request and response contracts, then validate untrusted input at the boundary.
+3. Add database migrations and test transaction behavior against PostgreSQL semantics.
+4. Instrument request outcomes and database operations while excluding secrets and sensitive payloads.
+5. Run deterministic tests and security checks in CI before deployment; exercise health and shutdown behavior in the target environment.
+
+## Security and operations
+
+Keep database credentials in the deployment secret store, use a database role limited to the service's needs, and avoid logging credentials or raw sensitive inputs. Bound request processing, configure timeouts at the service and proxy layers, and handle graceful shutdown during deploys.
+
+## Trade-offs and exit path
+
+The blueprint deliberately avoids choosing an HTTP framework or an observability backend. Select those after route complexity, middleware needs, and telemetry operations are known. PostgreSQL is a distinct service dependency; migrations and portable SQL form the boundary if the hosting environment changes.

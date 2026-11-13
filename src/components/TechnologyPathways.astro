@@ -1,0 +1,993 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  tools: CollectionEntry<'tools'>[];
+}
+
+interface RoleDefinition {
+  id: string;
+  title: string;
+  description: string;
+  toolIds: string[];
+}
+
+interface ScopeDefinition {
+  id: string;
+  title: string;
+  description: string;
+  roleIds: string[];
+}
+
+const { tools } = Astro.props;
+const publishedTools = new Map(tools.map((tool) => [tool.id, tool]));
+
+const roles: Record<string, RoleDefinition> = {
+  frontend: {
+    id: 'frontend',
+    title: 'Frontend',
+    description: 'The framework that serves your user-facing experience.',
+    toolIds: ['frontend/nextjs', 'frontend/astro', 'frontend/angular'],
+  },
+  styling: {
+    id: 'styling',
+    title: 'UI styling',
+    description: 'Choose a styling system or component approach.',
+    toolIds: ['styling-ui/tailwind-css', 'styling-ui/shadcn-ui', 'styling-ui/motion'],
+  },
+  runtime: {
+    id: 'runtime',
+    title: 'Language / runtime',
+    description: 'Choose the language or runtime for your application.',
+    toolIds: [
+      'languages-runtimes/nodejs',
+      'languages-runtimes/python',
+      'languages-runtimes/typescript',
+      'languages-runtimes/rust',
+    ],
+  },
+  'ai-runtime': {
+    id: 'runtime',
+    title: 'Language / runtime',
+    description: 'Python and Node.js are both common foundations for AI applications.',
+    toolIds: ['languages-runtimes/python', 'languages-runtimes/nodejs'],
+  },
+  backend: {
+    id: 'backend',
+    title: 'Backend / API',
+    description: 'Choose an application framework for APIs and server logic.',
+    toolIds: ['backend-apis/fastapi', 'backend-apis/fastify', 'backend-apis/spring-boot'],
+  },
+  'ai-backend': {
+    id: 'backend',
+    title: 'Backend / API',
+    description: 'Choose a backend framework suited to serving AI features.',
+    toolIds: ['backend-apis/fastapi', 'backend-apis/fastify'],
+  },
+  database: {
+    id: 'database',
+    title: 'Database',
+    description: 'Pick a primary database for application data.',
+    toolIds: [
+      'data/postgresql',
+      'data/mongodb',
+      'data/sqlite',
+      'data/supabase',
+      'data/turso',
+      'data/redis',
+    ],
+  },
+  'ai-database': {
+    id: 'database',
+    title: 'Database / retrieval',
+    description: 'Choose a data store, including options for vector search and retrieval.',
+    toolIds: ['data/pgvector', 'data/qdrant', 'data/postgresql', 'data/mongodb'],
+  },
+  'service-database': {
+    id: 'database',
+    title: 'Database',
+    description: 'Pick a primary store for service data.',
+    toolIds: ['data/postgresql', 'data/mongodb', 'data/sqlite', 'data/redis'],
+  },
+  'ai-tooling': {
+    id: 'ai-tooling',
+    title: 'AI tooling',
+    description: 'AI frameworks, model tooling, and evaluation options.',
+    toolIds: [
+      'ai-dev/langgraph',
+      'ai-dev/langchain',
+      'ai-dev/llamaindex',
+      'ai-dev/ollama',
+      'ai-dev/mcp',
+      'ai-dev/ragas',
+    ],
+  },
+  auth: {
+    id: 'auth',
+    title: 'Authentication',
+    description: 'Add sign-in and identity management when the product needs it.',
+    toolIds: ['auth/authjs', 'auth/better-auth', 'auth/clerk', 'auth/keycloak'],
+  },
+  testing: {
+    id: 'testing',
+    title: 'Testing',
+    description: 'Choose browser, unit, and accessibility testing tools.',
+    toolIds: ['testing/playwright', 'testing/vitest', 'testing/axe-core'],
+  },
+  deployment: {
+    id: 'deployment',
+    title: 'Deployment',
+    description: 'Choose how the application is packaged or hosted.',
+    toolIds: [
+      'deployment/cloudflare',
+      'deployment/docker',
+      'deployment/kubernetes',
+      'deployment/coolify',
+      'deployment/caddy',
+    ],
+  },
+  'static-deployment': {
+    id: 'deployment',
+    title: 'Hosting',
+    description: 'Pick a platform or web server for a static site.',
+    toolIds: ['deployment/cloudflare', 'deployment/caddy', 'deployment/coolify'],
+  },
+  observability: {
+    id: 'observability',
+    title: 'Observability',
+    description: 'Monitor application health, performance, and errors.',
+    toolIds: [
+      'observability/opentelemetry',
+      'observability/grafana',
+      'observability/prometheus',
+      'observability/sentry',
+      'observability/signoz',
+    ],
+  },
+  'ai-observability': {
+    id: 'observability',
+    title: 'AI observability',
+    description: 'Trace, evaluate, and monitor AI application behavior.',
+    toolIds: [
+      'observability/langfuse',
+      'observability/arize-phoenix',
+      'observability/opentelemetry',
+    ],
+  },
+  analytics: {
+    id: 'analytics',
+    title: 'Analytics',
+    description: 'Understand how people use your product or content.',
+    toolIds: ['analytics/plausible', 'analytics/umami', 'analytics/posthog'],
+  },
+  'ci-cd': {
+    id: 'ci-cd',
+    title: 'CI / CD',
+    description: 'Automate checks and delivery when changes are made.',
+    toolIds: ['ci-cd/github-actions', 'ci-cd/woodpecker-ci'],
+  },
+};
+
+const scopeDefinitions: ScopeDefinition[] = [
+  {
+    id: 'ai-app',
+    title: 'AI application',
+    description: 'A user-facing product with AI features, retrieval, and an application backend.',
+    roleIds: [
+      'frontend',
+      'styling',
+      'ai-runtime',
+      'ai-backend',
+      'ai-database',
+      'ai-tooling',
+      'auth',
+      'testing',
+      'deployment',
+      'ai-observability',
+      'ci-cd',
+    ],
+  },
+  {
+    id: 'ai-service',
+    title: 'AI service',
+    description: 'An API or worker that runs models, agents, or retrieval without a product UI.',
+    roleIds: [
+      'ai-runtime',
+      'ai-backend',
+      'ai-database',
+      'ai-tooling',
+      'auth',
+      'testing',
+      'deployment',
+      'ai-observability',
+      'ci-cd',
+    ],
+  },
+  {
+    id: 'web-app',
+    title: 'Web application',
+    description: 'A full-stack web product with a frontend, application backend, and data store.',
+    roleIds: [
+      'frontend',
+      'styling',
+      'runtime',
+      'backend',
+      'database',
+      'auth',
+      'testing',
+      'deployment',
+      'observability',
+      'analytics',
+      'ci-cd',
+    ],
+  },
+  {
+    id: 'api-service',
+    title: 'API / service',
+    description: 'A backend service or API without a required user-facing frontend.',
+    roleIds: [
+      'runtime',
+      'backend',
+      'service-database',
+      'auth',
+      'testing',
+      'deployment',
+      'observability',
+      'ci-cd',
+    ],
+  },
+  {
+    id: 'static-site',
+    title: 'Static / content site',
+    description:
+      'A documentation, blog, or marketing site without a dedicated backend or database.',
+    roleIds: ['frontend', 'styling', 'static-deployment', 'analytics', 'testing', 'ci-cd'],
+  },
+];
+
+const scopes = scopeDefinitions
+  .map((scope) => ({
+    ...scope,
+    roles: scope.roleIds
+      .map((roleId) => roles[roleId])
+      .filter((role): role is RoleDefinition => role !== undefined)
+      .map((role) => ({
+        ...role,
+        tools: role.toolIds.flatMap((id) => {
+          const tool = publishedTools.get(id);
+          return tool ? [{ id: tool.id, title: tool.data.title }] : [];
+        }),
+      }))
+      .filter((role) => role.tools.length > 0),
+  }))
+  .filter((scope) => scope.roles.length > 0);
+---
+
+<figure class="technology-pathways" aria-labelledby="technology-pathways-title">
+  <figcaption class="pathways-intro">
+    <p class="eyebrow">Interactive stack builder</p>
+    <h2 id="technology-pathways-title">Choose a stack for your project</h2>
+    <p>
+      Start with your project scope, then choose one technology for each relevant role. Each
+      choice links to its guide.
+    </p>
+  </figcaption>
+
+  <div class="roadmap" data-technology-pathways>
+    <script type="application/json" data-scope-data set:html={JSON.stringify(scopes)}></script>
+    <svg class="roadmap-connectors" aria-hidden="true"></svg>
+
+    <section class="roadmap-stage scope-stage" aria-labelledby="scope-stage-title">
+      <div class="stage-heading">
+        <span class="stage-number">01</span>
+        <h3 id="scope-stage-title">What are you building?</h3>
+      </div>
+      <div class="scope-options" data-scope-options>
+        {
+          scopes.map((scope) => (
+            <button
+              class="roadmap-node scope-node"
+              type="button"
+              data-scope-id={scope.id}
+              aria-pressed="false"
+            >
+              <span class="scope-node-title">{scope.title}</span>
+              <span class="scope-node-description">{scope.description}</span>
+              <span class="scope-node-count">{scope.roles.length} roles</span>
+            </button>
+          ))
+        }
+      </div>
+    </section>
+
+    <section
+      class="roadmap-stage role-stage"
+      aria-labelledby="role-stage-title"
+      data-role-stage
+      hidden
+    >
+      <div class="stage-heading">
+        <span class="stage-number">02</span>
+        <div>
+          <h3 id="role-stage-title">Choose one technology per role</h3>
+          <p data-role-stage-description></p>
+        </div>
+      </div>
+      <div class="role-options" data-role-options></div>
+    </section>
+
+    <section class="stack-summary" data-stack-summary aria-live="polite" hidden>
+      <div class="summary-header">
+        <div>
+          <p class="eyebrow">Your stack</p>
+          <h3 data-summary-title></h3>
+        </div>
+        <p class="summary-progress" data-summary-progress></p>
+      </div>
+      <ul class="summary-choices" data-summary-choices></ul>
+    </section>
+
+    <div class="roadmap-footer">
+      <p class="roadmap-status" role="status" data-roadmap-status>
+        Select a project scope to see relevant technology choices.
+      </p>
+      <button class="roadmap-reset" type="button" data-roadmap-reset hidden>
+        Start over
+      </button>
+    </div>
+  </div>
+</figure>
+
+<script>
+  interface ToolChoice {
+    id: string;
+    title: string;
+  }
+
+  interface RoleChoice {
+    id: string;
+    title: string;
+    description: string;
+    tools: ToolChoice[];
+  }
+
+  interface ScopeChoice {
+    id: string;
+    title: string;
+    description: string;
+    roles: RoleChoice[];
+  }
+
+  interface Connector {
+    from: HTMLElement;
+    to: HTMLElement;
+    active: boolean;
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-technology-pathways]').forEach((roadmap) => {
+    const dataElement = roadmap.querySelector<HTMLScriptElement>('[data-scope-data]');
+    const connectorSvg = roadmap.querySelector<SVGSVGElement>('.roadmap-connectors');
+    const scopeStage = roadmap.querySelector<HTMLElement>('[data-scope-options]');
+    const roleStage = roadmap.querySelector<HTMLElement>('[data-role-stage]');
+    const roleTitle = roadmap.querySelector<HTMLElement>('#role-stage-title');
+    const roleDescription = roadmap.querySelector<HTMLElement>('[data-role-stage-description]');
+    const roleOptions = roadmap.querySelector<HTMLElement>('[data-role-options]');
+    const summary = roadmap.querySelector<HTMLElement>('[data-stack-summary]');
+    const summaryTitle = roadmap.querySelector<HTMLElement>('[data-summary-title]');
+    const summaryProgress = roadmap.querySelector<HTMLElement>('[data-summary-progress]');
+    const summaryChoices = roadmap.querySelector<HTMLElement>('[data-summary-choices]');
+    const status = roadmap.querySelector<HTMLElement>('[data-roadmap-status]');
+    const resetButton = roadmap.querySelector<HTMLButtonElement>('[data-roadmap-reset]');
+
+    if (
+      !dataElement ||
+      !connectorSvg ||
+      !scopeStage ||
+      !roleStage ||
+      !roleTitle ||
+      !roleDescription ||
+      !roleOptions ||
+      !summary ||
+      !summaryTitle ||
+      !summaryProgress ||
+      !summaryChoices ||
+      !status ||
+      !resetButton
+    ) {
+      return;
+    }
+
+    const scopeDataElement = dataElement;
+    const connectorsLayer = connectorSvg;
+    const roleStageElement = roleStage;
+    const roleTitleElement = roleTitle;
+    const roleDescriptionElement = roleDescription;
+    const roleChoiceList = roleOptions;
+    const stackSummary = summary;
+    const stackTitle = summaryTitle;
+    const stackProgress = summaryProgress;
+    const stackChoices = summaryChoices;
+    const roadmapStatus = status;
+    const startOverButton = resetButton;
+    const scopes = JSON.parse(scopeDataElement.textContent ?? '[]') as ScopeChoice[];
+    const scopeButtons = Array.from(roadmap.querySelectorAll<HTMLButtonElement>('[data-scope-id]'));
+    let selectedScope: ScopeChoice | undefined;
+    const selectedTools = new Map<string, ToolChoice>();
+
+    function renderRoles(scope: ScopeChoice) {
+      roleChoiceList.replaceChildren();
+
+      scope.roles.forEach((role) => {
+        const branch = document.createElement('section');
+        branch.className = 'roadmap-role';
+        branch.dataset.roleId = role.id;
+
+        const heading = document.createElement('h4');
+        heading.className = 'roadmap-node role-node';
+        heading.dataset.roleNode = role.id;
+        heading.textContent = role.title;
+
+        const description = document.createElement('p');
+        description.className = 'role-description';
+        description.textContent = role.description;
+
+        const choices = document.createElement('div');
+        choices.className = 'technology-options';
+
+        role.tools.forEach((tool) => {
+          const button = document.createElement('button');
+          button.className = 'roadmap-node technology-node';
+          button.type = 'button';
+          button.dataset.roleId = role.id;
+          button.dataset.toolId = tool.id;
+          button.setAttribute('aria-pressed', 'false');
+          button.textContent = tool.title;
+          choices.append(button);
+        });
+
+        branch.append(heading, description, choices);
+        roleChoiceList.append(branch);
+      });
+    }
+
+    function updateSummary() {
+      if (!selectedScope) return;
+
+      const selectedCount = selectedTools.size;
+      stackTitle.textContent = selectedScope.title;
+      stackProgress.textContent = `${selectedCount} of ${selectedScope.roles.length} roles selected`;
+      stackChoices.replaceChildren();
+
+      selectedScope.roles.forEach((role) => {
+        const item = document.createElement('li');
+        item.className = 'summary-choice';
+
+        const roleName = document.createElement('span');
+        roleName.className = 'summary-role';
+        roleName.textContent = role.title;
+
+        const tool = selectedTools.get(role.id);
+        if (tool) {
+          const link = document.createElement('a');
+          link.href = `/tools/${tool.id}/`;
+          link.textContent = tool.title;
+          item.append(roleName, link);
+        } else {
+          const prompt = document.createElement('span');
+          prompt.className = 'summary-prompt';
+          prompt.textContent = 'Choose one';
+          item.append(roleName, prompt);
+        }
+
+        stackChoices.append(item);
+      });
+    }
+
+    function drawConnectors() {
+      const bounds = roadmap.getBoundingClientRect();
+      const width = Math.max(bounds.width, 1);
+      const height = Math.max(bounds.height, 1);
+      connectorsLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      connectorsLayer.setAttribute('width', String(width));
+      connectorsLayer.setAttribute('height', String(height));
+      connectorsLayer.replaceChildren();
+
+      const connectors: Connector[] = [];
+      const root = roadmap.querySelector<HTMLElement>('.scope-stage .stage-heading');
+      if (root) {
+        scopeButtons.forEach((button) => {
+          connectors.push({
+            from: root,
+            to: button,
+            active: button.dataset.scopeId === selectedScope?.id,
+          });
+        });
+      }
+
+      if (selectedScope) {
+        selectedScope.roles.forEach((role) => {
+          const branch = roleChoiceList.querySelector<HTMLElement>(
+            `[data-role-id="${role.id}"].roadmap-role`,
+          );
+          const roleNode = branch?.querySelector<HTMLElement>('[data-role-node]');
+          if (!branch || !roleNode) return;
+
+          const selectedTool = selectedTools.get(role.id);
+          const selectedScopeButton = scopeButtons.find(
+            (button) => button.dataset.scopeId === selectedScope?.id,
+          );
+          if (!selectedScopeButton) return;
+
+          connectors.push({
+            from: selectedScopeButton,
+            to: roleNode,
+            active: Boolean(selectedTool),
+          });
+
+          branch.querySelectorAll<HTMLElement>('[data-tool-id]').forEach((toolNode) => {
+            connectors.push({
+              from: roleNode,
+              to: toolNode,
+              active: toolNode.dataset.toolId === selectedTool?.id,
+            });
+          });
+        });
+      }
+
+      connectors.forEach(({ from, to, active }) => {
+        const fromRect = from.getBoundingClientRect();
+        const toRect = to.getBoundingClientRect();
+        const fromX = fromRect.left + fromRect.width / 2 - bounds.left;
+        const fromY = fromRect.bottom - bounds.top;
+        const toX = toRect.left + toRect.width / 2 - bounds.left;
+        const toY = toRect.top - bounds.top;
+        const bend = Math.max((toY - fromY) * 0.45, 16);
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+
+        path.setAttribute(
+          'd',
+          `M ${fromX} ${fromY} C ${fromX} ${fromY + bend}, ${toX} ${toY - bend}, ${toX} ${toY}`,
+        );
+        path.setAttribute('class', active ? 'roadmap-edge is-active' : 'roadmap-edge');
+        connectorsLayer.append(path);
+      });
+    }
+
+    function selectScope(scopeId: string) {
+      selectedScope = scopes.find((scope) => scope.id === scopeId);
+      if (!selectedScope) return;
+
+      selectedTools.clear();
+      scopeButtons.forEach((button) => {
+        button.setAttribute('aria-pressed', String(button.dataset.scopeId === scopeId));
+      });
+      roleStageElement.hidden = false;
+      stackSummary.hidden = false;
+      startOverButton.hidden = false;
+      roleTitleElement.textContent = 'Choose one technology per role';
+      roleDescriptionElement.textContent = selectedScope.description;
+      renderRoles(selectedScope);
+      updateSummary();
+      roadmapStatus.textContent = `${selectedScope.title} selected. Choose one option for each relevant role.`;
+      requestAnimationFrame(drawConnectors);
+    }
+
+    scopeButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        if (button.dataset.scopeId) selectScope(button.dataset.scopeId);
+      });
+    });
+
+    roleChoiceList.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLButtonElement) || !target.dataset.roleId || !target.dataset.toolId) {
+        return;
+      }
+
+      const role = selectedScope?.roles.find((candidate) => candidate.id === target.dataset.roleId);
+      const tool = role?.tools.find((candidate) => candidate.id === target.dataset.toolId);
+      if (!role || !tool) return;
+
+      selectedTools.set(role.id, tool);
+      roleChoiceList
+        .querySelectorAll<HTMLButtonElement>(`[data-role-id="${role.id}"][data-tool-id]`)
+        .forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.toolId === tool.id));
+        });
+
+      updateSummary();
+      roadmapStatus.textContent = `${role.title}: ${tool.title} selected.`;
+      requestAnimationFrame(drawConnectors);
+    });
+
+    startOverButton.addEventListener('click', () => {
+      selectedScope = undefined;
+      selectedTools.clear();
+      scopeButtons.forEach((button) => button.setAttribute('aria-pressed', 'false'));
+      roleChoiceList.replaceChildren();
+      roleStageElement.hidden = true;
+      stackSummary.hidden = true;
+      startOverButton.hidden = true;
+      connectorsLayer.replaceChildren();
+      roadmapStatus.textContent = 'Select a project scope to see relevant technology choices.';
+    });
+
+    const resizeObserver = new ResizeObserver(() => requestAnimationFrame(drawConnectors));
+    resizeObserver.observe(roadmap);
+    window.addEventListener('load', drawConnectors, { once: true });
+  });
+</script>
+
+<style is:global>
+  .technology-pathways {
+    --pathway-accent: var(--color-brand);
+    --pathway-ink: var(--color-ink);
+    --pathway-muted: var(--color-muted);
+    --pathway-border: color-mix(in srgb, var(--color-ink) 25%, transparent);
+    --pathway-surface: var(--color-paper);
+    margin: 3rem auto;
+    max-width: 76rem;
+    color: var(--pathway-ink);
+  }
+
+  .technology-pathways *,
+  .technology-pathways *::before,
+  .technology-pathways *::after {
+    box-sizing: border-box;
+  }
+
+  .pathways-intro {
+    max-width: 48rem;
+    margin: 0 auto 2rem;
+    text-align: center;
+  }
+
+  .pathways-intro h2 {
+    margin: 0.35rem 0 0.65rem;
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    letter-spacing: -0.035em;
+  }
+
+  .pathways-intro > p:last-child {
+    margin: 0 auto;
+    color: var(--pathway-muted);
+    line-height: 1.65;
+  }
+
+  .eyebrow {
+    margin: 0;
+    color: var(--pathway-accent);
+    font-size: 0.72rem;
+    font-weight: 750;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .roadmap {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: clamp(1rem, 3vw, 2rem);
+    border: 1px solid var(--pathway-border);
+    border-radius: 1.25rem;
+    background:
+      radial-gradient(ellipse at 50% 0, color-mix(in srgb, var(--pathway-accent) 9%, transparent), transparent 60%),
+      var(--pathway-surface);
+  }
+
+  .roadmap-connectors {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+
+  .roadmap-edge {
+    fill: none;
+    stroke: color-mix(in srgb, var(--pathway-border) 82%, transparent);
+    stroke-width: 1.5;
+    transition: stroke 180ms ease, stroke-width 180ms ease;
+  }
+
+  .roadmap-edge.is-active {
+    stroke: var(--pathway-accent);
+    stroke-width: 2.5;
+  }
+
+  .roadmap-stage {
+    position: relative;
+  }
+
+  .stage-heading {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto 1.25rem;
+    padding: 0.55rem 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--pathway-accent) 45%, var(--pathway-border));
+    border-radius: 0.8rem;
+    background: var(--pathway-surface);
+  }
+
+  .stage-number {
+    display: inline-grid;
+    width: 1.65rem;
+    height: 1.65rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--color-brand-soft);
+    color: var(--pathway-ink);
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  .stage-heading h3,
+  .summary-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+
+  .stage-heading p {
+    margin: 0.25rem 0 0;
+    color: var(--pathway-muted);
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+
+  .scope-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: 0.75rem;
+  }
+
+  .roadmap-node {
+    position: relative;
+    z-index: 2;
+    border: 1px solid var(--pathway-border);
+    border-radius: 0.7rem;
+    background: var(--pathway-surface);
+    color: var(--pathway-ink);
+    font: inherit;
+    text-align: left;
+  }
+
+  button.roadmap-node {
+    cursor: pointer;
+    transition:
+      border-color 160ms ease,
+      background 160ms ease,
+      color 160ms ease,
+      transform 160ms ease;
+  }
+
+  button.roadmap-node:hover {
+    border-color: color-mix(in srgb, var(--pathway-accent) 65%, var(--pathway-border));
+    transform: translateY(-1px);
+  }
+
+  button.roadmap-node:focus-visible,
+  .roadmap-reset:focus-visible,
+  .summary-choice a:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--pathway-accent) 70%, white);
+    outline-offset: 3px;
+  }
+
+  .scope-node {
+    display: flex;
+    min-height: 8.5rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.9rem;
+  }
+
+  .scope-node[aria-pressed='true'],
+  .technology-node[aria-pressed='true'] {
+    border-color: var(--pathway-accent);
+    background: color-mix(in srgb, var(--pathway-accent) 12%, var(--pathway-surface));
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--pathway-accent) 25%, transparent);
+  }
+
+  .scope-node-title {
+    font-size: 0.95rem;
+    font-weight: 750;
+  }
+
+  .scope-node-description {
+    color: var(--pathway-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .scope-node-count {
+    margin-top: auto;
+    color: var(--pathway-accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .role-stage {
+    margin-top: 2.25rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--pathway-border);
+  }
+
+  .role-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1rem;
+  }
+
+  .roadmap-role {
+    position: relative;
+    min-width: 0;
+    padding: 0.9rem;
+    border: 1px solid color-mix(in srgb, var(--pathway-border) 72%, transparent);
+    border-radius: 0.85rem;
+    background: transparent;
+  }
+
+  .role-node {
+    width: fit-content;
+    max-width: 100%;
+    padding: 0.4rem 0.65rem;
+    font-size: 0.82rem;
+    font-weight: 750;
+  }
+
+  .role-description {
+    position: relative;
+    z-index: 3;
+    margin: 0.45rem 0 0.7rem;
+    padding-right: 0.15rem;
+    background: var(--pathway-surface);
+    color: var(--pathway-muted);
+    font-size: 0.73rem;
+    line-height: 1.5;
+  }
+
+  .technology-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .technology-node {
+    padding: 0.45rem 0.6rem;
+    font-size: 0.75rem !important;
+    line-height: 1.25;
+  }
+
+  .stack-summary {
+    position: relative;
+    z-index: 1;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--pathway-border);
+    border-radius: 0.9rem;
+    background: color-mix(in srgb, var(--pathway-surface) 96%, transparent);
+  }
+
+  .summary-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.7rem;
+  }
+
+  .summary-header .eyebrow {
+    margin-bottom: 0.25rem;
+  }
+
+  .summary-progress {
+    margin: 0;
+    color: var(--pathway-muted);
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .summary-choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .summary-choice {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.55rem 0.65rem;
+    border-radius: 0.55rem;
+    background: color-mix(in srgb, var(--pathway-border) 25%, transparent);
+    font-size: 0.78rem;
+  }
+
+  .summary-role,
+  .summary-prompt {
+    color: var(--pathway-muted);
+    font-size: 0.68rem;
+  }
+
+  .summary-choice a {
+    width: fit-content;
+    color: var(--pathway-accent);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .summary-choice a:hover {
+    text-decoration: underline;
+  }
+
+  .roadmap-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.1rem;
+  }
+
+  .roadmap-status {
+    margin: 0;
+    color: var(--pathway-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .roadmap-reset {
+    flex: 0 0 auto;
+    padding: 0.45rem 0.7rem;
+    border: 1px solid var(--pathway-border);
+    border-radius: 0.55rem;
+    background: transparent;
+    color: var(--pathway-ink);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.75rem;
+  }
+
+  .roadmap-reset:hover {
+    border-color: var(--pathway-accent);
+  }
+
+  @media (max-width: 36rem) {
+    .roadmap {
+      padding: 1rem;
+    }
+
+    .scope-options,
+    .role-options {
+      grid-template-columns: 1fr;
+    }
+
+    .scope-node {
+      min-height: auto;
+    }
+
+    .summary-header,
+    .roadmap-footer {
+      align-items: flex-start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .roadmap *,
+    .roadmap *::before,
+    .roadmap *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  }
+</style>

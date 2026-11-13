@@ -1,0 +1,69 @@
+---
+title: Claude Code
+summary: Use a repository-aware coding agent with explicit permissions and review boundaries.
+category: ai-dev
+maturity: frontier
+radar: trial
+toolVersion: 2.1.323
+verifiedAt: 2026-11-13
+officialDocs: https://code.claude.com/docs/en/overview
+license: Proprietary
+pricing: paid
+difficulty: intermediate
+alternatives: [github-copilot]
+related: [mcp]
+tags: [ai, coding-agent, automation]
+---
+
+## What it is, when to use it, when not to
+
+Claude Code is an agentic coding tool that can inspect a repository, edit files, and run commands. Use it for bounded development work with reviewable outcomes; avoid unattended access to sensitive systems or production credentials.
+
+## Prerequisites and versions
+
+This guide covers Claude Code **2.1.323**. Access requires an eligible subscription or supported API provider; available features vary by surface and account.
+
+## Install and minimal setup
+
+Install Claude Code through its official setup instructions, open a repository, and begin with a read-only task before granting write or command permissions.
+
+## Correct implementation
+
+Use repository instructions to explain project conventions, then grant the smallest permissions needed for the task. Review proposed edits and commands before accepting consequential changes.
+
+## Integrate with the rest of the stack
+
+Use hooks and MCP servers only when they have a clear purpose and controlled permissions. Keep credentials in approved local or CI secret stores, not prompts or repository instructions.
+
+## Test it
+
+Evaluate the agent on a small, reversible task. Check the diff, run the project's normal checks yourself, and confirm any generated commands had only the intended effects.
+
+## Security and performance
+
+Treat repository content, tool results, and external instructions as untrusted input. Keep secrets out of context, limit file and network access, and require approval for destructive operations.
+
+## Common mistakes
+
+Avoid broad permission bypasses, running generated shell commands without inspection, and treating a plausible explanation as proof that a change works.
+
+## Observability
+
+Review session transcripts, tool use, changed files, and command outcomes according to your organization's retention and privacy policy.
+
+## Upgrade and migration notes
+
+Check the changelog and re-evaluate permission behavior when upgrading. Run `claude --version` to identify the installed CLI release.
+
+## Alternatives
+
+GitHub Copilot offers IDE, CLI, and hosted workflows; compare supported surfaces, model access, privacy terms, and approval controls.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Claude Code overview](https://code.claude.com/docs/en/overview)
+- [Claude Code permissions](https://code.claude.com/docs/en/permissions)
+- [Claude Code changelog](https://code.claude.com/docs/en/changelog)
+- [Claude pricing](https://claude.com/pricing)

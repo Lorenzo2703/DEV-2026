@@ -1,0 +1,231 @@
+---
+title: Angular + Keycloak application platform
+summary: An identity-first Angular and Spring Boot stack with Traefik, a Python alternative, and deliberate choices for data, delivery, caching, and observability.
+tools:
+  - frontend/angular
+  - auth/keycloak
+  - backend-apis/spring-boot
+  - deployment/traefik
+  - languages-runtimes/python
+  - backend-apis/fastapi
+  - ci-cd/github-actions
+  - package-management/mise
+  - data/supabase
+  - data/mongodb
+  - data/redis
+  - observability/signoz
+  - observability/sentry
+difficulty: advanced
+toolVersion: "Angular 22.2.6; Keycloak 26.8.2; keycloak-js 26.2.5; Spring Boot 4.1.2; Traefik 3.7.19"
+verifiedAt: 2026-11-13
+needsVerification: true
+---
+
+import StackDiagram from '../../components/StackDiagram.astro';
+import CodeTabs from '../../components/CodeTabs.astro';
+import installConfig from '../../../snippets/angular-keycloak-platform/traefik.yml?raw';
+import routeConfig from '../../../snippets/angular-keycloak-platform/routes.yml?raw';
+
+<figure>
+  <img src="/images/blueprints/identity-platform.svg" width="1200" height="560" alt="A browser application connects through an HTTPS gateway to private API, data, and operations services, with an identity shield above the gateway." decoding="async" />
+  <figcaption>Identity at the boundary. Authorization in the API. Complexity only where it earns its keep.</figcaption>
+</figure>
+
+## Who this blueprint is for
+
+Build an internal operations portal or a customer-facing business application with [Angular](/tools/frontend/angular/), [Keycloak](/tools/auth/keycloak/), [Spring Boot](/tools/backend-apis/spring-boot/), and [Traefik](/tools/deployment/traefik/). The worked design is a project/task portal: users sign in, see projects they belong to, and edit tasks only when their membership permits it.
+
+**Choose one API:** Spring Boot is the default here for a JVM team; [Python](/tools/languages-runtimes/python/) with [FastAPI](/tools/backend-apis/fastapi/) is an alternative, not an extra microservice. Angular owns interaction, Keycloak owns identity, the API owns business permissions, and Traefik owns public routing.
+
+This is an implementation blueprint with tested proxy configuration, **not a downloadable, fully integrated application**. Verification date: **2026-11-13**. **Needs verification:** the combined stack and deployment-specific TLS/identity routing remain untested; complete the staging checks below before production. No frontend/backend integration compatibility is implied by the version list.
+
+## Architecture and trust boundaries
+
+<StackDiagram kind="architecture" />
+
+Serve Angular at `https://app.example.test` and its API at the same origin under `/api`. This avoids a cross-origin browser API setup in the default design. These are reserved example hosts, not deployed endpoints; replace them with your domains and provision trusted certificates.
+
+Use `https://id.example.test/realms/portal` as the canonical issuer. Browser and backend must agree on this exact issuer; a container hostname is not an interchangeable issuer. Give the backend working DNS and trusted HTTPS access to Keycloak discovery and signing keys.
+
+Keycloak needs its **own supported relational database**, independent of whether the application uses Supabase, MongoDB, or no database. Separate schemas/accounts, backup ownership, and preferably service instances. MongoDB and Redis are not substitutes for Keycloak's database. Keep Keycloak administration, Traefik management, database ports, and telemetry collectors on private networks.
+
+## Versions and prerequisites
+
+The core releases were checked against official documentation and release notes:
+
+| Component | Verified release | Constraint or decision |
+| --- | --- | --- |
+| Angular | 22.2.6 | Angular 22 requires TypeScript `>=6.0.0 <6.1.0` and a supported Node.js/RxJS combination. Do not inherit this handbook's TypeScript 7 compiler. |
+| Keycloak server | 26.8.2 | Use production deployment and upgrade guidance, not development mode. |
+| Keycloak JavaScript adapter | 26.2.5 | Separately released from the server; do not assume matching version numbers. |
+| Spring Boot | 4.1.2 | Requires Java 17 or later; choose and test a supported JDK. Use the generated Maven or Gradle wrapper. |
+| Traefik | 3.7.19 | This sample uses the file provider, explicit router priorities, and provisioned TLS certificate files. |
+| Python alternative | Python 3.15.2 / FastAPI 0.162.6 | FastAPI's release notes add Python 3.15 support and drop Python 3.10. Test your full locked dependency set. |
+| Optional build tooling | mise 2026.11.8 | Development/CI version management, not a production process supervisor. |
+| Optional monitoring/cache | SigNoz 0.150.0 / Sentry JS SDK 11.12.0 / Redis 8.10.3 | Independently verified releases, not a tested bundle or a requirement to install all three. |
+| Optional data | Supabase hosted service / MongoDB 9.0.8 | Supabase has no single whole-platform release pin; the MongoDB guide tests a standalone server, not this deployed stack. |
+
+Before starting, arrange DNS/TLS, a container registry, a secret store, a staging environment, a supported database for Keycloak, and an owner for backups and upgrades. Decide whether you need single-node availability or a redundant deployment; one Compose host is not high availability.
+
+## Select the smallest useful stack
+
+| Tool | Include when | Leave out when |
+| --- | --- | --- |
+| Angular + Keycloak + one API + Traefik | You need a substantial authenticated application with controlled identity infrastructure. | A static site or managed identity solution already meets the requirement. |
+| [mise](/tools/package-management/mise/) | Developers and CI need consistent Node.js plus Java or Python versions. | Existing devcontainers and CI images already pin the same toolchain. |
+| [Supabase](/tools/data/supabase/) | Relational projects, memberships, and tasks need managed PostgreSQL; optionally add storage or realtime. | There is no persistent business data, or an existing PostgreSQL service suffices. |
+| [MongoDB](/tools/data/mongodb/) | Your main access pattern is reading/writing bounded document aggregates with genuinely variable structure. | Memberships, joins, and cross-entity invariants dominate. The task portal defaults to relational storage. |
+| [Redis](/tools/data/redis/) | Measurements justify a shared cache or an explicitly designed distributed limiter. | The database meets latency goals. Do not add it just because login exists. |
+| [SigNoz](/tools/observability/signoz/) | You need correlated API traces, metrics, and logs with an operator and retention budget. | Existing observability already covers service incidents. |
+| [Sentry](/tools/observability/sentry/) | Actionable browser exceptions, release attribution, and source maps improve support. | Existing client error reporting is sufficient. SigNoz and Sentry can overlap; assign ownership rather than duplicate everything. |
+
+For this portal, start with **Angular + Keycloak + Spring Boot + Traefik + Supabase PostgreSQL + GitHub Actions**. Add mise if it removes toolchain drift. Start operations with redacted structured logs, health checks, and alerts; adopt SigNoz or Sentry for a concrete investigation gap. Redis stays off initially.
+
+## Build the first vertical slice
+
+1. **Define the contract.** Specify `/api/projects` and `/api/projects/{projectId}/tasks`, including pagination, validation errors, and allowed operations. Decide how `(issuer, subject)` maps to application membership. Never accept a user ID or organization ID from the browser as proof of access.
+2. **Create the frontend.** Follow Angular's installation guide and generate a standalone application with routing. Pin the CLI/runtime/compiler together, commit the chosen package-manager lockfile, and implement a login screen, project list, task editor, and explicit loading/error/empty states.
+3. **Create exactly one API.** Generate Spring Boot with Spring Web, Spring Security, and OAuth2 Resource Server support. Alternatively create a locked Python/FastAPI project with request/response models and dependency-based authentication. Add persistence only after the endpoint contracts are clear.
+4. **Bring up identity independently.** Deploy Keycloak with its own relational database, a `portal` realm, and separate clients for the browser and API audience. Export/review non-secret configuration; obtain bootstrap and database credentials from your secret store.
+5. **Wire a real round trip.** Sign in, fetch one authorized project, create a task, refresh the page, and sign out. Show a user-visible failure when identity or API calls fail; do not continue requests with a stale token after refresh fails.
+6. **Put the proxy in front.** Serve deep Angular routes with the frontend server's SPA fallback while preserving `/api` paths at the API. Test the proxy before adding optional services.
+
+Keep the frontend, backend, identity configuration, and deployment configuration in separate directories. Public Angular configuration may contain the issuer and client ID, never database credentials, client secrets, or administrative tokens.
+
+## Login and authorization, correctly
+
+<StackDiagram kind="identity" />
+
+### Configure the browser client
+
+Create a public OIDC client such as `portal-web`: **Client authentication Off**, Standard Flow enabled, PKCE with **S256**, and exact allowed redirect URIs/web origins for each environment. Disable password/direct access grants and implicit flow unless there is a separately reviewed requirement. A browser cannot protect a client secret.
+
+Initialize `keycloak-js` **before Angular routing starts**, as the adapter can change the callback URL. Use authorization code flow, retain access/refresh tokens only in memory, and allowlist the API origin and `/api` path before attaching a bearer token. Refresh before a protected request; on refresh failure, stop it and offer reauthentication. Do not attach tokens to arbitrary URLs, analytics, images, or Keycloak administration.
+
+Router guards are navigation conveniences, not security boundaries. Test ordinary redirect login even when third-party cookies are blocked; silent SSO and session iframes are browser-dependent. Use the adapter's documented logout behavior and exact approved return URLs.
+
+### Configure the API audience and permissions
+
+Define `portal-api` as the intended API audience and configure Keycloak to include it in access tokens issued for this application. Inspect a staging token's claims without logging or pasting live tokens. An ID token is not an API credential.
+
+On every protected request validate the signature using trusted issuer keys, allowlisted algorithms, exact issuer, expected audience, expiration, and not-before. Reject missing/invalid credentials with **401**. Reject authenticated users lacking the required permission with **403**; choose a consistent non-disclosure policy for resources outside their membership.
+
+**Spring Boot path:** configure Spring Security as an OAuth2 resource server, set `spring.security.oauth2.resourceserver.jwt.issuer-uri` to the canonical realm issuer, and explicitly configure audience validation for `portal-api`. Require authentication for business routes. Spring Security maps token scopes to `SCOPE_` authorities by default; nested Keycloak realm/client roles need an explicit converter if used. Authentication alone does not validate project membership.
+
+**Python path:** FastAPI's security dependency extracts a bearer credential; it does not establish trust by itself. Use a maintained JWT/OIDC verifier with discovery/JWKS caching, rotation handling, timeouts, and the same claim checks. The FastAPI password-token tutorial is not a Keycloak login implementation: do not duplicate password collection or issue a second set of application JWTs.
+
+For both backends, enforce resource authorization in the service/data query using verified subject plus membership, not a broad realm role alone. Test owner, editor, viewer, stranger, and revoked-member cases. If you move to a cookie-based backend-for-frontend, redesign session and CSRF protections; do not carry a bearer-only CSRF assumption into cookie authentication.
+
+## Traefik routing and deployment
+
+Use the file provider when you want explicit reviewed routes without mounting the Docker socket. The following original configuration is imported from `snippets/angular-keycloak-platform/` and tested for YAML validity and routing invariants.
+
+<CodeTabs id="platform-proxy" label="Traefik application configuration" items={[
+  { label: 'traefik.yml', language: 'yaml', code: installConfig },
+  { label: 'routes.yml', language: 'yaml', code: routeConfig },
+]} />
+
+Mount the install file as Traefik's configuration and the routing file in `/etc/traefik/dynamic`. The paths shown are **Linux container paths**, including when the host runs Windows. Supply a valid certificate/key for your real application domain at the referenced secret paths. No private key is included. Provision renewal separately or deliberately configure Traefik's documented ACME resolver; this snippet does not automate issuance.
+
+The API router has higher priority than the Angular fallback and matches `/api` or `/api/…`, **not `/apiculture`**. It does not strip the prefix: your backend must expose `/api` routes. Both upstream names must resolve on the private service network. The sample uses HTTP upstreams for a single-host private-network baseline; use authenticated upstream TLS across untrusted networks. TLS at the edge does not encrypt the entire stack.
+
+**Identity routing is intentionally separate from this sample.** Follow Keycloak's reverse-proxy guide for `id.example.test`, preferably with TLS re-encryption. Set its canonical hostname, choose the correct proxy-header mode, overwrite untrusted forwarded headers, and restrict trusted proxy addresses. For edge termination with an HTTP upstream, Keycloak additionally requires HTTP enabled. Do not blindly expose the whole identity host: constrain public paths to those required for login/discovery/resources, keep administration private, and test recovery/logout links. Never publish management port 9000.
+
+Set bounded proxy/backend timeouts, body-size limits, and graceful shutdown behavior for your application. Do not enable retry middleware on non-idempotent task writes unless the operation has a tested idempotency strategy. Unknown hosts must not fall through to an application or administrative service.
+
+## Data and caching decisions
+
+### Supabase PostgreSQL: the default for this portal
+
+Model projects, memberships, and tasks with foreign keys, uniqueness constraints, and versioned migrations. Store identity mappings using issuer plus subject; let Keycloak own login credentials. Give the API a least-privilege database role and bounded connection pool. Prefer API-mediated queries initially so permission checks have one owner.
+
+Supabase is not merely another name for MongoDB: it offers PostgreSQL plus platform services. **Do not enable Supabase Auth as a competing login system** for this design. If Angular needs direct Data API, Storage, or Realtime access, Supabase documents **Custom OIDC**: register the HTTPS Keycloak issuer, use asymmetric JWTs with `kid`, and add the intended `role` claim. Build and test row-level security for reads **and writes** before exposing those APIs.
+
+Use the documented third-party subject handling: `auth.uid()` assumes UUID subjects, whereas reading `sub` from verified JWT claims allows text subjects. Include issuer restrictions where multiple identity sources are trusted. Never let a browser choose an elevated database role or receive a service-role secret. Custom OIDC currently has no Supabase CLI configuration option, so record the dashboard/Management API integration in the deployment procedure; do not invent a local config key. Budget for third-party active-user usage and test signing-key rotation, whose propagation is not instantaneous.
+
+### MongoDB: an alternative, not a companion
+
+Choose [MongoDB](/tools/data/mongodb/) instead when bounded aggregates and document access patterns dominate. Define schema validation and indexes, cap growing arrays, plan schema evolution, and test transaction requirements against your actual topology. Keep tenant/project predicates in every read and write. Do not deploy both databases just to keep your options open.
+
+The standalone guide verifies **Community Server 9.0.8** with **Node.js driver 7.9.0** using a real isolated server. That does not establish Java/Python driver compatibility or validate this platform's hosting tier, authentication, replication, or backup/restore procedure; verify those deployment boundaries before adoption.
+
+### Redis: add after measurement
+
+Start without Redis. If repeated expensive reads justify caching, define cache-aside behavior, a TTL, invalidation after writes, memory limits, eviction, and a safe response to outages. Partition keys by tenant/resource; never cache one user's authorized response under a global key. Stale membership data must not extend access beyond your revocation policy.
+
+A disposable cache can fall back to the authoritative database with bounded load. A security limiter needs a separately chosen outage policy. Neither may silently fail open by accident. Do not use Redis as the authoritative project store or assume it replaces Keycloak's internal cache.
+
+## CI/CD and reproducible environments
+
+<StackDiagram kind="delivery" />
+
+Use [GitHub Actions](/tools/ci-cd/github-actions/) as the concrete CI/CD choice. Keep pull-request checks unprivileged; deployment is a separate protected job/environment.
+
+- **Frontend:** locked install, TypeScript/Angular build, component tests, browser tests, and axe checks for login/error/task flows. Verify that a deep route reload returns the application and `/api` errors never return HTML.
+- **Backend:** use the generated wrapper for Spring Boot, or a locked [uv](/tools/package-management/uv/) environment for Python. Run unit and real-database integration tests, including the authorization matrix and migration compatibility.
+- **Images:** build non-root runtime images, record a software bill of materials, scan dependencies/images, and pin deployed artifacts by digest. Serve the Angular build with a static server; do not use the development server in production.
+- **Staging:** deploy the same images that production will receive, apply backward-compatible migrations, and run real Keycloak login/logout/token-expiry and proxy tests. Mocks alone cannot certify this stack.
+- **Production:** require approval, use scoped credentials or workload identity where supported, serialize releases, and monitor the rollout. Roll back application digests only while the database schema remains compatible; restoring identity/database state is a separate recovery operation.
+
+Pin third-party Actions to full commit SHAs, default permissions to `contents: read`, grant publishing/deployment permissions only to the relevant job, and avoid privileged execution of untrusted pull requests. Never expose production secrets to PR builds or share a privileged runner with untrusted jobs.
+
+**mise is optional:** pin a compatible Node.js and the selected JDK or Python runtime in the project's configuration, review config trust before execution, and use identical pins locally and in CI. Keep Java/Python package locks and wrappers too; runtime management does not lock dependencies or container images.
+
+## Observability without duplicate plumbing
+
+**Baseline:** redacted structured logs, readiness/liveness checks appropriate to each service, proxy request status/latency, certificate-expiry alerts, identity failure rates, and tested backups. Define an availability/latency objective and an on-call owner before collecting every possible signal.
+
+**Add SigNoz for service investigations.** Instrument the chosen backend with OpenTelemetry and send telemetry through a private collector. Correlate proxy/API/database work where instrumentation supports it; do not claim every hop is automatically traced. Set sampling, retention, collector memory limits, and an outage/drop policy. Never export authorization headers, raw task content, passwords, or query secrets. SigNoz 0.150.0 changes alert APIs and introduces log-storage migration capacity requirements; read the upgrade notes before choosing it.
+
+**Add Sentry for frontend investigations.** Use the Angular SDK's error handling and release attribution, upload source maps from a protected build, and verify a controlled staging error resolves to the original source. Keep upload credentials out of Angular assets. Begin with errors only; tracing/replay are deliberate privacy and budget decisions, not automatic requirements. Restrict trace propagation destinations and scrub URLs, identifiers, payloads, and breadcrumbs.
+
+If both are enabled, assign service health/traces to SigNoz and browser error triage to Sentry, with one incident owner and deduplicated alerts. Set independent ingestion budgets. Losing telemetry should not turn a successful business operation into a failed request.
+
+## Security, performance, and failure modes
+
+- **XSS and tokens:** in-memory tokens reduce persistence, not XSS risk. Keep Angular sanitization, review third-party scripts, and deploy an application-appropriate CSP. Never use local storage for access/refresh tokens.
+- **Identity outage:** show a recoverable login error; do not bypass authentication. Document how existing tokens behave during discovery/key-cache outages and signing-key rotation.
+- **Object-level access:** scope every task/project query and mutation to verified membership, including bulk endpoints and exports.
+- **Infrastructure:** expose only intended HTTPS routes, restrict service-to-service access, rotate secrets, and test database plus identity restore. Hostname configuration alone does not restrict admin-console network access.
+- **Resource limits:** cap pages, payloads, connections, and background work. Index real query predicates and measure before introducing caching.
+- **UI performance:** lazy-load feature routes, measure loading and interaction on representative devices, and keep motion optional. The diagrams here use short CSS-only entrance animation, no animation library, and remain static under reduced motion or print.
+- **Cost:** budget database connections/storage/backups, telemetry retention/ingestion, and hosted-service usage. Running more services is not a substitute for an availability plan.
+
+## Test it and promote safely
+
+Run `bun run snippets` in this handbook to validate the imported proxy sample. Its checks cover YAML syntax, API priority/path boundaries, HTTPS attachment, and defined private upstreams. **They do not start Traefik, Keycloak, Angular, or either backend**, and are not end-to-end evidence.
+
+For your deployed staging application, use this acceptance matrix:
+
+| Scenario | Required outcome |
+| --- | --- |
+| Anonymous protected API request | 401; no project data and no HTML fallback. |
+| Expired, wrong-issuer, wrong-audience, tampered token | Rejected; no database operation or sensitive error detail. |
+| Viewer tries editing; stranger guesses a project/task ID | Denied according to the authorization/non-disclosure policy. |
+| Editor creates a task and reloads | Authorized data persists; deep Angular URL reload works. |
+| Refresh failure, logout, blocked third-party cookies | No stale-token requests; visible recovery; normal redirect login remains usable. |
+| `/api`, `/api/tasks`, `/apiculture`, unknown host | Intended router behavior; no admin-service fallback. |
+| Public identity/admin/database/telemetry probes | Login works; administrative and private endpoints remain unreachable externally. |
+| Certificate renewal and signing-key rotation | Trusted HTTPS continues; expected tokens work after the documented propagation window. |
+| Redis/telemetry outage, if enabled | Deliberate fallback/drop behavior; no authorization bypass or unbounded load. |
+| Upgrade, compatible rollback, restore drill | Smoke tests pass; backups can restore identity and application data within agreed recovery objectives. |
+
+Run browser accessibility checks on login, project list, task editor, error states, and both color themes. Add manual keyboard/focus checks. Do not treat a passing axe scan as complete accessibility certification.
+
+## Upgrade and exit paths
+
+Upgrade one layer at a time in staging. Angular's compiler/runtime matrix, Spring's JDK/framework support, Keycloak's server/adapter release split, database driver support, and Traefik configuration changes are separate compatibility gates.
+
+Keep API contracts independent of Spring or FastAPI so a backend replacement does not require rewriting Angular. Keep identity subject mappings explicit so changing providers is a migration, not a silent account merge. Preserve portable database migrations and export/restore procedures. OpenTelemetry reduces monitoring-backend coupling; Redis remains removable while it is only a disposable cache.
+
+## Sources
+
+Official sources opened on **2026-11-13**. Release numbers are the observed stable releases at that date, not permanent deployment advice.
+
+- **Angular:** [compatibility](https://angular.dev/reference/versions), [22.2.6 release](https://github.com/angular/angular/releases/tag/v22.2.6).
+- **Keycloak:** [downloads and separate adapter version](https://www.keycloak.org/downloads), [server release notes](https://www.keycloak.org/docs/latest/release_notes/index.html), [JavaScript adapter](https://www.keycloak.org/securing-apps/javascript-adapter), [26.2.5 adapter release](https://github.com/keycloak/keycloak-js/releases/tag/26.2.5), [reverse proxy](https://www.keycloak.org/server/reverseproxy).
+- **Spring:** [Boot requirements](https://docs.spring.io/spring-boot/system-requirements.html), [4.1.2 release](https://github.com/spring-projects/spring-boot/releases/tag/v4.1.2), [JWT resource server](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html).
+- **Traefik:** [file-based routing](https://doc.traefik.io/traefik/reference/routing-configuration/dynamic-configuration-methods/), [install options](https://doc.traefik.io/traefik/reference/install-configuration/configuration-options/), [HTTP routers](https://doc.traefik.io/traefik/reference/routing-configuration/http/routing/router/), [TLS certificate files](https://doc.traefik.io/traefik/reference/routing-configuration/http/tls/tls-certificates/), [3.7.19 release](https://github.com/traefik/traefik/releases/tag/v3.7.19).
+- **Python alternative:** [Python 3.15.2](https://www.python.org/downloads/release/python-3152/), [FastAPI release notes](https://fastapi.tiangolo.com/release-notes/), [JWT security tutorial and its password-flow scope](https://fastapi.tiangolo.com/tutorial/security/oauth2-jwt/).
+- **Data:** [Supabase third-party auth](https://supabase.com/docs/guides/auth/third-party/overview), [Custom OIDC and RLS](https://supabase.com/docs/guides/auth/third-party/custom-oidc), [MongoDB modeling](https://www.mongodb.com/docs/manual/data-modeling/), [MongoDB releases](https://www.mongodb.com/docs/manual/release-notes/), [Redis development](https://redis.io/docs/latest/develop/), [Redis 8.10.3 release](https://github.com/redis/redis/releases/tag/8.10.3).
+- **Operations:** [mise configuration](https://mise.jdx.dev/configuration.html), [mise 2026.11.8](https://github.com/jdx/mise/releases/tag/v2026.11.8), [SigNoz instrumentation](https://signoz.io/docs/instrumentation/), [SigNoz 0.150.0](https://github.com/SigNoz/signoz/releases/tag/v0.150.0), [Sentry Angular](https://docs.sentry.io/platforms/javascript/guides/angular/), [Sentry SDK 11.12.0](https://github.com/getsentry/sentry-javascript/releases/tag/11.12.0), [GitHub Actions secure use](https://docs.github.com/en/actions/reference/security/secure-use).

@@ -19,8 +19,8 @@ const dateLabel = verifiedAt.toLocaleDateString('en', {
 ---
 
 <p class="text-sm text-muted" data-review-deadline={verifiedAt.getTime() + reviewWindowDays * 86_400_000} data-needs-verification={needsVerification}>
-  Last verified
-  <time datetime={verifiedAt.toISOString()}>{dateLabel}</time>
+  Last verified 
+  <time class="p-1" datetime={verifiedAt.toISOString()}>{dateLabel}</time>
   <strong class="ml-2 text-amber-700 dark:text-amber-300" data-review-badge hidden={!needsReview}>Needs review</strong>
 </p>
 

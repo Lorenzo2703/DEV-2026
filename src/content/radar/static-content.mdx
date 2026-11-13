@@ -1,0 +1,24 @@
+---
+title: Static content publishing
+summary: Adopt build-time pages for this handbook; add request-time infrastructure only for a concrete route requirement.
+status: adopt
+tools:
+  - frontend/astro
+  - styling-ui/tailwind-css
+  - package-management/bun
+  - ci-cd/github-actions
+  - testing/playwright
+verifiedAt: 2026-11-13
+---
+
+## Decision
+
+This handbook is content-led, and its pages can be generated during a build. We adopt static output and add browser JavaScript only for features that need it.
+
+## Why
+
+The [static handbook blueprint](/blueprints/static-handbook/) documents the selected stack and its publishing sequence. The approach keeps generated content portable, while CI checks samples, content, builds, and browser behavior before publication.
+
+## Revisit when
+
+Reassess if a route needs personalized request-time data, private user state, or another capability that cannot be handled safely at build time. Do not introduce a server adapter pre-emptively.

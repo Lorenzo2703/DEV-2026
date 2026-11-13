@@ -1,0 +1,90 @@
+---
+title: mise
+summary: Select project tool versions and run repeatable tasks locally and in CI.
+category: package-management
+maturity: stable
+radar: trial
+toolVersion: 2026.11.8
+verifiedAt: 2026-11-13
+officialDocs: https://mise.jdx.dev/configuration.html
+repo: https://github.com/jdx/mise
+license: MIT
+pricing: free
+difficulty: beginner
+alternatives: []
+related: [bun, nodejs]
+tags: [package-manager, reproducible-builds]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import config from '../../../../snippets/mise/mise.toml?raw';
+import tests from '../../../../snippets/mise/verify.test.mjs?raw';
+
+## What it is, when to use it, when not to
+
+mise selects development tools and can run project tasks with a consistent environment. It is useful when a team needs to coordinate runtime versions across machines and CI.
+
+Try it alongside an existing workflow before replacing that workflow. If your deployment platform already provides the necessary runtime, adding another version manager there may not be worthwhile.
+
+## Prerequisites and versions
+
+This guide was verified against mise **2026.11.8**. The sample task runs Node.js tests; it requests Node.js 22.23.4. The repository test runner supplies Node.js separately and intentionally skips automatic tool installation.
+
+## Install and minimal setup
+
+Install mise using the [official instructions](https://mise.jdx.dev/installing-mise.html), then check `mise --version`. Review a project's configuration before running its tasks or installing its tools.
+
+## Correct implementation
+
+Commit a project configuration with explicit tool versions and named tasks. This example declares an exact Node.js version and a verification task:
+
+<CodeTabs id="mise-config" label="mise configuration" items={[{ label: 'mise.toml', language: 'toml', code: config }]} />
+
+Run `mise install` after reviewing the configuration, then run `mise run verify`. Use a lockfile and `mise install --locked` where the backends and target platforms support it. Keep the mise version itself pinned separately in CI.
+
+## Integrate with the rest of the stack
+
+Use the same project tool requests in development and CI. The [Node.js guide](/tools/languages-runtimes/nodejs/) explains runtime selection, while [Bun](/tools/package-management/bun/) covers this site's package manager. Configuration in parent directories and local overrides can affect the final selection; inspect it with `mise config ls` and `mise ls --current`.
+
+## Test it
+
+The sample task runs this small Node.js test:
+
+<CodeTabs id="mise-test" label="mise task test" items={[{ label: 'verify.test.mjs', language: 'javascript', code: tests }]} />
+
+Run the repository's `bun run snippets` to execute it. The sample runner uses `mise run --skip-tools verify` because CI already installs Node.js. This skips automatic installation and is not proof that the requested version was installed by mise.
+
+## Security and performance
+
+Treat project configuration and tasks as executable code: review them and their tool sources before trusting or running them. Avoid storing secrets in `mise.toml`. Verify downloaded tools where the backend supports it, and prefer reviewed updates over unbounded automatic changes.
+
+## Common mistakes
+
+- **Assuming a short version is exact:** a version prefix can resolve to different releases. Use an exact request or a lockfile where reproducibility is required.
+- **Ignoring configuration precedence:** a parent or local configuration can change the selected environment.
+- **Treating a trusted task as sandboxed:** it runs with the invoking user's permissions.
+
+## Observability
+
+Record the mise version, selected runtimes, task failures, and installation errors in CI logs. Avoid printing secrets or sensitive environment variables.
+
+## Upgrade and migration notes
+
+Read the [release notes](https://github.com/jdx/mise/releases) before changing the mise pin, and verify tool installation and tasks on each supported platform. When migrating from another version manager, compare effective versions and shell behavior before removing the old configuration.
+
+## Alternatives
+
+A language-specific version manager may be simpler when a project uses only one runtime. Prefer the least complex approach that remains reproducible for your team.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Configuration](https://mise.jdx.dev/configuration.html)
+- [Version requests](https://mise.jdx.dev/dev-tools/versions.html)
+- [Tasks](https://mise.jdx.dev/tasks/)
+- [CI](https://mise.jdx.dev/continuous-integration.html)
+- [Security](https://mise.jdx.dev/security.html)
+- [Installation](https://mise.jdx.dev/installing-mise.html)
+- [Releases](https://github.com/jdx/mise/releases)
+- [License](https://github.com/jdx/mise/blob/main/LICENSE)

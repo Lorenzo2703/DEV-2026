@@ -1,0 +1,70 @@
+---
+title: Ragas
+summary: Evaluate retrieval and generation behavior with repeatable datasets and metrics.
+category: ai-dev
+maturity: stable
+radar: assess
+toolVersion: 0.4.3
+verifiedAt: 2026-11-13
+officialDocs: https://docs.ragas.io/en/stable/
+repo: https://github.com/vibrantlabsai/ragas
+license: Apache-2.0
+pricing: free
+difficulty: advanced
+alternatives: []
+related: [langchain, llamaindex]
+tags: [ai, evaluation, rag]
+---
+
+## What it is, when to use it, when not to
+
+Ragas provides evaluation methods for AI applications, including retrieval-augmented generation. Use it to compare controlled experiments; do not treat an automated score as ground truth or a replacement for human review.
+
+## Prerequisites and versions
+
+This guide covers Ragas **0.4.3**. Evaluation methods may require model-provider access, representative test data, and additional dependencies.
+
+## Install and minimal setup
+
+Create a small, versioned dataset of representative questions, contexts, and expected evidence before selecting metrics.
+
+## Correct implementation
+
+Choose metrics that map to a product requirement, document their assumptions, and keep the dataset fixed when comparing changes. Inspect failures and examples, not just aggregate scores.
+
+## Integrate with the rest of the stack
+
+Run evaluations alongside application tests and record the model, prompt, retrieval configuration, and dataset version for each result.
+
+## Test it
+
+Check metric behavior on known-good and known-bad examples, assess score variance, and compare automated results with expert judgments.
+
+## Security and performance
+
+Evaluation data may contain sensitive prompts or documents. Use approved datasets, control provider access, and account for model calls and processing cost.
+
+## Common mistakes
+
+Avoid optimizing to a single metric, comparing scores across different datasets, or claiming statistical significance from a small sample.
+
+## Observability
+
+Track evaluation runs, dataset and model versions, score distributions, failed examples, and evaluation cost.
+
+## Upgrade and migration notes
+
+Review release notes for metric or dataset API changes and rerun a fixed baseline before adopting a new version.
+
+## Alternatives
+
+Human review, custom task-specific tests, and other evaluation frameworks can complement Ragas; select methods that measure the behavior users need.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Ragas documentation](https://docs.ragas.io/en/stable/)
+- [Ragas metrics overview](https://docs.ragas.io/en/stable/concepts/metrics/overview/)
+- [Ragas 0.4.3 release](https://github.com/vibrantlabsai/ragas/releases/tag/v0.4.3)
+- [Ragas license](https://raw.githubusercontent.com/vibrantlabsai/ragas/main/LICENSE)

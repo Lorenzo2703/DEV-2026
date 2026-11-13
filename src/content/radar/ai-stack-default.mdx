@@ -1,0 +1,19 @@
+---
+title: AI orchestration as a default dependency
+summary: Assess AI tooling against a concrete product need; do not make orchestration part of every application stack by default.
+status: assess
+tools: []
+verifiedAt: 2026-11-13
+---
+
+## Decision
+
+Assess AI and orchestration tools against a specific workflow rather than adding them to a baseline stack. The registry's AI application path is a menu of alternatives and optional components, not a mandatory bundle.
+
+## Why
+
+The AI application path in `docs/tool-registry.md` recommends starting with the narrowest framework that meets the use case and adding orchestration, evaluation, observability, or vector search only for concrete requirements. Before adopting a tool, establish what data it receives, where prompts and outputs are retained, and how failures are evaluated.
+
+## Revisit when
+
+Promote a specific tool only after its official documentation, compatibility, data handling, operational cost, and exit path have been reviewed for an actual application.

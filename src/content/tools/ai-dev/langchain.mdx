@@ -1,0 +1,71 @@
+---
+title: LangChain
+summary: Compose model calls, tools, and structured outputs into application workflows.
+category: ai-dev
+maturity: stable
+radar: trial
+toolVersion: 1.5.0
+verifiedAt: 2026-11-13
+officialDocs: https://docs.langchain.com/oss/python/langchain/overview
+repo: https://github.com/langchain-ai/langchain
+license: MIT
+pricing: mixed
+difficulty: intermediate
+alternatives: [langgraph, llamaindex]
+related: [ragas]
+tags: [ai, llm, agents]
+---
+
+## What it is, when to use it, when not to
+
+LangChain provides components for connecting models, prompts, tools, and agent workflows. Use it when its integrations and abstractions simplify a real application; direct provider APIs may be clearer for a single model call.
+
+## Prerequisites and versions
+
+This guide covers the Python package **1.5.0**, which requires Python 3.11 or newer. JavaScript and provider integration packages are versioned separately.
+
+## Install and minimal setup
+
+Choose a provider integration, configure its credential outside source control, and start with one narrowly scoped model task.
+
+## Correct implementation
+
+Validate structured output at the application boundary, give tools typed inputs and bounded authority, and handle provider errors, timeouts, and rate limits explicitly.
+
+## Integrate with the rest of the stack
+
+Use LangGraph when a workflow needs durable state or human approval. Keep retrieval, model calls, and business authorization as distinct responsibilities.
+
+## Test it
+
+Use deterministic fakes for application logic and a small evaluation set for provider-backed behavior. Test malformed outputs, tool failures, and retry limits.
+
+## Security and performance
+
+Treat prompts, retrieved documents, and tool results as untrusted. Redact sensitive data from traces and enforce authorization in application code, not in model instructions.
+
+## Common mistakes
+
+Avoid choosing an agent framework for a simple call, trusting model-generated arguments, and retrying non-idempotent tools automatically.
+
+## Observability
+
+Record latency, token usage, tool calls, failure categories, and evaluation results without logging sensitive prompt content by default.
+
+## Upgrade and migration notes
+
+Review the changelog for Python compatibility and API changes. This release requires Python 3.11 or newer; upgrade the runtime before the package.
+
+## Alternatives
+
+Provider SDKs reduce abstraction for simple use cases; LangGraph is a lower-level orchestration option for stateful workflows.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [LangChain Python overview](https://docs.langchain.com/oss/python/langchain/overview)
+- [LangChain tools](https://docs.langchain.com/oss/python/langchain/tools)
+- [LangChain changelog](https://docs.langchain.com/oss/python/releases/changelog)
+- [LangChain pricing](https://www.langchain.com/pricing)
+- [LangChain license](https://github.com/langchain-ai/langchain/blob/master/LICENSE)

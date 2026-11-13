@@ -54,7 +54,7 @@ describe('tool content validation', () => {
     verifiedAt: '2026-11-12',
     officialDocs: 'https://example.com/docs',
     license: 'MIT',
-    pricing: 'oss',
+    pricing: 'free',
     difficulty: 'beginner',
   };
   const headings = [
@@ -77,6 +77,20 @@ describe('tool content validation', () => {
   it('accepts valid tool metadata and ordered headings', () => {
     expect(validateToolFrontmatter(validTool)).toEqual([]);
     expect(validateToolHeadings(headings)).toEqual([]);
+  });
+
+  it('requires date-shaped tool versions to be quoted, matching Astro parsing', () => {
+    const unquoted = parseFrontmatter(
+      '---\ntoolVersion: 2026-07-28\nverifiedAt: 2026-11-12\n---\n',
+    ).data;
+    expect(unquoted.verifiedAt).toBeInstanceOf(Date);
+    expect(validateToolFrontmatter({ ...validTool, ...unquoted })).toEqual([
+      '"toolVersion" must be a string.',
+    ]);
+
+    const quoted = parseFrontmatter('---\ntoolVersion: "2026-07-28"\n---\n').data;
+    expect(quoted.toolVersion).toBe('2026-07-28');
+    expect(validateToolFrontmatter({ ...validTool, ...quoted })).toEqual([]);
   });
 
   it('rejects invalid metadata and missing/out-of-order sections', () => {

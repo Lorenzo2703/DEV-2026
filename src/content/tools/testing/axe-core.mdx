@@ -1,0 +1,74 @@
+---
+title: axe-core
+summary: Catch a useful subset of accessibility defects with automated checks in existing browser tests.
+category: testing
+maturity: stable
+radar: adopt
+toolVersion: "4.14.0"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://github.com/dequelabs/axe-core
+repo: https://github.com/dequelabs/axe-core
+license: MPL-2.0
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [playwright]
+tags: [accessibility, testing, browser]
+---
+
+## What it is, when to use it, when not to
+
+axe-core is an accessibility rules engine that can run against rendered web interfaces. Use it in browser or integration tests to catch common, machine-detectable issues.
+
+Automated checks cannot establish full WCAG conformance or replace keyboard, screen-reader, and human evaluation.
+
+## Prerequisites and versions
+
+This guide covers axe-core **4.14.0**. Run it against a representative browser-rendered page in your existing test stack.
+
+## Install and minimal setup
+
+Add axe-core or a browser-test integration such as `@axe-core/playwright` as a development dependency, following that integration's installation guide.
+
+## Correct implementation
+
+Run scans on important page states after the UI has rendered. Narrow exclusions only when a specific element cannot be scanned, and document the reason. Treat each finding as a prompt to inspect semantics and expected behavior, not as a score to optimize.
+
+## Integrate with the rest of the stack
+
+Add scans to browser tests, for example [Playwright](/tools/testing/playwright/), on representative routes and interaction states.
+
+## Test it
+
+Verify that a known violation is reported, remediate it, then repeat the scan. Also manually check keyboard navigation and a screen-reader flow.
+
+## Security and performance
+
+Keep the test dependency updated. Run scans on stable page states and avoid collecting user data in test reports.
+
+## Common mistakes
+
+- Treating zero violations as proof of accessibility misses issues automation cannot detect.
+- Blanket-disabling rules hides regressions across the whole application.
+- Scanning only the initial page misses dialogs, menus, and validation states.
+
+## Observability
+
+Publish actionable rule, route, and element details with CI results. Track recurring issue classes rather than relying on a single pass/fail number.
+
+## Upgrade and migration notes
+
+Rule changes can increase or decrease findings between releases. Review the release notes and triage changed results instead of automatically suppressing them.
+
+## Alternatives
+
+Browser extensions are useful during development; other accessibility engines can complement automated checks. None replace manual evaluation.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [axe-core repository and documentation](https://github.com/dequelabs/axe-core)
+- [axe-core releases](https://github.com/dequelabs/axe-core/releases)
+- [axe rules and remediation advice](https://dequeuniversity.com/rules/axe/)

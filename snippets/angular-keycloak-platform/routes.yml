@@ -1,0 +1,27 @@
+http:
+  routers:
+    frontend:
+      rule: "Host(`app.example.test`)"
+      priority: 10
+      entryPoints: [websecure]
+      service: frontend
+      tls: {}
+    api:
+      rule: "Host(`app.example.test`) && (Path(`/api`) || PathPrefix(`/api/`))"
+      priority: 100
+      entryPoints: [websecure]
+      service: api
+      tls: {}
+  services:
+    frontend:
+      loadBalancer:
+        servers:
+          - url: "http://frontend:8080"
+    api:
+      loadBalancer:
+        servers:
+          - url: "http://api:8080"
+tls:
+  certificates:
+    - certFile: /run/secrets/app-cert.pem
+      keyFile: /run/secrets/app-key.pem

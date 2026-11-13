@@ -1,0 +1,88 @@
+---
+title: uv
+summary: Manage Python projects with isolated environments, a committed lockfile, and reproducible CI checks.
+category: package-management
+maturity: stable
+radar: trial
+toolVersion: 0.13.8
+verifiedAt: 2026-11-13
+officialDocs: https://docs.astral.sh/uv/guides/projects/
+repo: https://github.com/astral-sh/uv
+license: MIT OR Apache-2.0
+pricing: free
+difficulty: beginner
+alternatives: []
+related: [python]
+tags: [python, package-manager, reproducible-builds]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import project from '../../../../snippets/uv/pyproject.toml?raw';
+import tests from '../../../../snippets/uv/test_example.py?raw';
+
+## What it is, when to use it, when not to
+
+uv manages Python project dependencies, virtual environments, and Python versions. Use it when your team wants one workflow for declaring, locking, and installing application dependencies.
+
+Try it on a small project before migrating an existing dependency workflow. If a deployment platform requires a different installation process, verify that it can consume your exported dependencies before replacing that process.
+
+## Prerequisites and versions
+
+This guide was verified against uv **0.13.8**. The example uses Python 3.12 or newer and the Python standard library. Install a supported Python interpreter and pin uv consistently in development and CI.
+
+## Install and minimal setup
+
+Choose an installation method from the [official installation guide](https://docs.astral.sh/uv/getting-started/installation/) and verify it with `uv --version`. To start a project, use `uv init`, then run project commands from its directory. uv creates the project environment and lockfile when needed.
+
+## Correct implementation
+
+Declare your Python compatibility and direct dependencies in `pyproject.toml`. This dependency-free example deliberately omits a build system: uv manages its environment without installing the project as a package.
+
+<CodeTabs id="uv-project" label="uv project" items={[{ label: 'pyproject.toml', language: 'toml', code: project }]} />
+
+Commit `uv.lock`, but do not commit the generated `.venv` directory. Add dependencies with `uv add`, review the resulting manifest and lockfile changes, and use `uv sync --locked` in CI to fail if the lockfile no longer matches project metadata. Use `uv lock --check` to check the lockfile without installing packages.
+
+## Integrate with the rest of the stack
+
+Align the Python version with your application and CI environment. The [Python guide](/tools/languages-runtimes/python/) covers runtime setup. The [official GitHub Actions guide](https://docs.astral.sh/uv/guides/integration/github/) describes pinning uv and selecting Python in CI.
+
+## Test it
+
+This test exercises an application function without external dependencies:
+
+<CodeTabs id="uv-tests" label="uv example tests" items={[{ label: 'test_example.py', language: 'python', code: tests }]} />
+
+Run `uv lock --check --offline` and `uv run --locked --offline python -m unittest -v test_example` from `snippets/uv/`. The repository runs both through `bun run snippets`. For projects with external packages, ensure the required artifacts are available before using offline mode.
+
+## Security and performance
+
+Review dependencies and their sources before updating the lockfile; pinning does not make an unsafe dependency safe. Keep private index credentials out of manifests, lockfiles, logs, and source control. Limit access to CI secrets and regularly update dependencies through reviewed changes.
+
+## Common mistakes
+
+- **Using `--frozen` as a freshness check:** it uses the lockfile without checking whether project metadata is current. Use `--locked` when that check matters.
+- **Expecting automatic upgrades:** a valid lockfile is not stale simply because a newer release exists. Upgrade deliberately and test the resulting changes.
+- **Committing an environment:** `.venv` is machine-specific; commit the manifest and lockfile instead.
+
+## Observability
+
+Record the uv and Python versions used by CI, and surface lock-check, installation, and test failures in build logs. Monitor dependency update proposals and investigate repeated resolution or installation failures without printing credentials.
+
+## Upgrade and migration notes
+
+Review the [uv releases](https://github.com/astral-sh/uv/releases) before changing your pin. Test lockfile and deployment workflows with the new version before rolling it out. When migrating from requirements files, compare the resolved dependencies and deployment behavior rather than assuming the two workflows are interchangeable.
+
+## Alternatives
+
+Existing pip-based workflows can remain a good fit when they already provide reviewed, reproducible dependency installation. Pick the workflow your deployment and team can maintain consistently.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Project guide](https://docs.astral.sh/uv/guides/projects/)
+- [Locking and syncing](https://docs.astral.sh/uv/concepts/projects/sync/)
+- [Installation](https://docs.astral.sh/uv/getting-started/installation/)
+- [GitHub Actions integration](https://docs.astral.sh/uv/guides/integration/github/)
+- [uv releases](https://github.com/astral-sh/uv/releases)
+- [MIT license](https://github.com/astral-sh/uv/blob/main/LICENSE-MIT)

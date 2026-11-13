@@ -1,0 +1,74 @@
+---
+title: Better Auth
+summary: Integrate application-owned authentication with configurable sessions, database adapters, and plugins.
+category: auth
+maturity: stable
+radar: trial
+toolVersion: "1.7.23"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://www.better-auth.com/docs
+repo: https://github.com/better-auth/better-auth
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: [clerk, keycloak]
+related: [nextjs, postgresql]
+tags: [authentication, sessions, typescript]
+---
+
+## What it is, when to use it, when not to
+
+Better Auth is a TypeScript authentication library that integrates with an application's server and database. Use it when you want framework-level auth control and are prepared to operate session storage and upgrades.
+
+Choose a hosted provider when your team prefers a managed identity service and support model.
+
+## Prerequisites and versions
+
+This guide covers Better Auth **1.7.23**. The library is free to use; deployment and database costs remain your responsibility.
+
+## Install and minimal setup
+
+Install `better-auth`, set a high-entropy secret and canonical application URL in server-side environment configuration, and select a supported database adapter.
+
+## Correct implementation
+
+Keep the auth instance and secret on the server, use the framework integration for request handling, and apply database migrations using the documented adapter flow. Authentication identifies a user; enforce per-resource authorization in application logic.
+
+## Integrate with the rest of the stack
+
+Choose a database and adapter that fit the application, such as [PostgreSQL](/tools/data/postgresql/), and use the integration for your framework.
+
+## Test it
+
+Cover account creation, sign-in, session refresh and revocation, provider callbacks, and authorization on protected routes.
+
+## Security and performance
+
+Generate and rotate secrets safely, configure trusted origins and cookies, verify callback URLs, and avoid exposing session material in logs. Review adapter and plugin security guidance before enabling them.
+
+## Common mistakes
+
+- A valid session does not automatically grant access to every resource.
+- Weak or committed secrets undermine session protection.
+- Skipping adapter migrations can leave the auth schema inconsistent.
+
+## Observability
+
+Track sign-in and callback failures, database errors, and session operations without logging passwords, tokens, or private user data.
+
+## Upgrade and migration notes
+
+Review releases for security notices and required actions. The 1.7.23 release calls out OAuth, CORS header, and shared replay-store configuration considerations for relevant MCP integrations.
+
+## Alternatives
+
+Clerk reduces identity-service operations; Keycloak provides a separately operated identity platform and protocol integrations.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Better Auth documentation](https://www.better-auth.com/docs)
+- [Installation](https://www.better-auth.com/docs/installation)
+- [Better Auth releases](https://github.com/better-auth/better-auth/releases)

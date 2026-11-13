@@ -1,0 +1,43 @@
+---
+title: Static handbook site
+summary: A content-first, statically built handbook with measured interactivity and a reproducible publish path.
+tools:
+  - frontend/astro
+  - styling-ui/tailwind-css
+  - package-management/bun
+  - ci-cd/github-actions
+  - testing/playwright
+  - deployment/cloudflare
+difficulty: intermediate
+---
+
+## Who this blueprint is for
+
+Use this stack for a documentation or handbook site whose content can be rendered at build time. It keeps the published pages portable and reserves browser JavaScript for features that need it.
+
+This is the stack used by this handbook. It is not a default for authenticated, frequently personalized applications.
+
+## Stack shape
+
+- **Content and rendering:** [Astro](/tools/frontend/astro/) for typed content and static output.
+- **Presentation:** [Tailwind CSS](/tools/styling-ui/tailwind-css/) for the site's utility styling.
+- **Local tooling:** [Bun](/tools/package-management/bun/) with the committed lockfile.
+- **Verification:** [GitHub Actions](/tools/ci-cd/github-actions/) runs checks, snippets, builds, and browser tests.
+- **Browser behavior:** [Playwright](/tools/testing/playwright/) verifies key journeys and automated accessibility checks.
+- **Hosting:** [Cloudflare Workers static assets](/tools/deployment/cloudflare/) is one deployment option; keep the generated site portable so another static host remains an exit path.
+
+## Build sequence
+
+1. Define and validate the content collections before adding pages.
+2. Keep examples in runnable snippet directories and import them into content rather than copying code into prose.
+3. Generate static output and the search index from the same locked dependency set.
+4. Run type, content, snippet, and browser checks before publishing that build.
+5. Verify the deployed origin, metadata, feeds, and key links after deployment.
+
+## Leave out until needed
+
+Do not add server rendering, a database, user accounts, or analytics merely because the framework can support them. Add a server-side component only when a specific route needs request-time data or private state. Keep secrets out of generated assets and source-controlled configuration.
+
+## Trade-offs and exit path
+
+Build-time rendering makes publishing dependent on a successful build and deploy; it does not refresh content on its own. Search indexes and generated metadata are also build artifacts that must be deployed with the corresponding pages. The static output is the portability boundary: a different static host can serve it, while provider-specific routing and deployment configuration will need replacement.

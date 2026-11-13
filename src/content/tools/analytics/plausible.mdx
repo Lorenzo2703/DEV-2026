@@ -1,0 +1,71 @@
+---
+title: Plausible
+summary: Measure web traffic with a lightweight analytics tool and purposeful event design.
+category: analytics
+maturity: stable
+radar: adopt
+toolVersion: 3.2.1
+verifiedAt: 2026-11-13
+officialDocs: https://plausible.io/docs
+repo: https://github.com/plausible/analytics
+license: AGPL-3.0
+pricing: mixed
+difficulty: beginner
+alternatives: [umami]
+related: []
+tags: [analytics, privacy, web]
+---
+
+## What it is, when to use it, when not to
+
+Plausible provides web analytics with hosted and self-hosted options. Use it for site traffic and a small set of purposeful events; choose a different product when you need extensive user-level product analytics.
+
+## Prerequisites and versions
+
+This guide covers Plausible Community Edition **3.2.1**. Hosted plan features and self-hosted operational requirements differ.
+
+## Install and minimal setup
+
+Create a site, add the documented tracking integration, and verify pageviews in a non-production environment before collecting events.
+
+## Correct implementation
+
+Define events around decisions the team needs to make. Keep property values minimal, document retention, and avoid sending direct identifiers or sensitive URL parameters.
+
+## Integrate with the rest of the stack
+
+Keep analytics non-critical to page rendering and user transactions. Use a documented event vocabulary shared by application and reporting owners.
+
+## Test it
+
+Confirm pageviews and intended events arrive once, check excluded paths and domains, and verify privacy-sensitive values are not collected.
+
+## Security and performance
+
+Review script placement, access roles, retention, and self-hosted security updates. Analytics collection should not expose secrets in query strings or event properties.
+
+## Common mistakes
+
+Avoid tracking every click, treating aggregate analytics as an authoritative business record, or assuming a privacy-focused tool removes all compliance obligations.
+
+## Observability
+
+Monitor event ingestion, site configuration, script availability, and data freshness.
+
+## Upgrade and migration notes
+
+Review Community Edition releases and database migration instructions before self-hosted upgrades. Export or retain source data needed for migration.
+
+## Alternatives
+
+[Umami](/tools/analytics/umami/) is another web analytics option with self-hosted and hosted offerings; PostHog supports broader product analytics.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Plausible documentation](https://plausible.io/docs)
+- [Plausible changelog](https://plausible.io/changelog)
+- [Plausible 3.2.1 release](https://github.com/plausible/analytics/releases/tag/v3.2.1)
+- [Plausible subscription plans](https://plausible.io/docs/subscription-plans)
+- [Plausible license](https://github.com/plausible/analytics/blob/master/LICENSE.md)

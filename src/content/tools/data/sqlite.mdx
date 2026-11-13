@@ -1,0 +1,74 @@
+---
+title: SQLite
+summary: Use an embedded relational database for local, single-node, or application-bundled persistence.
+category: data
+maturity: stable
+radar: adopt
+toolVersion: "3.54.1"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://www.sqlite.org/docs.html
+repo: https://www.sqlite.org/src
+license: Public domain
+pricing: free
+difficulty: beginner
+alternatives: [postgresql, turso]
+related: [python, better-auth]
+tags: [database, embedded, sql]
+---
+
+## What it is, when to use it, when not to
+
+SQLite is an embedded SQL database stored in a local file, with no separate server process. Use it for local applications, prototypes, and workloads whose concurrency and deployment fit its model.
+
+Choose a client-server database for many concurrent writers, centralized access, or distributed operations.
+
+## Prerequisites and versions
+
+The latest stable SQLite release verified is **3.54.1**. Confirm the version bundled by your language runtime or application package; it may differ from the latest upstream release.
+
+## Install and minimal setup
+
+Use a maintained language binding or the SQLite command-line tool. Create schema changes as reviewed migrations and store the database file in an appropriate persistent location.
+
+## Correct implementation
+
+Use transactions for related changes, parameterized statements for user input, and a migration history for schema evolution. Define backup and restore procedures that account for the database and any associated journal or WAL files.
+
+## Integrate with the rest of the stack
+
+SQLite can serve embedded application data or local development. Move to [PostgreSQL](/tools/data/postgresql/) when server-side concurrency, replication, or centralized operations become necessary.
+
+## Test it
+
+Exercise migrations, transaction rollback, concurrent access patterns, backup restoration, and application behavior with a copy of representative data.
+
+## Security and performance
+
+Protect file permissions and backups; application-level access controls still matter. Monitor lock contention and file growth and choose journal settings for the deployment.
+
+## Common mistakes
+
+- Assuming every language binding contains the latest SQLite engine can miss fixes.
+- Treating a file copy during active writes as a verified backup can produce an unusable restore.
+- Selecting SQLite for a high-write multi-instance service can create contention.
+
+## Observability
+
+Monitor database errors, lock waits, file size, migration outcomes, and backup restore checks.
+
+## Upgrade and migration notes
+
+Review SQLite release history and the binding's release notes. Test schema migration and recovery before upgrading the embedded engine.
+
+## Alternatives
+
+PostgreSQL suits shared multi-user services. Turso extends SQLite-compatible workflows into embedded and managed deployment models, with separate compatibility considerations.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [SQLite documentation](https://www.sqlite.org/docs.html)
+- [SQLite release history](https://www.sqlite.org/changes.html)
+- [SQLite official site and latest release](https://www.sqlite.org/)

@@ -1,0 +1,71 @@
+---
+title: Docker
+summary: Package applications as reproducible container images with minimized runtime privileges.
+category: deployment
+maturity: stable
+radar: adopt
+toolVersion: 29.9.3
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://docs.docker.com/
+repo: https://github.com/moby/moby
+license: Apache-2.0
+pricing: mixed
+difficulty: intermediate
+related: [github-actions, kubernetes]
+tags: [containers, deployment, supply-chain]
+---
+
+## What it is, when to use it, when not to
+
+Docker provides tooling and products for building and running containerized applications. Use container images for repeatable packaging and deployment; avoid assuming a container alone provides a complete security boundary.
+
+## Prerequisites and versions
+
+This guide covers Docker Engine **29.9.3**. Docker Engine, Docker Desktop, and Compose are separate components with different release and licensing details.
+
+## Install and minimal setup
+
+Install a supported Docker product, build an image from a minimal application definition, and run it locally with only required ports and configuration.
+
+## Correct implementation
+
+Use multi-stage builds where useful, pin base images deliberately, run as a non-root user, and keep credentials out of image layers. Review the image contents before publishing.
+
+## Integrate with the rest of the stack
+
+Build and scan images in CI, publish immutable artifacts, and deploy the same artifact through environments. Define health checks and resource limits in the runtime platform.
+
+## Test it
+
+Check that the built image starts, serves expected traffic, and does not contain build-time secrets. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Keep the daemon and host patched, restrict access to the Docker socket, and minimize image contents. Treat access to the daemon as privileged.
+
+## Common mistakes
+
+Avoid running as root without need, using mutable production tags, or mounting sensitive host paths into untrusted containers.
+
+## Observability
+
+Monitor container restarts, resource use, image vulnerabilities, and deployment health.
+
+## Upgrade and migration notes
+
+Review release and compatibility notes for the engine, Compose, and related tooling separately.
+
+## Alternatives
+
+Podman offers a daemonless container workflow; Kubernetes or managed container services may handle orchestration when needed.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Docker documentation](https://docs.docker.com/)
+- [Docker Engine 29.9.3 release](https://github.com/moby/moby/releases/tag/docker-v29.9.3)
+- [Moby license](https://github.com/moby/moby/blob/master/LICENSE)
+
+Check current Docker product terms and component versions for the platform you use.

@@ -1,0 +1,71 @@
+---
+title: Kubernetes
+summary: Orchestrate container workloads with explicit resource, access, and rollout policies.
+category: deployment
+maturity: stable
+radar: adopt
+toolVersion: 1.37.1
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://kubernetes.io/docs/home/
+repo: https://github.com/kubernetes/kubernetes
+license: Apache-2.0
+pricing: free
+difficulty: advanced
+related: [docker, prometheus, traefik]
+tags: [deployment, containers, orchestration]
+---
+
+## What it is, when to use it, when not to
+
+Kubernetes orchestrates containerized workloads across a cluster. Use it when scheduling, service discovery, and rollout needs justify cluster operations; prefer a simpler deployment model for a small application.
+
+## Prerequisites and versions
+
+This guide covers Kubernetes **1.37.1**. Select a supported distribution and confirm its version, upgrade, and support policy.
+
+## Install and minimal setup
+
+Choose a managed or self-managed cluster, define a namespace and minimal workload, and use the platform’s supported access configuration.
+
+## Correct implementation
+
+Declare resource requests and limits, health probes, service accounts, and network policy intentionally. Store secrets outside source control and use reviewed, versioned manifests.
+
+## Integrate with the rest of the stack
+
+Connect deployment automation, image registries, ingress, monitoring, and storage using explicit ownership boundaries. Validate workload behavior against the target cluster version.
+
+## Test it
+
+Verify rollout, readiness, scaling, and failure recovery in a non-production cluster. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Apply least-privilege RBAC, patch control-plane and node components, isolate workloads, and monitor resource pressure.
+
+## Common mistakes
+
+Avoid broad cluster-admin permissions, unbounded resources, and treating a successful manifest apply as proof of service health.
+
+## Observability
+
+Monitor node and workload health, scheduling failures, API availability, resource saturation, and deployment status.
+
+## Upgrade and migration notes
+
+Follow the distribution’s version-skew and upgrade policy. Test API deprecations, add-on compatibility, and restore procedures before production upgrades.
+
+## Alternatives
+
+k3s provides a lighter Kubernetes distribution; managed container services or simpler platform-as-a-service options can reduce operational burden.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Kubernetes documentation](https://kubernetes.io/docs/home/)
+- [Kubernetes release history](https://kubernetes.io/releases/)
+- [Kubernetes license](https://github.com/kubernetes/kubernetes/blob/master/LICENSE)
+
+Select a maintained minor release and follow its version-skew and support policy.

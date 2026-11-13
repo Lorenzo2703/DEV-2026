@@ -1,0 +1,88 @@
+---
+title: Algolia
+summary: Index public records and query them with a restricted search key.
+category: data
+maturity: stable
+radar: trial
+toolVersion: 5.64.0
+verifiedAt: 2026-11-13
+officialDocs: https://www.algolia.com/doc/libraries/sdk/methods/search/search-single-index
+repo: https://github.com/algolia/algoliasearch-client-javascript
+license: MIT
+pricing: free-tier
+difficulty: intermediate
+alternatives: []
+related: [typescript]
+tags: [search, data, hosted-service]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import search from '../../../../snippets/algolia/search.ts?raw';
+import tests from '../../../../snippets/algolia/search.test.ts?raw';
+
+## What it is, when to use it, when not to
+
+Algolia is a hosted search service. Its JavaScript client queries indices of records maintained by your application. It is useful when a team needs hosted relevance and search features without operating a search cluster.
+
+For a small static handbook, a local build-time index may be simpler and cheaper. Consider the operational and billing implications before replacing one.
+
+## Prerequisites and versions
+
+This example uses the **5.64.0** JavaScript client and a Node.js environment. A live search also requires an Algolia application, an index populated with public guide records, and a suitably restricted search key. The SDK license is MIT; the hosted service has separate pricing.
+
+## Install and minimal setup
+
+Install the JavaScript client with your package manager and create an index through your own indexing pipeline. Give each record a stable `objectID`, title, and URL so updates correspond to the same source item. Obtain a restricted search-only key; do not put an administrative key in client code.
+
+## Correct implementation
+
+Use the application ID and restricted key to create a client, then pass the target index and user query to the search function. This example returns a bounded page of selected fields:
+
+<CodeTabs id="algolia-search" label="Algolia search" items={[{ label: 'search.ts', language: 'typescript', code: search }]} />
+
+The generic type describes the expected response; it does not validate remote records at runtime. Validate data before indexing or at the boundary when the source is not trusted. Handle rejected requests in the application and show users an appropriate error rather than an empty success state.
+
+## Integrate with the rest of the stack
+
+Produce index records from your source of truth in a controlled pipeline. Review schema and relevance changes, and reconcile deletions so stale records do not remain searchable. The [TypeScript guide](/tools/languages-runtimes/typescript/) covers validation at application boundaries.
+
+## Test it
+
+The sample tests use the real client with a simulated requester; they verify the query, returned hits, and error propagation without an account or network access:
+
+<CodeTabs id="algolia-test" label="Algolia search tests" items={[{ label: 'search.test.ts', language: 'typescript', code: tests }]} />
+
+Run `bun run snippets` to execute them. Add a separate integration test against a disposable index to verify your real credentials and indexing pipeline.
+
+## Security and performance
+
+An exposed search key can still allow scraping or excessive requests. Limit its index access and other restrictions, and only index information intended for its audience. Keep administrative credentials on trusted infrastructure. Monitor search requests and record counts against the current plan; search-as-you-type can generate a request for every keystroke.
+
+## Common mistakes
+
+- **Publishing an admin key:** use restricted search credentials for public clients.
+- **Indexing private fields:** search-only access can expose indexed data.
+- **Treating generated IDs as stable:** set `objectID` from the source so updates and deletes target the intended record.
+
+## Observability
+
+Track search failures, latency, request volume, and indexing freshness. Alert on indexing failures and unexpected usage, and avoid logging credentials or sensitive queries.
+
+## Upgrade and migration notes
+
+The version above is the JavaScript client version, not a version of the hosted service. Review [client releases](https://github.com/algolia/algoliasearch-client-javascript/releases/tag/5.64.0), test upgrades against a disposable index, and retain your source records so a different search system can be rebuilt.
+
+## Alternatives
+
+For static public content, a build-time search index avoids a hosted service. A database's built-in full-text search may be sufficient for simpler query and relevance needs.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Search an index](https://www.algolia.com/doc/libraries/sdk/methods/search/search-single-index)
+- [Prepare records](https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data)
+- [API key security](https://www.algolia.com/doc/guides/security/api-keys)
+- [Pricing](https://www.algolia.com/pricing/)
+- [JavaScript client 5.64.0](https://github.com/algolia/algoliasearch-client-javascript/releases/tag/5.64.0)
+- [SDK license](https://github.com/algolia/algoliasearch-client-javascript/blob/main/LICENSE)

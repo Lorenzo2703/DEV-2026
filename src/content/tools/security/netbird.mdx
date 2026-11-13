@@ -1,0 +1,71 @@
+---
+title: NetBird
+summary: Build an identity-aware private network with explicit peer and resource policies.
+category: security
+maturity: stable
+radar: trial
+toolVersion: 0.83.1
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://docs.netbird.io/
+repo: https://github.com/netbirdio/netbird
+license: BSD-3-Clause
+pricing: mixed
+difficulty: intermediate
+related: [tailscale, headscale]
+tags: [networking, zero-trust, vpn]
+---
+
+## What it is, when to use it, when not to
+
+NetBird is an identity-aware private networking platform with hosted and self-managed paths. Evaluate it when private peer connectivity and centralized policy are needed; avoid adding an overlay network without clear ownership.
+
+## Prerequisites and versions
+
+This guide covers NetBird **0.83.1**. Decide how users and devices authenticate and which network resources they should reach.
+
+## Install and minimal setup
+
+Choose hosted or self-hosted operation and enroll a test peer. Set access policies before connecting sensitive workloads.
+
+## Correct implementation
+
+Use least-privilege peer and resource policies, manage identities centrally where supported, and define how device access is removed. Secure management-plane credentials and configuration.
+
+## Integrate with the rest of the stack
+
+Treat private network access as an additional boundary, not a substitute for service authorization. Document routing, DNS, and firewall interactions.
+
+## Test it
+
+Confirm allowed and denied connectivity across representative peers, including revocation behavior. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Review management-plane exposure, peer enrollment, and key lifecycle. Measure connectivity and throughput for the actual network topology.
+
+## Common mistakes
+
+Avoid overly broad peer access and assume encrypted connectivity alone enforces user-level permissions.
+
+## Observability
+
+Monitor peer status, policy changes, connection failures, and self-hosted control-plane health.
+
+## Upgrade and migration notes
+
+Verify version compatibility and migration procedures before upgrading the management plane or clients.
+
+## Alternatives
+
+Tailscale provides a managed alternative; Headscale is a self-hosted control server with a narrower scope. Compare requirements before selecting.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [NetBird documentation](https://docs.netbird.io/)
+- [NetBird 0.83.1 release](https://github.com/netbirdio/netbird/releases/tag/v0.83.1)
+- [NetBird license](https://github.com/netbirdio/netbird/blob/main/LICENSE)
+
+Check current hosted-plan features and limits when choosing between cloud and self-hosted deployment.

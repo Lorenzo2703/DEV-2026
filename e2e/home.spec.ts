@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
@@ -5,8 +6,218 @@ test('home page provides the main handbook navigation', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /build and operate software/i })).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Main navigation' })
+      .getByRole('link', { name: 'Guides & posts' }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole('navigation', { name: 'Main navigation' })
+      .getByRole('link', { name: 'Posts', exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Search' }),
+  ).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Latest announcement' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Introducing Dev in 2026' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Featured blueprints' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Technology radar' })).toBeVisible();
+});
+
+test('dated guide has accessible article metadata and a social card', async ({ page }) => {
+  test.skip(!process.env.SITE_URL, 'SITE_URL is required for publishing metadata.');
+  await page.goto('/guides/2026-11-13-introducing-dev-in-2026/');
+  await expect(page.getByRole('heading', { name: 'Introducing Dev in 2026' })).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
+  const imageUrl = await page.locator('meta[property="og:image"]').getAttribute('content');
+  expect(imageUrl).toBe(
+    `${new URL(process.env.SITE_URL ?? 'https://example.test').origin}/og/guides/2026-11-13-introducing-dev-in-2026.png`,
+  );
+  const image = await page.request.get('/og/guides/2026-11-13-introducing-dev-in-2026.png');
+  expect(image.ok()).toBe(true);
+  expect(image.headers()['content-type']).toContain('image/png');
+});
+
+test('cross-cutting blueprints and stack guide are published', async ({ page }) => {
+  await page.goto('/blueprints/');
+  await expect(page.getByRole('link', { name: 'Static handbook site' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Node.js service foundation' })).toBeVisible();
+
+  await page.goto('/guides/choosing-a-stack/');
+  await expect(
+    page.getByRole('heading', { name: 'Choose a stack by its boundaries' }),
+  ).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('identity platform blueprint has accessible visuals and reduced-motion diagrams', async ({
+  page,
+}) => {
+  await page.goto('/blueprints/');
+  await page.getByRole('link', { name: 'Angular + Keycloak application platform' }).click();
+  await expect(page).toHaveURL(/\/blueprints\/angular-keycloak-platform\/$/);
+  await expect(
+    page.getByRole('heading', { name: 'Angular + Keycloak application platform', exact: true }),
+  ).toBeVisible();
+  const illustration = page.getByRole('img', { name: /browser application connects/i });
+  await expect(illustration).toBeVisible();
+  expect(
+    await illustration.evaluate((image: HTMLImageElement) => image.naturalWidth),
+  ).toBeGreaterThan(0);
+  await expect(page.locator('[data-stack-diagram]')).toHaveCount(3);
+  await expect(page.getByText(/Needs verification:/)).toBeVisible();
+  const node = page.locator('[data-stack-node]').first();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  expect(await node.evaluate((element) => getComputedStyle(element).animationName)).toBe(
+    'stack-arrive',
+  );
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  expect(await node.evaluate((element) => getComputedStyle(element).animationName)).toBe('none');
+
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate(
+      (value) => document.documentElement.setAttribute('data-theme', value),
+      theme,
+    );
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  await expect(page.getByRole('figure', { name: /Identity flow:/ })).toBeVisible();
+});
+
+test('Spring Boot guide is discoverable and presents accessible runnable samples', async ({
+  page,
+}) => {
+  await page.goto('/tools/');
+  await page.getByRole('link', { name: 'Spring Boot', exact: true }).click();
+  await expect(page).toHaveURL('/tools/backend-apis/spring-boot/');
+  await expect(page.getByRole('heading', { name: 'Spring Boot', exact: true })).toBeVisible();
+  const contract = page.locator('#spring-boot-application');
+  await contract.getByRole('tab', { name: 'GreetingController.java' }).click();
+  await expect(contract.getByRole('tabpanel')).toContainText('@Valid @RequestBody');
+  await expect(contract.getByRole('tabpanel')).toContainText('principal.getSubject()');
+  await expect(page.locator('#spring-boot-tests')).toContainText('RANDOM_PORT');
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate(
+      (value) => document.documentElement.setAttribute('data-theme', value),
+      theme,
+    );
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  await page.goto('/blueprints/angular-keycloak-platform/');
+  await expect(
+    page.getByRole('link', { name: 'Spring Boot', exact: true }).first(),
+  ).toHaveAttribute('href', '/tools/backend-apis/spring-boot/');
+});
+
+test('MongoDB guide exposes tested samples, recovery boundaries, and blueprint links', async ({
+  page,
+}) => {
+  await page.goto('/tools/');
+  await page.getByRole('link', { name: 'MongoDB', exact: true }).click();
+  await expect(page).toHaveURL('/tools/data/mongodb/');
+  await expect(page.getByRole('heading', { name: 'MongoDB', exact: true })).toBeVisible();
+  await expect(page.locator('#mongodb-schema')).toContainText('validationAction');
+  await expect(page.locator('#mongodb-tasks')).toContainText('expectedRevision');
+  await expect(page.locator('#mongodb-tests')).toContainText("version: '9.0.8'");
+  await expect(
+    page.getByRole('heading', { name: 'Prove that a backup can restore service' }),
+  ).toBeVisible();
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate(
+      (value) => document.documentElement.setAttribute('data-theme', value),
+      theme,
+    );
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  await page.goto('/blueprints/angular-keycloak-platform/');
+  await expect(page.getByRole('link', { name: 'MongoDB', exact: true }).first()).toHaveAttribute(
+    'href',
+    '/tools/data/mongodb/',
+  );
+  await page.goto('/radar/');
+  await expect(page.getByRole('link', { name: 'MongoDB', exact: true })).toBeVisible();
+});
+
+test('radar decision notes appear in their rings and open with tool links', async ({ page }) => {
+  await page.goto('/radar/');
+  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Static content publishing' })).toBeVisible();
+  await expect(
+    page
+      .getByRole('list', { name: 'trial decision notes' })
+      .getByRole('link', { name: 'Cloudflare Workers static assets' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'AI orchestration as a default dependency' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Kubernetes for the static handbook' }),
+  ).toBeVisible();
+  await page
+    .getByRole('list', { name: 'adopt decision notes' })
+    .getByRole('link', { name: 'Static content publishing' })
+    .click();
+  await expect(page).toHaveURL(/\/radar\/static-content\/$/);
+  await expect(page.getByText('Ring: adopt')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Astro' })).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
+});
+
+test('radar ring navigation is accessible and usable on narrow screens', async ({ page }) => {
+  await page.goto('/radar/');
+  const navigation = page.getByRole('navigation', { name: 'Recommendation rings' });
+  await expect(navigation.getByRole('link')).toHaveCount(4);
+  for (const ring of ['adopt', 'trial', 'assess', 'hold']) {
+    const link = navigation.locator(`a[href="#radar-${ring}"]`);
+    await link.click();
+    await expect(page).toHaveURL(new RegExp(`#radar-${ring}$`));
+    await expect(page.locator(`#radar-${ring}`)).toBeVisible();
+  }
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate(
+      (value) => document.documentElement.setAttribute('data-theme', value),
+      theme,
+    );
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  }
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  await navigation.locator('a[href="#radar-trial"]').focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/#radar-trial$/);
+  await expect(page.locator('#radar-trial')).toBeFocused();
+  const tools = page.getByRole('list', { name: 'trial tools' }).getByRole('link');
+  await expect(tools.first()).toBeVisible();
+  await tools.first().click();
+  await expect(page).toHaveURL(/\/tools\/.+\/$/);
 });
 
 test('analytics is disabled by default and exposes privacy settings when configured', async ({
@@ -24,7 +235,7 @@ test('analytics is disabled by default and exposes privacy settings when configu
   await expect(tracker).toHaveAttribute('data-do-not-track', 'true');
 });
 
-for (const collection of ['guides', 'blueprints', 'posts']) {
+for (const collection of ['guides', 'blueprints']) {
   test(`${collection} index displays published entries or an empty state`, async ({ page }) => {
     await page.goto(`/${collection}/`);
     const entries = page.locator('main article');
@@ -36,6 +247,85 @@ for (const collection of ['guides', 'blueprints', 'posts']) {
   });
 }
 
+test('legacy post URLs redirect to the unified guide pages', async ({ page }) => {
+  await page.goto('/posts/2026-11-13-introducing-dev-in-2026/');
+  await expect(page).toHaveURL(/\/guides\/2026-11-13-introducing-dev-in-2026\/$/);
+  await page.goto('/posts/');
+  await expect(page).toHaveURL(/\/guides\/$/);
+});
+
+test('guides index includes both guides and dated posts', async ({ page }) => {
+  await page.goto('/guides/');
+  await expect(page.getByRole('heading', { name: 'Guides & Posts' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Choose a stack by its boundaries' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Introducing Dev in 2026' })).toBeVisible();
+});
+
+test('home stack builder selects a scope-specific stack and highlights every selected route', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const roadmap = page.locator('[data-technology-pathways]');
+  await roadmap.locator('[data-scope-id="ai-app"]').click();
+
+  const aiTooling = roadmap.locator('.roadmap-role[data-role-id="ai-tooling"]');
+  await expect(aiTooling).toContainText('LangChain');
+  await expect(aiTooling).toContainText('LangGraph');
+  await expect(aiTooling).toContainText('LlamaIndex');
+  await expect(
+    roadmap.locator(
+      '.roadmap-role[data-role-id="runtime"] [data-tool-id="languages-runtimes/typescript"]',
+    ),
+  ).toHaveCount(0);
+
+  await aiTooling.locator('[data-tool-id="ai-dev/langchain"]').click();
+  await aiTooling.locator('[data-tool-id="ai-dev/langgraph"]').click();
+  await expect(aiTooling.locator('[data-tool-id="ai-dev/langgraph"]')).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(aiTooling.locator('[data-tool-id="ai-dev/langchain"]')).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await roadmap
+    .locator('.roadmap-role[data-role-id="backend"] [data-tool-id="backend-apis/fastapi"]')
+    .click();
+  await roadmap
+    .locator('.roadmap-role[data-role-id="database"] [data-tool-id="data/qdrant"]')
+    .click();
+  await roadmap
+    .locator('.roadmap-role[data-role-id="frontend"] [data-tool-id="frontend/nextjs"]')
+    .click();
+
+  await expect(roadmap.locator('[data-summary-progress]')).toHaveText('4 of 11 roles selected');
+  await expect(roadmap.locator('[data-summary-choices]')).toContainText('LangGraph');
+  await expect(roadmap.locator('[data-summary-choices]')).toContainText('FastAPI');
+  await expect(roadmap.locator('[data-summary-choices]')).toContainText('Qdrant');
+  await expect(roadmap.locator('[data-summary-choices]')).toContainText('Next.js');
+  await expect(roadmap.locator('.roadmap-edge.is-active')).toHaveCount(9);
+  await expect(
+    roadmap.locator('[data-summary-choices] a[href="/tools/ai-dev/langgraph/"]'),
+  ).toBeVisible();
+});
+
+test('home stack builder hides irrelevant roles and offers web-specific alternatives', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const roadmap = page.locator('[data-technology-pathways]');
+
+  await roadmap.locator('[data-scope-id="static-site"]').click();
+  await expect(roadmap.locator('.roadmap-role[data-role-id="backend"]')).toHaveCount(0);
+  await expect(roadmap.locator('.roadmap-role[data-role-id="database"]')).toHaveCount(0);
+  await expect(roadmap.locator('.roadmap-role[data-role-id="ai-tooling"]')).toHaveCount(0);
+
+  await roadmap.locator('[data-scope-id="web-app"]').click();
+  const runtime = roadmap.locator('.roadmap-role[data-role-id="runtime"]');
+  await expect(runtime.locator('[data-tool-id="languages-runtimes/typescript"]')).toBeVisible();
+  await expect(roadmap.locator('.roadmap-role[data-role-id="ai-tooling"]')).toHaveCount(0);
+});
+
 test('home page has no WCAG 2.2 AA accessibility violations', async ({ page }) => {
   await page.goto('/');
   const results = await new AxeBuilder({ page })
@@ -45,18 +335,19 @@ test('home page has no WCAG 2.2 AA accessibility violations', async ({ page }) =
   expect(results.violations).toEqual([]);
 });
 
-test('theme override persists and can return to system preference', async ({ page }) => {
+test('system theme is the default and manual theme choice persists', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
   await page.goto('/');
-  await page.getByLabel('Theme').selectOption('light');
+  await expect(page.getByRole('button', { name: 'Switch to light mode' })).toBeVisible();
+  await page.getByRole('button', { name: 'Switch to light mode' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await page.goto('/tools/');
-  await expect(page.getByLabel('Theme')).toHaveValue('light');
+  await expect(page.getByRole('button', { name: 'Switch to dark mode' })).toBeVisible();
   const card = page.locator('#tool-list article').first();
   const lightBackground = await card.evaluate(
     (element) => getComputedStyle(element).backgroundColor,
   );
-  await page.getByLabel('Theme').selectOption('dark');
+  await page.getByRole('button', { name: 'Switch to dark mode' }).click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await expect
     .poll(() => card.evaluate((element) => getComputedStyle(element).backgroundColor))
@@ -65,11 +356,77 @@ test('theme override persists and can return to system preference', async ({ pag
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
   expect(results.violations).toEqual([]);
-  await page.getByLabel('Theme').selectOption('system');
-  await expect(page.locator('html')).not.toHaveAttribute('data-theme');
+  await page.emulateMedia({ colorScheme: 'light' });
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(page.getByRole('button', { name: 'Switch to light mode' })).toBeVisible();
+});
+
+test('light primary text contrasts with surfaces and is distinct from body text', async ({
+  page,
+}) => {
+  for (const systemTheme of ['light', 'dark'] as const) {
+    await page.emulateMedia({ colorScheme: systemTheme });
+    await page.goto('/');
+    if (systemTheme === 'dark') {
+      await page.getByRole('button', { name: 'Switch to light mode' }).click();
+    }
+    const contrast = await page.evaluate(() => {
+      function luminance(color: string): number {
+        const channels = color.startsWith('#')
+          ? color
+              .slice(1)
+              .match(/.{2}/g)
+              ?.map((value) => Number.parseInt(value, 16))
+          : color.match(/\d+/g)?.map(Number);
+        if (channels?.length !== 3) throw new Error(`Unsupported color: ${color}`);
+        const linear = channels.map((channel) => {
+          const value = channel / 255;
+          return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+        });
+        const [red, green, blue] = linear;
+        if (red === undefined || green === undefined || blue === undefined) {
+          throw new Error(`Incomplete color: ${color}`);
+        }
+        return red * 0.2126 + green * 0.7152 + blue * 0.0722;
+      }
+      function ratio(first: string, second: string): number {
+        const a = luminance(first);
+        const b = luminance(second);
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      }
+      const link = document.querySelector('header nav a');
+      if (!(link instanceof HTMLElement)) throw new Error('Primary navigation link is missing.');
+      const root = getComputedStyle(document.documentElement);
+      const primary = getComputedStyle(link).color;
+      return {
+        paper: ratio(primary, root.backgroundColor),
+        soft: ratio(primary, root.getPropertyValue('--color-brand-soft').trim()),
+        body: ratio(primary, getComputedStyle(document.body).color),
+      };
+    });
+    expect(contrast.paper).toBeGreaterThanOrEqual(4.5);
+    expect(contrast.soft).toBeGreaterThanOrEqual(4.5);
+    expect(contrast.body).toBeGreaterThanOrEqual(3);
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  }
+});
+
+test('pointer glow follows the mouse without intercepting page interaction', async ({ page }) => {
+  await page.goto('/');
+  const glow = page.locator('.pointer-glow');
+  await expect(glow).toHaveAttribute('aria-hidden', 'true');
+  await page.mouse.move(160, 180);
   await expect
-    .poll(() => card.evaluate((element) => getComputedStyle(element).backgroundColor))
-    .not.toBe(lightBackground);
+    .poll(() => glow.evaluate((element) => element.getAttribute('data-active')))
+    .toBe('true');
+  await expect(glow).toHaveCSS('pointer-events', 'none');
+  await expect(glow).toHaveCSS('opacity', '1');
+  expect(await glow.evaluate((element) => element.style.getPropertyValue('--pointer-x'))).toBe(
+    '160px',
+  );
 });
 
 for (const tool of [
@@ -78,11 +435,27 @@ for (const tool of [
     title: 'TypeScript',
     sample: 'export function parseServiceConfig',
   },
+  {
+    url: '/tools/languages-runtimes/nodejs/',
+    title: 'Node.js',
+    sample: 'createHealthServer',
+  },
+  {
+    url: '/tools/languages-runtimes/python/',
+    title: 'Python',
+    sample: 'def parse_service_config',
+  },
+  { url: '/tools/languages-runtimes/rust/', title: 'Rust', sample: 'pub fn parse_port' },
   { url: '/tools/package-management/pnpm/', title: 'pnpm', sample: 'packageManager' },
   { url: '/tools/package-management/bun/', title: 'Bun', sample: 'export function welcome' },
+  { url: '/tools/package-management/uv/', title: 'uv', sample: 'requires-python' },
+  { url: '/tools/package-management/mise/', title: 'mise', sample: '[tasks.verify]' },
   { url: '/tools/frontend/astro/', title: 'Astro', sample: 'Ship a static site' },
+  { url: '/tools/frontend/nextjs/', title: 'Next.js', sample: 'Deployment checklist' },
+  { url: '/tools/frontend/angular/', title: 'Angular', sample: 'selector: ' },
   { url: '/tools/testing/vitest/', title: 'Vitest', sample: 'export function slugify' },
   { url: '/tools/styling-ui/tailwind-css/', title: 'Tailwind CSS', sample: 'import tailwindcss' },
+  { url: '/tools/styling-ui/shadcn-ui/', title: 'shadcn/ui', sample: 'Review deployment' },
   { url: '/tools/testing/playwright/', title: 'Playwright', sample: 'new AxeBuilder' },
   {
     url: '/tools/deployment/cloudflare/',
@@ -95,6 +468,7 @@ for (const tool of [
     sample: 'InMemorySpanExporter',
   },
   { url: '/tools/data/postgresql/', title: 'PostgreSQL', sample: 'CREATE TABLE tasks' },
+  { url: '/tools/data/algolia/', title: 'Algolia', sample: 'export async function searchGuides' },
   { url: '/tools/ci-cd/github-actions/', title: 'GitHub Actions', sample: 'cancel-in-progress' },
 ]) {
   test(`${tool.title} renders its imported snippet and has no accessibility violations`, async ({
@@ -161,6 +535,9 @@ test('tool pages link their sections and related category neighbors', async ({ p
     .getByRole('navigation', { name: 'On this page' })
     .getByRole('link', { name: 'Test it' })
     .click();
+  await expect(page.getByRole('navigation', { name: 'On this page' })).toHaveClass(
+    /table-of-contents/,
+  );
   await expect(page).toHaveURL(/#test-it$/);
   await page
     .getByRole('navigation', { name: 'More in this category' })
@@ -182,18 +559,54 @@ test('verification badges become stale without rebuilding the site', async ({ pa
   await expect(page.getByText('Needs review')).toBeVisible();
 });
 
-test('tool filters combine selections and reset', async ({ page }) => {
+test('tools catalog includes the registry and filters published guides', async ({ page }) => {
   await page.goto('/tools/');
+  await expect(page.getByRole('heading', { name: 'All tools' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Rust', exact: true })).toBeVisible();
+  await expect(page.getByText('Guide planned').first()).toBeVisible();
+  const registry = await readFile(new URL('../docs/tool-registry.md', import.meta.url), 'utf8');
+  const tools = [
+    ...registry.matchAll(/^\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*`([^`]+)`\s*\|/gm),
+  ].map(([, category, title, slug]) => {
+    if (!category || !title || !slug) throw new Error('Invalid registry row');
+    return { category: category.trim(), title: title.trim(), slug };
+  });
+  expect(tools.length).toBeGreaterThan(0);
+  const missing = await page
+    .locator('#tool-list [data-tool]')
+    .evaluateAll(
+      (cards, expected) =>
+        expected.filter(
+          ({ category, title, slug }) =>
+            !cards.some(
+              (card) =>
+                card.getAttribute('data-category') === category &&
+                (card.querySelector('a')?.getAttribute('href') === `/tools/${category}/${slug}/` ||
+                  card.querySelector('h2')?.textContent?.trim() === title),
+            ),
+        ),
+      tools,
+    );
+  expect(missing).toEqual([]);
+  await expect(page.locator('#tool-filters select')).toHaveCount(0);
   const initialCount = await page.getByRole('status').textContent();
-  await page.getByLabel('Category').selectOption('testing');
-  await expect(page.getByRole('status')).toHaveText('2 guides found.');
-  await page.getByLabel('Difficulty').selectOption('intermediate');
-  await expect(page.getByRole('status')).toHaveText('1 guide found.');
+  const all = page.getByRole('radio', { name: 'All', exact: true });
+  const testing = page.getByRole('radio', { name: 'testing', exact: true });
+  await expect(all).toBeChecked();
+  await all.focus();
+  await expect(all.locator(' + span')).toHaveCSS('outline-style', 'solid');
+  await all.press('ArrowRight');
+  await expect(all).not.toBeChecked();
+  await testing.locator('..').click();
+  await expect(testing).toBeChecked();
+  const testingCount = await page.locator('#tool-list [data-category="testing"]').count();
+  await expect(page.getByRole('status')).toHaveText(
+    `${testingCount} ${testingCount === 1 ? 'tool' : 'tools'} found.`,
+  );
   await expect(page.getByRole('heading', { name: 'Playwright' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Vitest' })).toBeHidden();
-  await page.getByLabel('Pricing').selectOption('mixed');
-  await expect(page.getByRole('status')).toHaveText('0 guides found.');
-  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(page.getByRole('heading', { name: 'Vitest' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Rust', exact: true })).toBeHidden();
+  await all.locator('..').click();
   await expect(page.getByRole('status')).toHaveText(initialCount ?? '');
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
@@ -206,7 +619,7 @@ test('tool guides remain available without JavaScript', async ({ browser }) => {
   const page = await context.newPage();
   await page.goto('/tools/');
   await expect(page.getByRole('heading', { name: 'Playwright' })).toBeVisible();
-  await expect(page.getByLabel('Category')).toBeHidden();
+  await expect(page.locator('#tool-filters')).toBeHidden();
   await page.goto('/tools/styling-ui/tailwind-css/');
   await expect(page.getByRole('heading', { name: 'astro.config.mjs' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'styles.css' })).toBeVisible();
@@ -219,8 +632,22 @@ test('tool guides remain available without JavaScript', async ({ browser }) => {
   await context.close();
 });
 
+test('selects remain usable in forced colors', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' });
+  await page.goto('/search/');
+  const category = page.getByLabel('Category');
+  await expect(category).toHaveCSS('appearance', 'auto');
+  await category.focus();
+  await expect(category).toHaveCSS('outline-style', 'solid');
+  await category.selectOption('testing');
+  await expect(category).toHaveValue('testing');
+});
+
 test('search finds pages and filters by category', async ({ page }) => {
   await page.goto('/search/');
+  await expect(page.getByLabel('Search terms')).toHaveCSS('min-height', '44px');
+  await page.getByLabel('Category').focus();
+  await expect(page.getByLabel('Category')).toHaveCSS('outline-style', 'solid');
   await page.getByLabel('Search terms').fill('Playwright');
   await page.getByRole('button', { name: 'Search', exact: true }).click();
   await expect(
@@ -302,9 +729,22 @@ test('configured feeds, canonical URLs, and sitemap contain published content', 
   expect(sitemap.error).toBe(false);
   expect(sitemap.locations).toContain(`${origin}/tools/testing/playwright/`);
   expect(sitemap.lastmods).toContain(verifiedAt);
+  expect(sitemap.locations).toContain(`${origin}/radar/static-content/`);
+  expect(sitemap.locations).toContain(`${origin}/guides/2026-11-13-introducing-dev-in-2026/`);
+  await page.goto('/radar/static-content/');
+  const radarVerifiedAt = await page.locator('article time').getAttribute('datetime');
+  expect(radarVerifiedAt).toBeTruthy();
+  expect(sitemap.lastmods).toContain(radarVerifiedAt);
+  expect(await page.locator('meta[property="og:image"]').getAttribute('content')).toBe(
+    `${origin}/og/radar/static-content.png`,
+  );
+  const radarImage = await page.request.get('/og/radar/static-content.png');
+  expect(radarImage.ok()).toBe(true);
+  expect(radarImage.headers()['content-type']).toContain('image/png');
   const allFeed = await parseXml('/rss.xml');
   expect(allFeed.error).toBe(false);
   expect(allFeed.links).toContain(`${origin}/tools/testing/playwright/`);
+  expect(allFeed.links).toContain(`${origin}/guides/2026-11-13-introducing-dev-in-2026/`);
   const categoryFeed = await parseXml('/feeds/testing.xml');
   expect(categoryFeed.error).toBe(false);
   expect(categoryFeed.links).toContain(`${origin}/tools/testing/playwright/`);

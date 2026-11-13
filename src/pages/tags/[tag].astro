@@ -4,12 +4,11 @@ import ToolCard from '../../components/ToolCard.astro';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 
 export async function getStaticPaths() {
-  const [tools, guides, posts] = await Promise.all([
+  const [tools, guides] = await Promise.all([
     getCollection('tools', ({ data }) => !data.draft),
     getCollection('guides', ({ data }) => !data.draft),
-    getCollection('posts', ({ data }) => !data.draft),
   ]);
-  const entries = [...tools, ...guides, ...posts];
+  const entries = [...tools, ...guides];
   const tags = [...new Set(entries.flatMap((entry) => entry.data.tags))].sort();
   return tags.map((tag) => ({
     params: { tag },

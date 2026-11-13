@@ -1,0 +1,71 @@
+---
+title: Podman
+summary: Build and run OCI containers with a daemonless, often rootless workflow.
+category: deployment
+maturity: stable
+radar: trial
+toolVersion: 6.2.0
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://docs.podman.io/en/latest/
+repo: https://github.com/podman-container-tools/podman
+license: Apache-2.0
+pricing: free
+difficulty: intermediate
+related: [docker, kubernetes]
+tags: [containers, deployment, rootless]
+---
+
+## What it is, when to use it, when not to
+
+Podman is a daemonless tool for building and running OCI containers. Consider it when rootless operation or its process model fits the environment; verify compatibility before replacing Docker-specific workflows.
+
+## Prerequisites and versions
+
+This guide covers Podman **6.2.0**. Platform behavior differs, particularly for the virtualized machine used on macOS and Windows.
+
+## Install and minimal setup
+
+Install the package for the target operating system, build a small image, and run it without elevated privileges where supported.
+
+## Correct implementation
+
+Test networking, volumes, user namespaces, and service startup on the actual target platform. Use explicit image versions and avoid embedding secrets in images.
+
+## Integrate with the rest of the stack
+
+Confirm compatibility with container registries, build systems, Compose files, and CI runners. Treat each operating system’s implementation differences as deployment constraints.
+
+## Test it
+
+Verify container startup, file permissions, networking, and shutdown behavior on supported hosts. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Prefer rootless execution when feasible and keep host packages current. Review volume mounts and privileges as carefully as with any container engine.
+
+## Common mistakes
+
+Avoid assuming every Docker API or Compose feature behaves identically across platforms.
+
+## Observability
+
+Monitor process health, resource consumption, container exits, and image provenance.
+
+## Upgrade and migration notes
+
+Check release notes and compatibility guidance for storage and networking changes before upgrading.
+
+## Alternatives
+
+Docker has broad ecosystem familiarity; Kubernetes and managed runtimes address orchestration rather than replacing local container tooling one-for-one.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Podman documentation](https://docs.podman.io/en/latest/)
+- [Podman 6.2.0 release](https://github.com/podman-container-tools/podman/releases/tag/v6.2.0)
+- [Podman license](https://github.com/podman-container-tools/podman/blob/main/LICENSE)
+
+Validate compatibility for the exact operating systems and integrations you support.

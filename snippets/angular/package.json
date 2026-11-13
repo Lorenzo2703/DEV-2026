@@ -1,0 +1,10 @@
+{
+  "name": "angular-snippet",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "typecheck": "node --check app.mjs && node --check app.test.mjs",
+    "run": "node --test app.test.mjs"
+  }
+}

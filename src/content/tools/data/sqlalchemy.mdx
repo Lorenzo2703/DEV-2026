@@ -1,0 +1,74 @@
+---
+title: SQLAlchemy
+summary: Map Python objects to relational data or use composable SQL expressions with explicit transaction scope.
+category: data
+maturity: stable
+radar: adopt
+toolVersion: "2.1.8"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://docs.sqlalchemy.org/en/21/
+repo: https://github.com/sqlalchemy/sqlalchemy
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [python, postgresql, sqlite]
+tags: [python, orm, database]
+---
+
+## What it is, when to use it, when not to
+
+SQLAlchemy is a Python SQL toolkit and ORM. Use its Core expression system for composable SQL or its ORM when mapped objects fit the domain and query patterns.
+
+Direct SQL or a lighter data layer may be clearer for a small, specialized persistence task.
+
+## Prerequisites and versions
+
+This guide covers SQLAlchemy **2.1.8**. Choose the supported driver and database dialect for your deployment.
+
+## Install and minimal setup
+
+Install SQLAlchemy and a database driver, configure an engine from protected environment settings, and create a session factory scoped to the application lifecycle.
+
+## Correct implementation
+
+Use one Session per unit of work, frame transactions explicitly, and close sessions reliably. Parameterize values through SQLAlchemy expressions and keep database I/O out of unrelated domain logic.
+
+## Integrate with the rest of the stack
+
+Use it with [Python](/tools/languages-runtimes/python/) and a database such as [PostgreSQL](/tools/data/postgresql/) or [SQLite](/tools/data/sqlite/). Use a migration tool to manage schema evolution.
+
+## Test it
+
+Cover commit, rollback, constraints, query behavior, and migrations against the production database dialect.
+
+## Security and performance
+
+Protect connection credentials, use least-privilege database roles, and avoid logging sensitive parameters. Inspect generated queries and bound connection-pool capacity.
+
+## Common mistakes
+
+- Sharing one Session across concurrent tasks can corrupt unit-of-work behavior.
+- Leaving transaction boundaries implicit makes failures harder to reason about.
+- Testing only against SQLite can hide dialect differences in production.
+
+## Observability
+
+Track pool saturation, query latency, transaction failures, and slow statements. Avoid logging credentials or private row data.
+
+## Upgrade and migration notes
+
+SQLAlchemy 2.1.8 is the current release verified here. Review major-version migration notes, dialect changes, and driver compatibility before upgrading.
+
+## Alternatives
+
+Use a lightweight query builder or direct SQL when the ORM adds more indirection than value. Choose a framework-specific ORM when its integrated conventions are a better fit.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [SQLAlchemy 2.1 documentation](https://docs.sqlalchemy.org/en/21/)
+- [Session basics](https://docs.sqlalchemy.org/en/21/orm/session_basics.html)
+- [SQLAlchemy releases](https://github.com/sqlalchemy/sqlalchemy/releases)

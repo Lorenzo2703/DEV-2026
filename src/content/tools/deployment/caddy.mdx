@@ -1,0 +1,71 @@
+---
+title: Caddy
+summary: Serve and reverse-proxy applications with an operationally simple web server.
+category: deployment
+maturity: stable
+radar: adopt
+toolVersion: 2.11.9
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://caddyserver.com/docs/
+repo: https://github.com/caddyserver/caddy
+license: Apache-2.0
+pricing: free
+difficulty: intermediate
+related: [traefik, docker]
+tags: [deployment, web-server, reverse-proxy]
+---
+
+## What it is, when to use it, when not to
+
+Caddy is an extensible web server commonly used for serving sites and reverse proxying. Consider it when clear configuration and automated HTTPS fit the deployment; use an existing platform edge when it already meets the need.
+
+## Prerequisites and versions
+
+This guide covers Caddy **2.11.9**. Public certificates require a reachable domain and working DNS; plan persistent storage for certificate state.
+
+## Install and minimal setup
+
+Install using the official instructions for the target platform and begin with one non-production site. Keep configuration and any certificate state protected.
+
+## Correct implementation
+
+Declare upstreams and hostnames explicitly, test configuration before rollout, and restrict access to administrative endpoints. Store durable state securely so certificate operations can recover.
+
+## Integrate with the rest of the stack
+
+Coordinate routing with the application and container platform. Confirm forwarded headers and client-address handling are correct for the network path.
+
+## Test it
+
+Verify HTTP-to-HTTPS behavior, certificate issuance, upstream health, and failure responses. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Protect administration and certificate data, keep the server updated, and set appropriate request and upstream limits.
+
+## Common mistakes
+
+Avoid exposing management APIs, losing persistent certificate state, or trusting forwarded headers from arbitrary clients.
+
+## Observability
+
+Monitor request failures, upstream availability, certificate renewal, and process health.
+
+## Upgrade and migration notes
+
+Check release notes and module compatibility before upgrading or changing custom builds.
+
+## Alternatives
+
+Traefik may suit dynamic container discovery; managed load balancers reduce server operations but can be less portable.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Caddy documentation](https://caddyserver.com/docs/)
+- [Caddy 2.11.9 release](https://github.com/caddyserver/caddy/releases/tag/v2.11.9)
+- [Caddy license](https://github.com/caddyserver/caddy/blob/master/LICENSE)
+
+Review the modules included in custom builds and their individual licensing.

@@ -1,0 +1,74 @@
+---
+title: Pydantic
+summary: Parse, validate, and serialize Python data using models with explicit boundary behavior.
+category: backend-apis
+maturity: stable
+radar: adopt
+toolVersion: "2.14.3"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://docs.pydantic.dev/latest/
+repo: https://github.com/pydantic/pydantic
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [python, fastapi]
+tags: [python, validation, serialization]
+---
+
+## What it is, when to use it, when not to
+
+Pydantic uses Python type annotations to validate, transform, and serialize data. Use it for API requests, configuration, and other external boundaries.
+
+For trusted internal values, ordinary Python types may be simpler; validation should be deliberate where data crosses a boundary.
+
+## Prerequisites and versions
+
+This guide covers Pydantic **2.14.3**. The current documentation supports Python 3.10 and later.
+
+## Install and minimal setup
+
+Install Pydantic in an isolated project environment and define models for the data entering or leaving a boundary.
+
+## Correct implementation
+
+Choose strict or coercive validation based on the contract, document defaults, and use explicit validators for domain rules. Keep serialization decisions separate from validation and avoid exposing private fields by accident.
+
+## Integrate with the rest of the stack
+
+Use Pydantic directly or through frameworks such as [FastAPI](/tools/backend-apis/fastapi/). Pin compatible versions across application and framework dependencies.
+
+## Test it
+
+Cover valid data, invalid types, missing values, coercion behavior, and serialization output at the boundary.
+
+## Security and performance
+
+Treat parsed input as untrusted until validated and authorized. Limit input sizes and avoid logging model contents that may contain sensitive fields.
+
+## Common mistakes
+
+- Type hints do not enforce validation unless data is parsed through the model.
+- Implicit coercion can make an API accept unintended representations.
+- Assuming serialization automatically removes private information can expose fields.
+
+## Observability
+
+Monitor validation error categories and model parsing latency. Record safe summaries rather than full payloads.
+
+## Upgrade and migration notes
+
+Pydantic 2 is the current documented major. Review its migration notes when coming from version 1 and test integrations that depend on model behavior.
+
+## Alternatives
+
+Standard-library dataclasses suit trusted data without parsing needs. Other validation libraries may better fit lightweight or schema-first requirements.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Pydantic documentation](https://docs.pydantic.dev/latest/)
+- [Pydantic releases](https://github.com/pydantic/pydantic/releases)
+- [Pydantic v2 migration guide](https://docs.pydantic.dev/latest/migration/)

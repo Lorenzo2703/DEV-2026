@@ -1,0 +1,74 @@
+---
+title: Valkey
+summary: Use a Redis-compatible in-memory data store with deliberate persistence, eviction, and access policies.
+category: data
+maturity: stable
+radar: trial
+toolVersion: "9.1.3"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://valkey.io/docs/
+repo: https://github.com/valkey-io/valkey
+license: BSD-3-Clause
+pricing: free
+difficulty: intermediate
+alternatives: [redis]
+related: [nodejs, postgresql]
+tags: [database, cache, key-value]
+---
+
+## What it is, when to use it, when not to
+
+Valkey is an open-source in-memory data store with data structures, persistence, replication, and clustering. Use it for caches, ephemeral coordination, or workloads that fit its key-value model.
+
+Do not treat a cache as the authoritative source of data unless its durability and recovery behavior meet the application's requirements.
+
+## Prerequisites and versions
+
+This guide covers stable Valkey **9.1.3**. The 9.2 release candidate is prerelease and should not be used as the production default.
+
+## Install and minimal setup
+
+Run Valkey using a supported package or managed service, restrict network access, and use an application client compatible with the deployment.
+
+## Correct implementation
+
+Choose data structures and key expiration deliberately. Set memory and eviction policies, define persistence and recovery expectations, and make operations safe to retry where applicable.
+
+## Integrate with the rest of the stack
+
+Place Valkey behind a server-side application boundary. Use PostgreSQL or another durable database for relational source-of-truth data.
+
+## Test it
+
+Exercise connection loss, expiration, eviction, restart, and recovery behavior in an environment matching production settings.
+
+## Security and performance
+
+Do not expose the service to untrusted networks. Configure ACLs, TLS where appropriate, memory limits, and backups for data that must survive failures.
+
+## Common mistakes
+
+- Publicly reachable database ports invite unauthorized commands and data loss.
+- Treating eviction as a durability strategy loses data by design.
+- Unbounded keys, values, or client connections can exhaust memory and capacity.
+
+## Observability
+
+Monitor memory, evictions, latency, connected clients, replication health, and persistence or backup status.
+
+## Upgrade and migration notes
+
+Read release notes for the exact release line and test data compatibility and recovery. Valkey documents Redis migration and compatibility considerations.
+
+## Alternatives
+
+Redis offers a similar data model and its own licensing and hosting choices. A relational database is more appropriate for durable relationships and queries.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Valkey documentation](https://valkey.io/docs/)
+- [Valkey developer and operations topics](https://valkey.io/topics/)
+- [Valkey releases](https://github.com/valkey-io/valkey/releases)

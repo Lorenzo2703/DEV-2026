@@ -3,20 +3,25 @@ import { getCollection } from 'astro:content';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 
 export async function getStaticPaths() {
-  const [guides, blueprints, posts] = await Promise.all([
+  const [guides, blueprints] = await Promise.all([
     getCollection('guides', ({ data }) => !data.draft),
     getCollection('blueprints', ({ data }) => !data.draft),
-    getCollection('posts', ({ data }) => !data.draft),
   ]);
   return [
-    { params: { collection: 'guides' }, props: { title: 'Guides', entries: guides } },
+    {
+      params: { collection: 'guides' },
+      props: { title: 'Guides & Posts', entries: guides },
+    },
     { params: { collection: 'blueprints' }, props: { title: 'Blueprints', entries: blueprints } },
-    { params: { collection: 'posts' }, props: { title: 'Posts', entries: posts } },
   ];
 }
 
 const { title, entries } = Astro.props;
-const sortedEntries = [...entries].sort((a, b) => a.data.title.localeCompare(b.data.title));
+const publishedAt = (entry: (typeof entries)[number]) =>
+  entry.collection === 'guides' ? (entry.data.publishedAt?.getTime() ?? 0) : 0;
+const sortedEntries = [...entries].sort(
+  (a, b) => publishedAt(b) - publishedAt(a) || a.data.title.localeCompare(b.data.title),
+);
 ---
 
 <SiteLayout title={title} description={`Explore published ${title.toLowerCase()} from the handbook.`}>
@@ -26,6 +31,14 @@ const sortedEntries = [...entries].sort((a, b) => a.data.title.localeCompare(b.d
       {sortedEntries.map((entry) => (
         <li>
           <article class="rounded-xl border border-slate-300/70 bg-white/70 p-6 dark:border-slate-700 dark:bg-slate-900">
+            {entry.collection === 'guides' && (
+              <p class="m-0 text-sm text-muted">
+                {entry.data.publishedAt ? 'Post' : 'Guide'}
+                {entry.data.publishedAt && (
+                  <> · <time datetime={entry.data.publishedAt.toISOString()}>{entry.data.publishedAt.toLocaleDateString('en', { dateStyle: 'medium' })}</time></>
+                )}
+              </p>
+            )}
             <h2 class="text-2xl font-bold"><a href={`/${entry.collection}/${entry.id}/`}>{entry.data.title}</a></h2>
             <p>{entry.data.summary}</p>
           </article>

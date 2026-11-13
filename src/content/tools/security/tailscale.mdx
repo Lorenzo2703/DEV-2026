@@ -1,0 +1,71 @@
+---
+title: Tailscale
+summary: Connect private services through identity-based networking and explicit access policy.
+category: security
+maturity: stable
+radar: adopt
+toolVersion: 1.104.7
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://tailscale.com/docs
+repo: https://github.com/tailscale/tailscale
+license: BSD-3-Clause
+pricing: mixed
+difficulty: intermediate
+related: [headscale, netbird]
+tags: [networking, zero-trust, vpn]
+---
+
+## What it is, when to use it, when not to
+
+Tailscale provides identity-based connectivity between devices and services. Use it to limit private network access without exposing services publicly; assess simpler network controls for small, static environments.
+
+## Prerequisites and versions
+
+This guide covers Tailscale client **1.104.7**. Plan identity-provider integration, device ownership, and an access policy before enrolling production devices.
+
+## Install and minimal setup
+
+Create an organization tailnet, enroll a test device, and define access policy before onboarding production systems. Follow official device-management and recovery guidance.
+
+## Correct implementation
+
+Grant access to specific identities and resources rather than broad network ranges. Review device approval, key expiration, DNS, and administrative roles as part of the access model.
+
+## Integrate with the rest of the stack
+
+Use the network as one control, not a replacement for application authentication or authorization. Document how services are discovered and how access is revoked.
+
+## Test it
+
+Verify both intended access and denied access from representative identities and devices. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Protect administrator accounts and enrollment workflows. Review policy changes, device inventory, and any subnet-routing or exit-node configuration.
+
+## Common mistakes
+
+Avoid granting broad access for convenience or assuming network membership authorizes every action inside an application.
+
+## Observability
+
+Review device status, policy changes, connection failures, and administrative audit events.
+
+## Upgrade and migration notes
+
+Check current client compatibility and migration guidance before changing control-plane or policy configuration.
+
+## Alternatives
+
+Headscale and NetBird offer related networking approaches with different operational and product models; compare support, policy, and hosting needs.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Tailscale documentation](https://tailscale.com/docs)
+- [Tailscale changelog](https://tailscale.com/changelog)
+- [Tailscale license](https://github.com/tailscale/tailscale/blob/main/LICENSE)
+
+Plan availability and limits vary; verify current product terms for your deployment.

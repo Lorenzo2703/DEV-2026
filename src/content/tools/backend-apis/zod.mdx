@@ -1,0 +1,74 @@
+---
+title: Zod
+summary: Validate untrusted JavaScript or TypeScript data at runtime and infer types from reusable schemas.
+category: backend-apis
+maturity: stable
+radar: adopt
+toolVersion: "4.6.7"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://zod.dev/
+repo: https://github.com/colinhacks/zod
+license: MIT
+pricing: free
+difficulty: beginner
+alternatives: []
+related: [typescript, fastify, nextjs]
+tags: [typescript, validation, schemas]
+---
+
+## What it is, when to use it, when not to
+
+Zod defines runtime schemas for JavaScript and TypeScript data, with types inferred from those schemas. Use it at boundaries such as HTTP input, environment configuration, and persisted data.
+
+Static TypeScript types alone are sufficient for values already trusted and checked within the program.
+
+## Prerequisites and versions
+
+This guide covers Zod **4.6.7**. Enable TypeScript strict mode as required by the project documentation.
+
+## Install and minimal setup
+
+Install `zod` and define schemas near the boundary where external data enters the application.
+
+## Correct implementation
+
+Parse unknown input and handle validation failures explicitly. Reuse schemas where a contract is shared, but keep input and output contracts separate when transformations or data exposure differ.
+
+## Integrate with the rest of the stack
+
+Use Zod with [TypeScript](/tools/languages-runtimes/typescript/) for runtime checks and inferred static types. It can complement an API framework such as [Fastify](/tools/backend-apis/fastify/).
+
+## Test it
+
+Check representative valid inputs, malformed values, missing fields, and boundary conditions. Confirm the application handles parse errors without exposing submitted data.
+
+## Security and performance
+
+Validate all external inputs and bound collection sizes where appropriate. Avoid returning raw validation issues if they could echo secrets or private values.
+
+## Common mistakes
+
+- Assuming a TypeScript annotation validates JSON at runtime leaves the boundary unprotected.
+- Coercion can accept values that the API contract intended to reject.
+- Duplicated schemas can drift between clients and servers.
+
+## Observability
+
+Track validation failure rates by endpoint or input category. Avoid logging full invalid values, which may contain secrets or personal data.
+
+## Upgrade and migration notes
+
+Zod 4 is stable. Review its migration notes when moving from Zod 3 and verify integrations' declared version support.
+
+## Alternatives
+
+Valibot and Ajv are alternatives with different size, schema, and ecosystem trade-offs. Choose one that matches the boundary and shared contract needs.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Zod documentation](https://zod.dev/)
+- [Zod releases](https://github.com/colinhacks/zod/releases)
+- [Zod 4 migration guide](https://zod.dev/v4/changelog)

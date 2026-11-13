@@ -4,18 +4,24 @@ import sharp from 'sharp';
 import { socialCardSvg } from '../../lib/social-card';
 
 export async function getStaticPaths() {
-  const [tools, guides, blueprints, posts] = await Promise.all([
+  const [tools, guides, blueprints, radar] = await Promise.all([
     getCollection('tools', ({ data }) => !data.draft),
     getCollection('guides', ({ data }) => !data.draft),
     getCollection('blueprints', ({ data }) => !data.draft),
-    getCollection('posts', ({ data }) => !data.draft),
+    getCollection('radar', ({ data }) => !data.draft),
   ]);
   return [
     { params: { slug: 'site' }, props: { title: 'Build and operate software with confidence' } },
-    ...[...tools, ...guides, ...blueprints, ...posts].map((entry) => ({
+    ...[...tools, ...guides, ...blueprints, ...radar].map((entry) => ({
       params: { slug: `${entry.collection}/${entry.id}` },
       props: { title: entry.data.title },
     })),
+    ...guides
+      .filter(({ data }) => data.publishedAt)
+      .map((entry) => ({
+        params: { slug: `posts/${entry.id}` },
+        props: { title: entry.data.title },
+      })),
   ];
 }
 

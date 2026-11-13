@@ -14,17 +14,17 @@ const categories = [...new Set(entries.map((entry) => entry.data.category))].sor
     <div class="grid gap-4 sm:grid-cols-2">
       <label class="flex flex-col gap-2 font-semibold" for="search-query">
         Search terms
-        <input id="search-query" type="search" required class="rounded-lg border border-slate-400 bg-paper p-2 text-ink" />
+        <input id="search-query" type="search" required class="form-control" />
       </label>
       <label class="flex flex-col gap-2 font-semibold" for="search-category">
         Category
-        <select id="search-category" class="rounded-lg border border-slate-400 bg-paper p-2 text-ink">
+        <select id="search-category" class="form-control">
           <option value="">All pages</option>
           {categories.map((category) => <option value={category}>{category.replaceAll('-', ' ')}</option>)}
         </select>
       </label>
     </div>
-    <button type="submit" class="mt-4 rounded-lg bg-brand px-5 py-3 font-semibold text-paper">Search</button>
+    <button type="submit" class="search-submit mt-4">Search</button>
   </form>
   <p id="search-status" class="mt-6" role="status" aria-live="polite"></p>
   <ul id="search-results" class="mt-4 space-y-4"></ul>

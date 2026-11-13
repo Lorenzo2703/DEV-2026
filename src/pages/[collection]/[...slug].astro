@@ -3,12 +3,11 @@ import { getCollection, render } from 'astro:content';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 
 export async function getStaticPaths() {
-  const [guides, blueprints, posts] = await Promise.all([
+  const [guides, blueprints] = await Promise.all([
     getCollection('guides', ({ data }) => !data.draft),
     getCollection('blueprints', ({ data }) => !data.draft),
-    getCollection('posts', ({ data }) => !data.draft),
   ]);
-  return [...guides, ...blueprints, ...posts].map((entry) => ({
+  return [...guides, ...blueprints].map((entry) => ({
     params: { collection: entry.collection, slug: entry.id },
     props: { entry },
   }));
@@ -17,17 +16,19 @@ export async function getStaticPaths() {
 const { entry } = Astro.props;
 const { Content, headings } = await render(entry);
 const sections = headings.filter((heading) => heading.depth === 2);
+const publishedAt = entry.collection === 'guides' ? entry.data.publishedAt : undefined;
 const readingMinutes = entry.body
   ? Math.max(1, Math.ceil(entry.body.trim().split(/\s+/).length / 200))
   : null;
-const tags = entry.collection === 'guides' || entry.collection === 'posts' ? entry.data.tags : [];
+const tags = entry.collection === 'guides' ? entry.data.tags : [];
 ---
 
 <SiteLayout title={entry.data.title} description={entry.data.summary} image={`/og/${entry.collection}/${entry.id}.png`} article>
-  <article class:list={['prose mx-auto max-w-3xl', { 'print-guide': entry.collection === 'guides' }]}>
+  <article class:list={['prose mx-auto max-w-3xl', { 'print-guide': entry.collection === 'guides', 'blueprint': entry.collection === 'blueprints' }]}>
     <a href={`/${entry.collection}/`}>← All {entry.collection}</a>
     <h1 class="mt-5 text-4xl font-bold">{entry.data.title}</h1>
     <p class="text-xl text-muted">{entry.data.summary}</p>
+    {publishedAt && <p class="text-sm text-muted"><time datetime={publishedAt.toISOString()}>{publishedAt.toLocaleDateString('en', { dateStyle: 'long' })}</time></p>}
     {readingMinutes && <p class="text-sm text-muted">{readingMinutes} min read</p>}
     {tags.length > 0 && (
       <p>Topics: {tags.map((tag, index) => (
@@ -35,7 +36,7 @@ const tags = entry.collection === 'guides' || entry.collection === 'posts' ? ent
       ))}</p>
     )}
     {sections.length > 0 && (
-      <nav aria-label="On this page" class="my-8 rounded-xl border border-slate-300/70 p-5 dark:border-slate-700">
+      <nav aria-label="On this page" class="table-of-contents">
         <p class="m-0 font-bold">On this page</p>
         <ol>{sections.map((section) => <li><a href={`#${section.slug}`}>{section.text}</a></li>)}</ol>
       </nav>
@@ -43,3 +44,23 @@ const tags = entry.collection === 'guides' || entry.collection === 'posts' ? ent
     <Content />
   </article>
 </SiteLayout>
+
+<style>
+  .blueprint :global(table) {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+  }
+  .blueprint :global(th),
+  .blueprint :global(td) {
+    padding: 0.75rem 0.5rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 25%, transparent);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+  }
+  .blueprint :global(:not(pre) > code) {
+    overflow-wrap: anywhere;
+  }
+</style>

@@ -1,0 +1,71 @@
+---
+title: Ollama
+summary: Run local or hosted language models behind an application-controlled boundary.
+category: ai-dev
+maturity: stable
+radar: trial
+toolVersion: 0.40.16
+verifiedAt: 2026-11-13
+officialDocs: https://docs.ollama.com/
+repo: https://github.com/ollama/ollama
+license: MIT
+pricing: mixed
+difficulty: intermediate
+alternatives: []
+related: [langchain]
+tags: [ai, local-models, inference]
+---
+
+## What it is, when to use it, when not to
+
+Ollama runs models locally and provides APIs for applications. Use it when local control or development convenience matters; choose hosted inference when hardware, operations, or model requirements make local serving impractical.
+
+## Prerequisites and versions
+
+This guide covers Ollama **0.40.16**. Check model requirements against available memory, storage, accelerator support, and expected concurrent requests.
+
+## Install and minimal setup
+
+Install the official application, select a model appropriate to the task and hardware, and try it locally before connecting an application.
+
+## Correct implementation
+
+Call the documented API from a backend service, set explicit timeouts and resource limits, and handle unavailable models and failed requests. Keep model selection configurable.
+
+## Integrate with the rest of the stack
+
+Use an application adapter or OpenAI-compatible client only after checking its supported features. Separate local inference from hosted model credentials and billing.
+
+## Test it
+
+Evaluate representative prompts and outputs, measure latency and memory use, and verify application behavior when the model server is stopped.
+
+## Security and performance
+
+Keep local API access bound to trusted interfaces unless remote access is deliberately secured. Treat prompts and model outputs as potentially sensitive and untrusted.
+
+## Common mistakes
+
+Avoid exposing an unauthenticated local server to a network, assuming every model behaves alike, or estimating hardware needs from model size alone.
+
+## Observability
+
+Monitor model load failures, request latency, memory and accelerator use, and hosted token usage where applicable.
+
+## Upgrade and migration notes
+
+Review Ollama release notes and model changes separately; record model identifiers so deployments are reproducible.
+
+## Alternatives
+
+Hosted inference APIs reduce local infrastructure work; other local runtimes may better fit specialized hardware or deployment constraints.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Ollama documentation](https://docs.ollama.com/)
+- [Ollama API introduction](https://docs.ollama.com/api/introduction.md)
+- [Ollama 0.40.16 release](https://github.com/ollama/ollama/releases/tag/v0.40.16)
+- [Ollama pricing](https://ollama.com/pricing)
+- [Ollama license](https://github.com/ollama/ollama/blob/main/LICENSE)

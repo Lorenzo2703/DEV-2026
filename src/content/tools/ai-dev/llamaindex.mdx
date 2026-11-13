@@ -1,0 +1,69 @@
+---
+title: LlamaIndex
+summary: Ingest and retrieve application data for grounded model responses.
+category: ai-dev
+maturity: stable
+radar: trial
+toolVersion: 0.14.25
+verifiedAt: 2026-11-13
+officialDocs: https://developers.llamaindex.ai/python/framework/
+repo: https://github.com/run-llama/llama_index
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: [langchain]
+related: [langchain, ragas]
+tags: [ai, retrieval, rag]
+---
+
+## What it is, when to use it, when not to
+
+LlamaIndex is a framework for connecting models to application data through ingestion, indexing, retrieval, and agent components. Use it when data access and retrieval are central; avoid adding an indexing layer if a direct query is sufficient.
+
+## Prerequisites and versions
+
+This guide covers the Python framework **0.14.25**. Integration packages and hosted parsing services may have separate releases and terms.
+
+## Install and minimal setup
+
+Choose only the data connectors and model integrations needed, then build a small index from non-sensitive test data.
+
+## Correct implementation
+
+Define explicit ingestion and update paths, filter documents by access policy before retrieval, and validate retrieved content before using it in a prompt.
+
+## Integrate with the rest of the stack
+
+Keep source-of-truth data in its original system and make index refresh and deletion behavior explicit. Pair retrieval with application-level authorization and evaluation.
+
+## Test it
+
+Use representative questions and documents to check retrieval relevance, stale-data handling, permission filtering, and behavior when a connector fails.
+
+## Security and performance
+
+Treat connectors, retrieved documents, and embeddings as sensitive data. Limit connector permissions, protect vector stores, and monitor ingestion volume and latency.
+
+## Common mistakes
+
+Avoid indexing data without access controls, treating retrieval as proof of truth, and measuring only answer quality while ignoring data freshness.
+
+## Observability
+
+Track ingestion failures, index freshness, retrieval latency, source attribution, and evaluation results.
+
+## Upgrade and migration notes
+
+Review package and integration releases before upgrading. Keep source records and a rebuild path so an index can be recreated.
+
+## Alternatives
+
+LangChain provides broader model and workflow integrations; direct database search may be sufficient for a narrow use case.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [LlamaIndex framework](https://developers.llamaindex.ai/python/framework/)
+- [LlamaIndex 0.14.25 release](https://github.com/run-llama/llama_index/releases/tag/v0.14.25)
+- [LlamaIndex license](https://github.com/run-llama/llama_index/blob/main/LICENSE)

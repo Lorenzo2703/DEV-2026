@@ -1,0 +1,98 @@
+---
+title: Node.js
+summary: Build JavaScript services on a supported Node.js release with explicit modules, bounded work, and operational safeguards.
+category: languages-runtimes
+maturity: stable
+radar: adopt
+toolVersion: 26.13.1
+verifiedAt: 2026-11-13
+officialDocs: https://nodejs.org/en/about/previous-releases
+repo: https://github.com/nodejs/node
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: [bun]
+related: [typescript, bun]
+tags: [nodejs, javascript, runtime, server]
+---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import serverCode from '../../../../snippets/nodejs/server.mjs?raw';
+import testCode from '../../../../snippets/nodejs/server.test.mjs?raw';
+
+## What it is, when to use it, when not to
+
+Node.js is a cross-platform JavaScript runtime built on V8, with APIs for servers, command-line tools, and scripts. Use it when your application and its dependencies target the Node.js runtime or when you need its mature server-side ecosystem.
+
+Prefer a supported LTS release for production. A small script may not need a dedicated runtime beyond the one already supplied by its host; a CPU-heavy workload may need worker threads or a separate service rather than more asynchronous I/O.
+
+## Prerequisites and versions
+
+The latest stable LTS release verified for this guide is **26.13.1**. Version 27 is Alpha and is not the production recommendation. Node.js releases move through Current and LTS phases; use an Active or Maintenance LTS release in production and plan upgrades before a line reaches end of life.
+
+The examples use the built-in HTTP server, `fetch`, and `node:test`. No third-party package is required.
+
+## Install and minimal setup
+
+Install Node.js from the [official downloads page](https://nodejs.org/en/download), select an LTS release, and pin the same version in your local development, CI, and production runtime tools. Check the installed runtime with `node --version`. Keep the pin under review: an exact version makes environments consistent but does not apply security updates by itself.
+
+Choose module semantics explicitly. This example uses `.mjs`; for `.js` files, set `"type": "module"` in `package.json`, or use `.cjs` for CommonJS. Avoid relying on implicit module detection.
+
+## Correct implementation
+
+Node's HTTP API is deliberately low-level: it parses protocol messages but does not validate application headers or request bodies for you. Keep route handling and input validation in your application layer. The example binds a health server to loopback for tests, responds with explicit JSON content types, and does not accept or process request bodies.
+
+<CodeTabs id="nodejs-server" label="Node.js HTTP server" items={[{ label: 'server.mjs', language: 'javascript', code: serverCode }]} />
+
+Prefer asynchronous I/O for network and file work so one request does not wait on avoidable synchronous operations. Bound CPU-heavy work separately, handle server and process errors deliberately, and implement graceful shutdown so deployment restarts can drain active connections. Configure request and header timeouts, connection limits, and reverse-proxy behavior for your workload rather than relying on undocumented assumptions about defaults.
+
+## Integrate with the rest of the stack
+
+Align the Node.js version used by local development, CI, and deployment. Use [TypeScript](/tools/languages-runtimes/typescript/) when compiler-checked interfaces help a codebase, but validate environment variables and other external data at runtime. Use [Bun](/tools/package-management/bun/) only when its runtime compatibility fits the application and its dependencies.
+
+## Test it
+
+The example uses Node's built-in test runner to start the server on an ephemeral loopback port and exercise both a successful health response and an unknown route:
+
+<CodeTabs id="nodejs-tests" label="Node.js server tests" items={[{ label: 'server.test.mjs', language: 'javascript', code: testCode }]} />
+
+Run the repository's `bun run snippets` command to syntax-check and execute this sample. In an application, add tests for the actual input boundaries, shutdown behavior, and error paths.
+
+## Security and performance
+
+Treat request bodies, headers, environment variables, and files as untrusted input. Apply size and time limits before processing requests, and use a reverse proxy where appropriate to enforce connection-level protections. Do not expose the inspector in production, and do not log secrets or raw sensitive inputs. Node's own security guidance distinguishes runtime vulnerabilities from application-level server risks.
+
+Avoid blocking the event loop with synchronous file operations or unbounded CPU work in request handlers. Measure latency and memory under representative load; asynchronous APIs do not make CPU-bound work non-blocking.
+
+## Common mistakes
+
+- **Running an end-of-life or Alpha line in production:** unsupported releases do not receive the normal maintenance guarantees; review the release schedule and upgrade before end of life.
+- **Leaving module format implicit:** different tools can interpret the same `.js` file differently; declare ESM or CommonJS intentionally.
+- **Treating parsing as validation:** Node's HTTP layer does not validate the application meaning of headers or bodies. Validate and bound user-controlled data before using it.
+- **Assuming asynchronous code is automatically scalable:** CPU-heavy callbacks still block the event loop; profile and isolate expensive work.
+- **Skipping shutdown and server error handling:** deployments restart processes, and unhandled server errors can turn a local failure into an outage.
+
+## Observability
+
+Emit structured logs with request identifiers and error context while excluding credentials and sensitive payloads. Track request duration, status codes, event-loop delay, memory, and active connections; alert on sustained error or saturation signals. Exercise health endpoints from the same network path used by the deployment platform.
+
+## Upgrade and migration notes
+
+Track the official release schedule and security announcements, then test upgrades against the application's dependency tree and deployment image before rollout. Keep lockfiles and runtime pins consistent across CI and production. Node.js 27 is Alpha as of this verification date; do not treat it as an LTS upgrade target.
+
+## Alternatives
+
+- **Bun:** combines a JavaScript runtime with package-management and bundling tools. Consider it when its compatibility and operational model suit your application; verify dependencies and production behavior before switching.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Node.js release schedule and supported releases](https://nodejs.org/en/about/previous-releases)
+- [Node.js 26.13.1 LTS release notes](https://nodejs.org/en/blog/release/v26.13.1)
+- [Node.js downloads](https://nodejs.org/en/download)
+- [ECMAScript modules](https://nodejs.org/api/esm.html)
+- [HTTP API](https://nodejs.org/api/http.html)
+- [Built-in test runner](https://nodejs.org/api/test.html)
+- [Security best practices](https://nodejs.org/en/learn/getting-started/security-best-practices)
+- [Node.js license](https://raw.githubusercontent.com/nodejs/node/main/LICENSE)

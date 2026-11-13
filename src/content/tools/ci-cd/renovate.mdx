@@ -1,0 +1,72 @@
+---
+title: Renovate
+summary: Automate dependency updates with schedules, grouping, and release-age controls.
+category: ci-cd
+maturity: stable
+radar: adopt
+toolVersion: 44.238.3
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://docs.renovatebot.com/
+repo: https://github.com/renovatebot/renovate
+license: AGPL-3.0-only
+pricing: mixed
+difficulty: intermediate
+alternatives: []
+related: [github-actions]
+tags: [dependencies, automation, supply-chain]
+---
+
+## What it is, when to use it, when not to
+
+Renovate discovers dependencies and proposes updates as pull requests. Use it to make updates reviewable and regular; it does not replace vulnerability triage or compatibility testing.
+
+## Prerequisites and versions
+
+This guide covers Renovate **44.238.3**. Renovate is available as an AGPL-3.0-only CLI and as Mend-hosted Community Cloud (free) or Enterprise Cloud (paid). Choose a deployment based on repository access, required support, and operational capacity.
+
+## Install and minimal setup
+
+Enable Renovate for selected repositories and start with its recommended configuration. Review the first proposed updates before broadening repository coverage.
+
+## Correct implementation
+
+Group low-risk updates to reduce review noise, separate major upgrades, and set a schedule that fits the team's capacity. Use a release-age delay where early releases pose risk.
+
+## Integrate with the rest of the stack
+
+Require the usual build, unit, and integration checks on update pull requests. Keep configuration reusable but allow repositories to document justified exceptions.
+
+## Test it
+
+Review generated branches and pull requests in a trial repository; verify lockfile changes and automerge rules with representative updates.
+
+## Security and performance
+
+Limit app or bot permissions, protect registry credentials, and treat package lifecycle scripts and update pull requests as untrusted code until reviewed.
+
+## Common mistakes
+
+Avoid automerging major changes, scheduling more updates than maintainers can review, and ignoring repeated failures that indicate stale configuration.
+
+## Observability
+
+Track update PR volume, age, check failures, and unresolved vulnerability updates.
+
+## Upgrade and migration notes
+
+Read Renovate's migration notes when changing configuration formats or major versions; verify presets and manager support after upgrades.
+
+## Alternatives
+
+Dependabot is integrated with GitHub; manual update workflows may be adequate for a small dependency set.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [Renovate documentation](https://docs.renovatebot.com/)
+- [Renovate 44.238.3 release](https://github.com/renovatebot/renovate/releases/tag/44.238.3)
+- [Renovate repository](https://github.com/renovatebot/renovate)
+- [Renovate license](https://github.com/renovatebot/renovate/blob/main/license)
+- [Mend-hosted Renovate plans](https://docs.renovatebot.com/mend-hosted/overview/)

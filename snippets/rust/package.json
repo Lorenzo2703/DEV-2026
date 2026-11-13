@@ -1,0 +1,9 @@
+{
+  "name": "rust-snippet",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "typecheck": "cargo check --locked",
+    "run": "cargo test --locked"
+  }
+}

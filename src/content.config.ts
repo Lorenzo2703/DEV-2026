@@ -37,7 +37,7 @@ const tools = defineCollection({
     officialDocs: z.url(),
     repo: z.url().optional(),
     license: z.string(),
-    pricing: z.enum(['oss', 'free-tier', 'paid', 'mixed']),
+    pricing: z.enum(['free', 'free-tier', 'paid', 'mixed']),
     difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
     alternatives: z.array(z.string()).default([]),
     related: z.array(z.string()).default([]),
@@ -51,6 +51,7 @@ const guides = defineCollection({
   schema: z.object({
     title: z.string(),
     summary: z.string().max(200),
+    publishedAt: z.coerce.date().optional(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
   }),
@@ -63,6 +64,9 @@ const blueprints = defineCollection({
     summary: z.string().max(200),
     tools: z.array(z.string()).default([]),
     difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
+    toolVersion: z.string().optional(),
+    verifiedAt: z.coerce.date().optional(),
+    needsVerification: z.boolean().default(false),
     draft: z.boolean().default(false),
   }),
 });
@@ -79,15 +83,4 @@ const radar = defineCollection({
   }),
 });
 
-const posts = defineCollection({
-  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/posts' }),
-  schema: z.object({
-    title: z.string(),
-    summary: z.string().max(200),
-    publishedAt: z.coerce.date(),
-    tags: z.array(z.string()).default([]),
-    draft: z.boolean().default(false),
-  }),
-});
-
-export const collections = { tools, guides, blueprints, radar, posts };
+export const collections = { tools, guides, blueprints, radar };

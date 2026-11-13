@@ -1,0 +1,74 @@
+---
+title: FastAPI
+summary: Define Python APIs with validated request models, dependency injection, and explicit error behavior.
+category: backend-apis
+maturity: stable
+radar: adopt
+toolVersion: "0.162.6"
+verifiedAt: 2026-11-13
+needsVerification: false
+officialDocs: https://fastapi.tiangolo.com/
+repo: https://github.com/fastapi/fastapi
+license: MIT
+pricing: free
+difficulty: intermediate
+alternatives: []
+related: [python, pydantic, postgresql]
+tags: [python, api, validation]
+---
+
+## What it is, when to use it, when not to
+
+FastAPI is a Python framework for HTTP APIs with request and response validation, dependency injection, and generated API documentation. Use it for typed service boundaries and async-capable request handling.
+
+Choose another approach if the service does not need an HTTP API or if your team is committed to a different framework.
+
+## Prerequisites and versions
+
+This guide covers FastAPI **0.162.6**. Review its current supported Python range before pinning the runtime; the latest release drops Python 3.10 support.
+
+## Install and minimal setup
+
+Install FastAPI in an isolated Python environment and select a production ASGI server using the official deployment guidance.
+
+## Correct implementation
+
+Model incoming and outgoing data explicitly, validate at the request boundary, and keep business logic independent of route functions. Use dependencies for shared services and raise documented HTTP errors rather than leaking exception details.
+
+## Integrate with the rest of the stack
+
+Use [Pydantic](/tools/backend-apis/pydantic/) for data models and [Python](/tools/languages-runtimes/python/) for the runtime. Add persistence only where the service needs durable state.
+
+## Test it
+
+Cover valid and invalid requests, authorization failures, response schemas, and lifespan-managed resources with API-level tests.
+
+## Security and performance
+
+Authenticate and authorize each protected operation; validation does not provide authorization. Bound input sizes, protect secrets, and use an ASGI server configuration suited to deployment.
+
+## Common mistakes
+
+- Treating type annotations as authorization checks leaves access control unimplemented.
+- Blocking operations inside async endpoints can reduce concurrency.
+- Returning raw exception details can expose internal state.
+
+## Observability
+
+Record request latency, status, and trace context while excluding credentials and sensitive request fields. Monitor worker restarts and dependency failures.
+
+## Upgrade and migration notes
+
+Read release notes for breaking changes and runtime support. Confirm the Python requirement before upgrading, and test dependency and lifespan behavior after changes.
+
+## Alternatives
+
+Fastify is a Node.js alternative. Django or Flask may suit projects that need their broader ecosystems or a different application structure.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [FastAPI documentation](https://fastapi.tiangolo.com/)
+- [Handling errors](https://fastapi.tiangolo.com/tutorial/handling-errors/)
+- [FastAPI release notes](https://fastapi.tiangolo.com/release-notes/)

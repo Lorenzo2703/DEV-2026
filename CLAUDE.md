@@ -57,10 +57,9 @@ Change a decision only by writing an ADR in `docs/adr/` that cites a verified fa
 │   ├── content.config.ts         # collection schemas (§5)
 │   ├── content/
 │   │   ├── tools/<category>/<slug>.mdx
-│   │   ├── guides/<slug>.mdx
+│   │   ├── guides/<slug>.mdx      # includes dated posts
 │   │   ├── blueprints/<slug>.mdx
 │   │   ├── radar/<slug>.mdx
-│   │   └── posts/<yyyy-mm-dd-slug>.mdx
 │   ├── components/               # ToolCard, MaturityBadge, VerifiedStamp, CodeTabs, Callout, Checklist
 │   ├── layouts/
 │   ├── pages/
@@ -93,7 +92,7 @@ Change a decision only by writing an ADR in `docs/adr/` that cites a verified fa
 
 ## 5. Content model
 
-Collections: `tools`, `guides`, `blueprints` (starter stacks), `radar`, `posts`. The tool schema is the most important one:
+Collections: `tools`, `guides` (including dated posts), `blueprints` (starter stacks), and `radar`. Add `publishedAt` to a guide to publish and sort it as a dated post; legacy `/posts/` URLs redirect to `/guides/`.
 
 ```ts
 // src/content.config.ts
@@ -135,7 +134,7 @@ const tools = defineCollection({
     officialDocs: z.url(),
     repo: z.url().optional(),
     license: z.string(),
-    pricing: z.enum(['oss', 'free-tier', 'paid', 'mixed']),
+    pricing: z.enum(['free', 'free-tier', 'paid', 'mixed']),
     difficulty: z.enum(['beginner', 'intermediate', 'advanced']),
     alternatives: z.array(z.string()).default([]), // tool slugs
     related: z.array(z.string()).default([]), // tool or guide slugs
@@ -198,7 +197,7 @@ Every tool page uses these sections, in this order. `verify:content` fails the b
 
 ## 9. Site features
 
-- Home with featured blueprints and the radar, tool index with filters (category, maturity, radar, pricing, difficulty), tag pages, per-category RSS, full-site RSS, sitemap with `lastmod` from `verifiedAt`.
+- Home with a scope-aware interactive stack builder that highlights selected technology paths, featured blueprints, and the radar; tool index with filters (category, maturity, radar, pricing, difficulty); tag pages; per-category RSS; full-site RSS; sitemap with `lastmod` from `verifiedAt`.
 - Page chrome: table of contents, reading time, "last verified" stamp, maturity badge, previous/next in category, copy buttons, package-manager tabs (pnpm, npm, bun, yarn), dark mode via `prefers-color-scheme` with manual override.
 - Search with Pagefind, filterable by category.
 - SEO: canonical URLs, Open Graph images generated at build time, JSON-LD (`TechArticle`), no duplicate content.

@@ -1,0 +1,71 @@
+---
+title: zizmor
+summary: Scan GitHub Actions workflows for common security risks as one layer of CI hardening.
+category: ci-cd
+maturity: stable
+radar: adopt
+toolVersion: 1.32.0
+verifiedAt: 2026-11-13
+needsVerification: true
+officialDocs: https://docs.zizmor.sh/
+repo: https://github.com/zizmorcore/zizmor
+license: MIT
+pricing: free
+difficulty: intermediate
+related: [github-actions]
+tags: [security, github-actions, static-analysis]
+---
+
+## What it is, when to use it, when not to
+
+zizmor is a static analyzer for GitHub Actions workflows. Use it to surface suspicious workflow patterns in review; do not treat a clean scan as a complete security audit.
+
+## Prerequisites and versions
+
+This guide covers zizmor **1.32.0** and a repository containing GitHub Actions workflows.
+
+## Install and minimal setup
+
+Choose a documented local or CI integration and scan repository workflows. Review findings before making automated changes.
+
+## Correct implementation
+
+Run the analyzer on the same workflow files that will be merged, and treat suppressions as reviewed exceptions with clear ownership. Keep the tool version controlled in CI.
+
+## Integrate with the rest of the stack
+
+Use it alongside least-privilege workflow permissions, pinned third-party actions, and review of untrusted code paths. It complements rather than replaces other checks.
+
+## Test it
+
+Confirm that the CI job scans the intended workflow directory and that findings appear in the expected review channel. Automated tests are intentionally omitted.
+
+## Security and performance
+
+Keep scan results and suppressions visible to maintainers. Avoid allowing untrusted workflow changes to weaken the security scan itself.
+
+## Common mistakes
+
+Avoid blindly accepting every finding or suppressing a rule globally to make a pipeline green.
+
+## Observability
+
+Track scan completion, newly introduced findings, and reviewed exceptions over time.
+
+## Upgrade and migration notes
+
+Review release notes for rule changes that may add or alter findings; pin and deliberately update the CI version.
+
+## Alternatives
+
+Other workflow linters and repository security tools can catch overlapping classes of issues. Combine them based on threat model, not tool count.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [zizmor documentation](https://docs.zizmor.sh/)
+- [zizmor 1.32.0 release](https://github.com/zizmorcore/zizmor/releases/tag/v1.32.0)
+- [zizmor license](https://github.com/zizmorcore/zizmor/blob/main/LICENSE)
+
+Static analysis is one security control; review findings in the context of each workflow.

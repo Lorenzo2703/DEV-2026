@@ -1,0 +1,68 @@
+---
+title: GitHub Copilot
+summary: Use AI assistance across coding workflows with repository guidance and human review.
+category: ai-dev
+maturity: stable
+radar: adopt
+toolVersion: "Rolling service; weekly release 2026-11-06"
+verifiedAt: 2026-11-13
+officialDocs: https://docs.github.com/en/copilot
+license: Proprietary
+pricing: mixed
+difficulty: beginner
+alternatives: [claude-code]
+related: [mcp, github-actions]
+tags: [ai, coding-assistant, productivity]
+---
+
+## What it is, when to use it, when not to
+
+GitHub Copilot provides coding assistance across IDEs, the CLI, and GitHub workflows. Use it to accelerate exploration and routine work; keep engineering judgment and review responsibility with the team.
+
+## Prerequisites and versions
+
+Copilot is a rolling service rather than one versioned product. This guide references the weekly release published **2026-11-06**; features and controls vary by client, plan, and organization policy.
+
+## Install and minimal setup
+
+Enable Copilot for an eligible account or organization, install the chosen client, and review its data and policy settings before using it with private repositories.
+
+## Correct implementation
+
+Provide concise repository instructions for architecture and commands. Ask for focused changes, inspect every diff, and verify generated code with the same checks as human-written code.
+
+## Integrate with the rest of the stack
+
+Use IDE or CLI assistance for local tasks and hosted agents only with repository permissions appropriate to the requested work. Keep CI as the source of truth for build and test results.
+
+## Test it
+
+Trial the workflow on a small issue, check its changes and tool actions, and confirm the selected client honors organization policies.
+
+## Security and performance
+
+Review data-use settings and access scopes. Never paste secrets into prompts, and treat generated code and agent output as untrusted until reviewed.
+
+## Common mistakes
+
+Avoid accepting large generated diffs without review, assuming code suggestions are tested, or using personal settings that conflict with organization policy.
+
+## Observability
+
+Use available usage and audit reporting to understand adoption, policy compliance, and client-version coverage.
+
+## Upgrade and migration notes
+
+Copilot clients update independently. Follow the relevant IDE or CLI release notes and recheck policy behavior after client updates.
+
+## Alternatives
+
+Claude Code emphasizes repository-level agent workflows; choose based on required clients, governance, model options, and integration.
+
+## Sources
+
+Accessed 2026-11-13:
+
+- [GitHub Copilot documentation](https://docs.github.com/en/copilot)
+- [GitHub Copilot weekly releases, November 2](https://github.blog/changelog/2026-11-06-github-copilot-weekly-releases-november-2/)
+- [GitHub Copilot plans](https://github.com/features/copilot/plans)
