@@ -1,4 +1,6 @@
+import { spawnSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
@@ -261,12 +263,15 @@ test('guides index includes both guides and dated posts', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Introducing Dev in 2026' })).toBeVisible();
 });
 
-test('home stack builder selects a scope-specific stack and highlights every selected route', async ({
+test('home stack builder supports multiple optional technologies per role', async ({
   page,
 }) => {
   await page.goto('/');
   const roadmap = page.locator('[data-technology-pathways]');
   await roadmap.locator('[data-scope-id="ai-app"]').click();
+  await expect(roadmap.locator('svg')).toHaveCount(0);
+  await expect(roadmap.locator('[data-summary-progress]')).toHaveText('0 roles selected');
+  await expect(roadmap.locator('[data-summary-choices] li')).toHaveCount(0);
 
   const aiTooling = roadmap.locator('.roadmap-role[data-role-id="ai-tooling"]');
   await expect(aiTooling).toContainText('LangChain');
@@ -286,7 +291,7 @@ test('home stack builder selects a scope-specific stack and highlights every sel
   );
   await expect(aiTooling.locator('[data-tool-id="ai-dev/langchain"]')).toHaveAttribute(
     'aria-pressed',
-    'false',
+    'true',
   );
   await roadmap
     .locator('.roadmap-role[data-role-id="backend"] [data-tool-id="backend-apis/fastapi"]')
@@ -298,15 +303,38 @@ test('home stack builder selects a scope-specific stack and highlights every sel
     .locator('.roadmap-role[data-role-id="frontend"] [data-tool-id="frontend/nextjs"]')
     .click();
 
-  await expect(roadmap.locator('[data-summary-progress]')).toHaveText('4 of 11 roles selected');
+  await expect(roadmap.locator('[data-summary-progress]')).toHaveText('4 roles selected');
   await expect(roadmap.locator('[data-summary-choices]')).toContainText('LangGraph');
+  await expect(roadmap.locator('[data-summary-choices]')).toContainText('LangChain');
   await expect(roadmap.locator('[data-summary-choices]')).toContainText('FastAPI');
   await expect(roadmap.locator('[data-summary-choices]')).toContainText('Qdrant');
   await expect(roadmap.locator('[data-summary-choices]')).toContainText('Next.js');
-  await expect(roadmap.locator('.roadmap-edge.is-active')).toHaveCount(9);
   await expect(
     roadmap.locator('[data-summary-choices] a[href="/tools/ai-dev/langgraph/"]'),
   ).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
+  await page.setViewportSize({ width: 375, height: 812 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  await aiTooling.locator('[data-tool-id="ai-dev/langchain"]').click();
+  await expect(aiTooling.locator('[data-tool-id="ai-dev/langchain"]')).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await expect(roadmap.locator('[data-summary-choices]')).not.toContainText('LangChain');
+  await expect(roadmap.locator('[data-summary-progress]')).toHaveText('4 roles selected');
+  await aiTooling.locator('[data-tool-id="ai-dev/langgraph"]').click();
+  await expect(roadmap.locator('[data-summary-progress]')).toHaveText('3 roles selected');
+  await expect(roadmap.locator('[data-summary-choices]')).not.toContainText('AI tooling');
+
+  await roadmap.locator('[data-scope-id="web-app"]').click();
+  await expect(roadmap.locator('[data-summary-progress]')).toHaveText('0 roles selected');
+  await expect(roadmap.locator('[data-summary-choices] li')).toHaveCount(0);
+  await roadmap.locator('[data-roadmap-reset]').click();
+  await expect(roadmap.locator('[data-stack-summary]')).toBeHidden();
+  await expect(roadmap.locator('[data-role-stage]')).toBeHidden();
 });
 
 test('home stack builder hides irrelevant roles and offers web-specific alternatives', async ({
@@ -324,6 +352,74 @@ test('home stack builder hides irrelevant roles and offers web-specific alternat
   const runtime = roadmap.locator('.roadmap-role[data-role-id="runtime"]');
   await expect(runtime.locator('[data-tool-id="languages-runtimes/typescript"]')).toBeVisible();
   await expect(roadmap.locator('.roadmap-role[data-role-id="ai-tooling"]')).toHaveCount(0);
+});
+
+test('stack bootstrap downloads scripts with primary choices and manual setup', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/');
+  const roadmap = page.locator('[data-technology-pathways]');
+  await roadmap.locator('[data-scope-id="web-app"]').click();
+  await roadmap.locator('[data-tool-id="frontend/astro"]').click();
+  await roadmap.locator('[data-tool-id="frontend/nextjs"]').click();
+  await roadmap.locator('[data-tool-id="languages-runtimes/nodejs"]').click();
+  await roadmap.locator('[data-tool-id="languages-runtimes/python"]').click();
+  await roadmap.locator('[data-tool-id="backend-apis/fastify"]').click();
+  await roadmap.locator('[data-tool-id="data/postgresql"]').click();
+  const downloadButton = roadmap.getByRole('button', { name: 'Download bootstrap script' });
+  await expect(downloadButton).toBeDisabled();
+  await roadmap.getByLabel('Primary Language / runtime').selectOption('languages-runtimes/nodejs');
+  await expect(downloadButton).toBeDisabled();
+  await roadmap.getByLabel('Primary Frontend').selectOption('frontend/astro');
+  await expect(downloadButton).toBeEnabled();
+  const accessibility = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(accessibility.violations).toEqual([]);
+  const primaryDownload = page.waitForEvent('download');
+  await downloadButton.click();
+  const selectedScript = await primaryDownload;
+  const selectedPath = testInfo.outputPath('primary.cjs');
+  await selectedScript.saveAs(selectedPath);
+  const source = await readFile(selectedPath, 'utf8');
+  expect(source).toContain('"frontend":"frontend/astro"');
+  expect(source).toContain('"id":"frontend/nextjs"');
+
+  await roadmap.locator('[data-tool-id="frontend/astro"]').click();
+  await roadmap.locator('[data-tool-id="frontend/nextjs"]').click();
+
+  for (const [format, filename] of [
+    ['node', 'bootstrap.cjs'],
+    ['powershell', 'bootstrap.ps1'],
+    ['shell', 'bootstrap.sh'],
+  ] as const) {
+    await roadmap.getByLabel('Script format').selectOption(format);
+    const pending = page.waitForEvent('download');
+    await downloadButton.click();
+    const download = await pending;
+    expect(download.suggestedFilename()).toBe(filename);
+    const script = testInfo.outputPath(filename);
+    await download.saveAs(script);
+    const command =
+      format === 'node' ? process.execPath : format === 'powershell' ? 'powershell.exe' : 'sh';
+    const args =
+      format === 'node'
+        ? [script, `example-${format}`]
+        : format === 'powershell'
+          ? ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', script, `example-${format}`]
+          : [script, `example-${format}`];
+    if (format === 'node' || (format === 'powershell') === (process.platform === 'win32')) {
+      const result = spawnSync(command, args, { cwd: dirname(script), encoding: 'utf8' });
+      expect(result.status, result.stderr).toBe(0);
+      const readme = await readFile(
+        testInfo.outputPath(`example-${format}`, 'README.md'),
+        'utf8',
+      );
+      expect(readme).toContain('Node.js (primary choice)');
+      expect(readme).toContain('PostgreSQL');
+      expect(readme).toContain('not automatically integrated');
+    }
+  }
 });
 
 test('home page has no WCAG 2.2 AA accessibility violations', async ({ page }) => {

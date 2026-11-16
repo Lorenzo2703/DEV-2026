@@ -268,15 +268,13 @@ const scopes = scopeDefinitions
     <p class="eyebrow">Interactive stack builder</p>
     <h2 id="technology-pathways-title">Choose a stack for your project</h2>
     <p>
-      Start with your project scope, then choose one technology for each relevant role. Each
-      choice links to its guide.
+      Start with your project scope, then choose any technologies that fit. Select multiple
+      technologies per role or leave a role empty. Each choice links to its guide.
     </p>
   </figcaption>
 
   <div class="roadmap" data-technology-pathways>
     <script type="application/json" data-scope-data set:html={JSON.stringify(scopes)}></script>
-    <svg class="roadmap-connectors" aria-hidden="true"></svg>
-
     <section class="roadmap-stage scope-stage" aria-labelledby="scope-stage-title">
       <div class="stage-heading">
         <span class="stage-number">01</span>
@@ -309,7 +307,7 @@ const scopes = scopeDefinitions
       <div class="stage-heading">
         <span class="stage-number">02</span>
         <div>
-          <h3 id="role-stage-title">Choose one technology per role</h3>
+          <h3 id="role-stage-title">Choose technologies for your stack</h3>
           <p data-role-stage-description></p>
         </div>
       </div>
@@ -325,6 +323,28 @@ const scopes = scopeDefinitions
         <p class="summary-progress" data-summary-progress></p>
       </div>
       <ul class="summary-choices" data-summary-choices></ul>
+      <div class="bootstrap-options" data-bootstrap hidden>
+        <h4>Bootstrap your project</h4>
+        <p>
+          Download a script to create the primary frontend and API starters. Other selections,
+          including runtimes and services, require the manual setup described in the generated
+          README. The starters are not connected automatically. All formats require Node.js;
+          frontend scaffolding also needs npm and internet access.
+        </p>
+        <div class="bootstrap-primary" data-bootstrap-primary></div>
+        <label for="bootstrap-format">Script format</label>
+        <select id="bootstrap-format" data-bootstrap-format>
+          <option value="node">Node.js (.cjs)</option>
+          <option value="powershell">PowerShell (.ps1)</option>
+          <option value="shell">Shell (.sh)</option>
+        </select>
+        <button type="button" class="roadmap-reset" data-bootstrap-download>Download bootstrap script</button>
+        <p>
+          Run from the parent directory: <code>node bootstrap.cjs</code>,
+          <code>.\bootstrap.ps1</code>, or <code>sh bootstrap.sh</code>. Add a project name
+          to use instead of <code>my-stack</code>. Existing directories are never overwritten.
+        </p>
+      </div>
     </section>
 
     <div class="roadmap-footer">
@@ -339,6 +359,8 @@ const scopes = scopeDefinitions
 </figure>
 
 <script>
+  import bootstrapTemplate from '../lib/bootstrap-template.cjs?raw';
+
   interface ToolChoice {
     id: string;
     title: string;
@@ -358,18 +380,10 @@ const scopes = scopeDefinitions
     roles: RoleChoice[];
   }
 
-  interface Connector {
-    from: HTMLElement;
-    to: HTMLElement;
-    active: boolean;
-  }
-
   document.querySelectorAll<HTMLElement>('[data-technology-pathways]').forEach((roadmap) => {
     const dataElement = roadmap.querySelector<HTMLScriptElement>('[data-scope-data]');
-    const connectorSvg = roadmap.querySelector<SVGSVGElement>('.roadmap-connectors');
     const scopeStage = roadmap.querySelector<HTMLElement>('[data-scope-options]');
     const roleStage = roadmap.querySelector<HTMLElement>('[data-role-stage]');
-    const roleTitle = roadmap.querySelector<HTMLElement>('#role-stage-title');
     const roleDescription = roadmap.querySelector<HTMLElement>('[data-role-stage-description]');
     const roleOptions = roadmap.querySelector<HTMLElement>('[data-role-options]');
     const summary = roadmap.querySelector<HTMLElement>('[data-stack-summary]');
@@ -378,13 +392,15 @@ const scopes = scopeDefinitions
     const summaryChoices = roadmap.querySelector<HTMLElement>('[data-summary-choices]');
     const status = roadmap.querySelector<HTMLElement>('[data-roadmap-status]');
     const resetButton = roadmap.querySelector<HTMLButtonElement>('[data-roadmap-reset]');
+    const bootstrap = roadmap.querySelector<HTMLElement>('[data-bootstrap]');
+    const bootstrapPrimary = roadmap.querySelector<HTMLElement>('[data-bootstrap-primary]');
+    const bootstrapFormat = roadmap.querySelector<HTMLSelectElement>('[data-bootstrap-format]');
+    const bootstrapDownload = roadmap.querySelector<HTMLButtonElement>('[data-bootstrap-download]');
 
     if (
       !dataElement ||
-      !connectorSvg ||
       !scopeStage ||
       !roleStage ||
-      !roleTitle ||
       !roleDescription ||
       !roleOptions ||
       !summary ||
@@ -392,15 +408,17 @@ const scopes = scopeDefinitions
       !summaryProgress ||
       !summaryChoices ||
       !status ||
-      !resetButton
+      !resetButton ||
+      !bootstrap ||
+      !bootstrapPrimary ||
+      !bootstrapFormat ||
+      !bootstrapDownload
     ) {
       return;
     }
 
     const scopeDataElement = dataElement;
-    const connectorsLayer = connectorSvg;
     const roleStageElement = roleStage;
-    const roleTitleElement = roleTitle;
     const roleDescriptionElement = roleDescription;
     const roleChoiceList = roleOptions;
     const stackSummary = summary;
@@ -409,10 +427,56 @@ const scopes = scopeDefinitions
     const stackChoices = summaryChoices;
     const roadmapStatus = status;
     const startOverButton = resetButton;
+    const bootstrapSection = bootstrap;
+    const primaryOptions = bootstrapPrimary;
+    const formatSelect = bootstrapFormat;
+    const downloadButton = bootstrapDownload;
     const scopes = JSON.parse(scopeDataElement.textContent ?? '[]') as ScopeChoice[];
     const scopeButtons = Array.from(roadmap.querySelectorAll<HTMLButtonElement>('[data-scope-id]'));
     let selectedScope: ScopeChoice | undefined;
-    const selectedTools = new Map<string, ToolChoice>();
+    const selectedTools = new Map<string, Map<string, ToolChoice>>();
+    const primaryChoices = new Map<string, string>();
+    const primaryRoles = ['frontend', 'backend', 'runtime'];
+
+    function updateBootstrap() {
+      if (!selectedScope) return;
+      bootstrapSection.hidden = selectedTools.size === 0;
+      primaryOptions.replaceChildren();
+      let needsChoice = false;
+      primaryRoles.forEach((roleId) => {
+        const role = selectedScope?.roles.find((candidate) => candidate.id === roleId);
+        const tools = selectedTools.get(roleId);
+        if (!role || !tools?.size) {
+          primaryChoices.delete(roleId);
+          return;
+        }
+        if (tools.size === 1) {
+          const first = tools.keys().next().value;
+          if (first) primaryChoices.set(roleId, first);
+          return;
+        }
+
+        const label = document.createElement('label');
+        label.textContent = `Primary ${role.title}`;
+        const select = document.createElement('select');
+        select.dataset.primaryRole = roleId;
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Choose a primary technology';
+        select.append(placeholder);
+        tools.forEach((tool) => {
+          const option = document.createElement('option');
+          option.value = tool.id;
+          option.textContent = tool.title;
+          select.append(option);
+        });
+        select.value = primaryChoices.get(roleId) ?? '';
+        if (!select.value) needsChoice = true;
+        label.append(select);
+        primaryOptions.append(label);
+      });
+      downloadButton.disabled = needsChoice;
+    }
 
     function renderRoles(scope: ScopeChoice) {
       roleChoiceList.replaceChildren();
@@ -423,8 +487,7 @@ const scopes = scopeDefinitions
         branch.dataset.roleId = role.id;
 
         const heading = document.createElement('h4');
-        heading.className = 'roadmap-node role-node';
-        heading.dataset.roleNode = role.id;
+        heading.className = 'role-node';
         heading.textContent = role.title;
 
         const description = document.createElement('p');
@@ -455,10 +518,13 @@ const scopes = scopeDefinitions
 
       const selectedCount = selectedTools.size;
       stackTitle.textContent = selectedScope.title;
-      stackProgress.textContent = `${selectedCount} of ${selectedScope.roles.length} roles selected`;
+      stackProgress.textContent = `${selectedCount} ${selectedCount === 1 ? 'role' : 'roles'} selected`;
       stackChoices.replaceChildren();
 
       selectedScope.roles.forEach((role) => {
+        const tools = selectedTools.get(role.id);
+        if (!tools?.size) return;
+
         const item = document.createElement('li');
         item.className = 'summary-choice';
 
@@ -466,91 +532,17 @@ const scopes = scopeDefinitions
         roleName.className = 'summary-role';
         roleName.textContent = role.title;
 
-        const tool = selectedTools.get(role.id);
-        if (tool) {
+        item.append(roleName);
+        tools.forEach((tool) => {
           const link = document.createElement('a');
           link.href = `/tools/${tool.id}/`;
           link.textContent = tool.title;
-          item.append(roleName, link);
-        } else {
-          const prompt = document.createElement('span');
-          prompt.className = 'summary-prompt';
-          prompt.textContent = 'Choose one';
-          item.append(roleName, prompt);
-        }
+          item.append(link);
+        });
 
         stackChoices.append(item);
       });
-    }
-
-    function drawConnectors() {
-      const bounds = roadmap.getBoundingClientRect();
-      const width = Math.max(bounds.width, 1);
-      const height = Math.max(bounds.height, 1);
-      connectorsLayer.setAttribute('viewBox', `0 0 ${width} ${height}`);
-      connectorsLayer.setAttribute('width', String(width));
-      connectorsLayer.setAttribute('height', String(height));
-      connectorsLayer.replaceChildren();
-
-      const connectors: Connector[] = [];
-      const root = roadmap.querySelector<HTMLElement>('.scope-stage .stage-heading');
-      if (root) {
-        scopeButtons.forEach((button) => {
-          connectors.push({
-            from: root,
-            to: button,
-            active: button.dataset.scopeId === selectedScope?.id,
-          });
-        });
-      }
-
-      if (selectedScope) {
-        selectedScope.roles.forEach((role) => {
-          const branch = roleChoiceList.querySelector<HTMLElement>(
-            `[data-role-id="${role.id}"].roadmap-role`,
-          );
-          const roleNode = branch?.querySelector<HTMLElement>('[data-role-node]');
-          if (!branch || !roleNode) return;
-
-          const selectedTool = selectedTools.get(role.id);
-          const selectedScopeButton = scopeButtons.find(
-            (button) => button.dataset.scopeId === selectedScope?.id,
-          );
-          if (!selectedScopeButton) return;
-
-          connectors.push({
-            from: selectedScopeButton,
-            to: roleNode,
-            active: Boolean(selectedTool),
-          });
-
-          branch.querySelectorAll<HTMLElement>('[data-tool-id]').forEach((toolNode) => {
-            connectors.push({
-              from: roleNode,
-              to: toolNode,
-              active: toolNode.dataset.toolId === selectedTool?.id,
-            });
-          });
-        });
-      }
-
-      connectors.forEach(({ from, to, active }) => {
-        const fromRect = from.getBoundingClientRect();
-        const toRect = to.getBoundingClientRect();
-        const fromX = fromRect.left + fromRect.width / 2 - bounds.left;
-        const fromY = fromRect.bottom - bounds.top;
-        const toX = toRect.left + toRect.width / 2 - bounds.left;
-        const toY = toRect.top - bounds.top;
-        const bend = Math.max((toY - fromY) * 0.45, 16);
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-
-        path.setAttribute(
-          'd',
-          `M ${fromX} ${fromY} C ${fromX} ${fromY + bend}, ${toX} ${toY - bend}, ${toX} ${toY}`,
-        );
-        path.setAttribute('class', active ? 'roadmap-edge is-active' : 'roadmap-edge');
-        connectorsLayer.append(path);
-      });
+      updateBootstrap();
     }
 
     function selectScope(scopeId: string) {
@@ -558,18 +550,17 @@ const scopes = scopeDefinitions
       if (!selectedScope) return;
 
       selectedTools.clear();
+      primaryChoices.clear();
       scopeButtons.forEach((button) => {
         button.setAttribute('aria-pressed', String(button.dataset.scopeId === scopeId));
       });
       roleStageElement.hidden = false;
       stackSummary.hidden = false;
       startOverButton.hidden = false;
-      roleTitleElement.textContent = 'Choose one technology per role';
       roleDescriptionElement.textContent = selectedScope.description;
       renderRoles(selectedScope);
       updateSummary();
-      roadmapStatus.textContent = `${selectedScope.title} selected. Choose one option for each relevant role.`;
-      requestAnimationFrame(drawConnectors);
+      roadmapStatus.textContent = `${selectedScope.title} selected. Choose any technologies that fit your project.`;
     }
 
     scopeButtons.forEach((button) => {
@@ -587,34 +578,95 @@ const scopes = scopeDefinitions
       const role = selectedScope?.roles.find((candidate) => candidate.id === target.dataset.roleId);
       const tool = role?.tools.find((candidate) => candidate.id === target.dataset.toolId);
       if (!role || !tool) return;
+      primaryChoices.delete(role.id);
 
-      selectedTools.set(role.id, tool);
-      roleChoiceList
-        .querySelectorAll<HTMLButtonElement>(`[data-role-id="${role.id}"][data-tool-id]`)
-        .forEach((button) => {
-          button.setAttribute('aria-pressed', String(button.dataset.toolId === tool.id));
-        });
+      const tools = selectedTools.get(role.id) ?? new Map<string, ToolChoice>();
+      const wasSelected = tools.has(tool.id);
+      if (wasSelected) {
+        tools.delete(tool.id);
+      } else {
+        tools.set(tool.id, tool);
+      }
+      if (tools.size) {
+        selectedTools.set(role.id, tools);
+      } else {
+        selectedTools.delete(role.id);
+      }
+      target.setAttribute('aria-pressed', String(!wasSelected));
 
       updateSummary();
-      roadmapStatus.textContent = `${role.title}: ${tool.title} selected.`;
-      requestAnimationFrame(drawConnectors);
+      roadmapStatus.textContent = `${role.title}: ${tool.title} ${wasSelected ? 'removed' : 'selected'}.`;
+    });
+
+    primaryOptions.addEventListener('change', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLSelectElement) || !target.dataset.primaryRole) return;
+      if (target.value) {
+        primaryChoices.set(target.dataset.primaryRole, target.value);
+      } else {
+        primaryChoices.delete(target.dataset.primaryRole);
+      }
+      downloadButton.disabled = Array.from(
+        primaryOptions.querySelectorAll<HTMLSelectElement>('select'),
+      ).some((select) => !select.value);
+    });
+
+    downloadButton.addEventListener('click', () => {
+      if (!selectedScope || selectedTools.size === 0) return;
+      const config = {
+        scope: selectedScope.title,
+        primary: Object.fromEntries(primaryChoices),
+        roles: selectedScope.roles.flatMap((role) => {
+          const tools = selectedTools.get(role.id);
+          return tools?.size
+            ? [{
+                id: role.id,
+                title: role.title,
+                tools: Array.from(tools.values(), (tool) => ({
+                  ...tool,
+                  url: new URL(`/tools/${tool.id}/`, window.location.origin).href,
+                })),
+              }]
+            : [];
+        }),
+      };
+      const source = bootstrapTemplate.replace('__STACK_CONFIG__', JSON.stringify(config));
+      const formats: Record<string, { name: string; content: string }> = {
+        node: { name: 'bootstrap.cjs', content: source },
+        powershell: {
+          name: 'bootstrap.ps1',
+          content: `$OutputEncoding = New-Object System.Text.UTF8Encoding\n$source = @'\n${source}\n'@\n$source | node - @args\nexit $LASTEXITCODE\n`,
+        },
+        shell: {
+          name: 'bootstrap.sh',
+          content: `#!/bin/sh\nnode - "$@" <<'__STACK_BOOTSTRAP_SCRIPT__'\n${source}\n__STACK_BOOTSTRAP_SCRIPT__\n`,
+        },
+      };
+      const format = formats[formatSelect.value];
+      if (!format) {
+        roadmapStatus.textContent = 'Select a valid bootstrap script format.';
+        return;
+      }
+      const url = URL.createObjectURL(new Blob([format.content], { type: 'text/plain' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = format.name;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      roadmapStatus.textContent = `${format.name} downloaded.`;
     });
 
     startOverButton.addEventListener('click', () => {
       selectedScope = undefined;
       selectedTools.clear();
+      primaryChoices.clear();
       scopeButtons.forEach((button) => button.setAttribute('aria-pressed', 'false'));
       roleChoiceList.replaceChildren();
       roleStageElement.hidden = true;
       stackSummary.hidden = true;
       startOverButton.hidden = true;
-      connectorsLayer.replaceChildren();
       roadmapStatus.textContent = 'Select a project scope to see relevant technology choices.';
     });
-
-    const resizeObserver = new ResizeObserver(() => requestAnimationFrame(drawConnectors));
-    resizeObserver.observe(roadmap);
-    window.addEventListener('load', drawConnectors, { once: true });
   });
 </script>
 
@@ -673,26 +725,6 @@ const scopes = scopeDefinitions
     background:
       radial-gradient(ellipse at 50% 0, color-mix(in srgb, var(--pathway-accent) 9%, transparent), transparent 60%),
       var(--pathway-surface);
-  }
-
-  .roadmap-connectors {
-    position: absolute;
-    z-index: 2;
-    inset: 0;
-    overflow: visible;
-    pointer-events: none;
-  }
-
-  .roadmap-edge {
-    fill: none;
-    stroke: color-mix(in srgb, var(--pathway-border) 82%, transparent);
-    stroke-width: 1.5;
-    transition: stroke 180ms ease, stroke-width 180ms ease;
-  }
-
-  .roadmap-edge.is-active {
-    stroke: var(--pathway-accent);
-    stroke-width: 2.5;
   }
 
   .roadmap-stage {
@@ -807,7 +839,7 @@ const scopes = scopeDefinitions
 
   .scope-node-count {
     margin-top: auto;
-    color: var(--pathway-accent);
+    color: var(--pathway-ink);
     font-size: 0.7rem;
     font-weight: 700;
   }
@@ -834,9 +866,7 @@ const scopes = scopeDefinitions
   }
 
   .role-node {
-    width: fit-content;
-    max-width: 100%;
-    padding: 0.4rem 0.65rem;
+    margin: 0;
     font-size: 0.82rem;
     font-weight: 750;
   }
@@ -846,7 +876,6 @@ const scopes = scopeDefinitions
     z-index: 3;
     margin: 0.45rem 0 0.7rem;
     padding-right: 0.15rem;
-    background: var(--pathway-surface);
     color: var(--pathway-muted);
     font-size: 0.73rem;
     line-height: 1.5;
@@ -913,13 +942,15 @@ const scopes = scopeDefinitions
     font-size: 0.78rem;
   }
 
-  .summary-role,
-  .summary-prompt {
+  .summary-role {
     color: var(--pathway-muted);
     font-size: 0.68rem;
   }
 
   .summary-choice a {
+    display: flex;
+    min-height: 24px;
+    align-items: center;
     width: fit-content;
     color: var(--pathway-accent);
     font-weight: 700;
@@ -928,6 +959,49 @@ const scopes = scopeDefinitions
 
   .summary-choice a:hover {
     text-decoration: underline;
+  }
+
+  .bootstrap-options {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--pathway-border);
+  }
+
+  .bootstrap-options h4 {
+    margin: 0;
+    font-weight: 750;
+  }
+
+  .bootstrap-options p {
+    margin: 0.5rem 0;
+    color: var(--pathway-muted);
+    font-size: 0.78rem;
+    line-height: 1.5;
+  }
+
+  .bootstrap-options label {
+    display: block;
+    margin: 0.7rem 0 0.3rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .bootstrap-options select {
+    display: block;
+    max-width: 100%;
+    min-height: 2.5rem;
+    margin: 0.3rem 0 0.7rem;
+    padding: 0.4rem;
+    border: 1px solid var(--pathway-border);
+    border-radius: 0.4rem;
+    background: var(--pathway-surface);
+    color: var(--pathway-ink);
+    font: inherit;
+  }
+
+  .bootstrap-options select:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--pathway-accent) 70%, white);
+    outline-offset: 3px;
   }
 
   .roadmap-footer {

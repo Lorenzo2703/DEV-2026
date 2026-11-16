@@ -20,6 +20,12 @@ Analytics is disabled by default. To enable the self-hosted Umami integration in
 
 Enable Renovate and protect the main branch with the CI verification job as a required check. Patch updates can then automerge only after checks pass; minor updates remain reviewable. The release-age cooldown depends on timestamps provided by each package source.
 
+## Stack bootstrap
+
+The home-page stack builder can download a Node.js, PowerShell, or POSIX shell bootstrap script. Select a primary frontend, API framework, or language/runtime when choosing multiple options in those categories. All three script formats require Node.js; frontend generation also requires npm, internet access, and a Node.js version supported by the selected framework.
+
+Run the downloaded script from the directory in which the new project should be created, optionally passing a project name (letters, numbers, underscores, and hyphens only). It refuses to overwrite an existing directory. The script creates independent starters for the primary frontend and API; install their dependencies and follow the generated README to configure the remaining selections. It does not connect services, provision accounts, or configure authentication, deployment, or credentials.
+
 ## Commands
 
 | Command                  | Purpose                                                                                      |
