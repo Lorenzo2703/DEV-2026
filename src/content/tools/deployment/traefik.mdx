@@ -1,6 +1,6 @@
 ---
 title: Traefik
-summary: Route traffic to services with explicit TLS, middleware, and administrative access controls.
+summary: Route traffic to services with dynamic discovery, explicit TLS, and protected administrative access.
 category: deployment
 maturity: stable
 radar: adopt
@@ -16,56 +16,145 @@ related: [docker, kubernetes, caddy]
 tags: [deployment, reverse-proxy, networking]
 ---
 
-## What it is, when to use it, when not to
+## What it is
 
-Traefik is an application proxy that can discover services and route requests. Use it when dynamic service discovery or integration with container platforms is useful; avoid introducing a proxy layer without an operational need.
+Traefik Proxy is a reverse proxy and load balancer that can build routing configuration from providers such as Docker, Kubernetes, and files. It is most useful when services are created, removed, or redeployed often and routes should follow those changes without maintaining a separate static proxy configuration for every service.
+
+Use it for dynamic container or orchestrator environments, especially when its provider integrations and middleware model reduce operational work. For a few stable sites, adding a proxy may not be worthwhile; a simpler web server or a platform-managed ingress may be easier to operate.
+
+### How routing works
+
+Requests enter through an entry point, match a router rule, pass through any configured middleware, and reach a service. Providers supply routing configuration; Traefik watches supported providers and updates its active configuration as their state changes.
+
+<figure>
+  <img src="/images/tools/traefik-request-flow.svg" width="1200" height="560" alt="Internet requests enter Traefik over HTTPS; routers select frontend or API services, while Docker, Kubernetes, or file providers supply route configuration." decoding="async" />
+  <figcaption>Providers describe available routes; routers match requests and services forward them to the selected upstream.</figcaption>
+</figure>
+
+The configuration model separates static installation settings—such as entry points and enabled providers—from dynamic routing settings—such as routers, services, middleware, and certificates.
+
+### Traefik vs NGINX
+
+Both can terminate TLS, proxy requests, and load-balance upstreams. The key difference is how routes are configured and updated.
+
+<div class="traefik-comparison" role="region" aria-label="Traefik and NGINX comparison" tabindex="0">
+  <table>
+    <caption class="sr-only">A feature comparison of Traefik Proxy and NGINX Open Source</caption>
+    <colgroup>
+      <col class="comparison-label" />
+      <col />
+      <col />
+    </colgroup>
+    <thead>
+      <tr>
+        <th scope="col">Area</th>
+        <th scope="col">Traefik</th>
+        <th scope="col">NGINX OSS</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th scope="row">Best for</th>
+        <td>Frequently changing container and orchestrator services</td>
+        <td>Stable routes and general-purpose web serving</td>
+      </tr>
+      <tr>
+        <th scope="row">Service discovery</th>
+        <td>Providers watch Docker, Kubernetes, files, and other sources</td>
+        <td>Explicit upstreams; automate discovery separately</td>
+      </tr>
+      <tr>
+        <th scope="row">Route updates</th>
+        <td>Provider changes update active routing dynamically</td>
+        <td>Validate configuration, then reload</td>
+      </tr>
+      <tr>
+        <th scope="row">TLS</th>
+        <td>Built-in ACME resolvers or supplied certificates</td>
+        <td>Usually paired with external certificate automation</td>
+      </tr>
+      <tr>
+        <th scope="row">Strengths</th>
+        <td>Service routing, middleware, live dashboard/API</td>
+        <td>Static files, caching, buffering, directive-level control</td>
+      </tr>
+      <tr>
+        <th scope="row">Dashboard</th>
+        <td>Built in; restrict access to administrators</td>
+        <td>No comparable dashboard in Open Source</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+**Choose Traefik** when automatic discovery saves work as services change. **Choose NGINX** when routes are stable, its web-server features matter, or it is already your team's standard. NGINX Plus is a separate commercial edition with additional capabilities.
+
+Neither is universally faster. Benchmark your routes, TLS settings, payloads, and concurrency before choosing.
+
+### Dashboard screenshot
+
+<figure>
+  <a href="https://doc.traefik.io/traefik/reference/install-configuration/api-dashboard/">
+    <img src="https://doc.traefik.io/traefik/assets/img/webui-dashboard.png" width="1200" height="1000" alt="Traefik's official dashboard screenshot showing the providers view." loading="lazy" decoding="async" />
+  </a>
+  <figcaption>Official Traefik dashboard screenshot, illustrating the providers view. The entries shown depend on the running instance and enabled providers. Source: <a href="https://doc.traefik.io/traefik/reference/install-configuration/api-dashboard/">Traefik API and Dashboard documentation</a>.</figcaption>
+</figure>
 
 ## Prerequisites and versions
 
-This guide covers Traefik **3.7.19**. Choose the deployment provider and determine how TLS certificates and routing configuration will be managed.
+This guide covers Traefik **3.7.19**. Choose an installation method and provider, decide who owns TLS and DNS, and confirm the proxy can reach only the intended upstream networks. The Traefik dashboard helps inspect active configuration; it is not a substitute for health checks, logs, or deployment tests.
 
 ## Install and minimal setup
 
-Select a supported installation method, configure one test route, and verify TLS and backend health before exposing production traffic.
+Start with one test route, then verify the route, certificate, backend health, and behavior for an unknown host. Keep provider access scoped and store sensitive configuration outside public service labels and repositories.
 
 ## Correct implementation
 
-Keep provider access scoped, define TLS and routing explicitly, and protect administrative interfaces. Store sensitive configuration outside public service labels and repositories.
+- Define entry points and providers in static configuration.
+- Give each router a narrow host and path rule, and set priority deliberately when rules overlap.
+- Point services to reachable upstream addresses and ports.
+- Configure TLS and middleware intentionally; discovering a service does not also make it safe to expose.
 
 ## Integrate with the rest of the stack
 
-Coordinate route ownership with the platform that discovers services. Make health checks, timeouts, and upstream behavior consistent with application expectations.
+Coordinate route ownership with the platform that discovers services. This repository's [Angular + Keycloak blueprint](/blueprints/angular-keycloak-platform/) demonstrates a file-provider setup with host-based routing, an API path rule, explicit router priority, and provisioned TLS certificates. Make health checks, timeouts, and upstream behavior consistent with application expectations.
 
 ## Test it
 
-Check intended host routing, TLS, redirects, and denial of unrecognized traffic. Automated tests are intentionally omitted.
+Check intended host and path routing, TLS, redirects, middleware behavior, upstream health, and rejection of unrecognized traffic. For API routes, test boundary cases such as `/api`, `/api/`, and a similarly prefixed but unrelated path. Automated tests are intentionally omitted from this guide; use staging checks that match your deployment provider and TLS setup.
 
 ## Security and performance
 
-Use secure TLS settings, restrict management access, and review middleware that changes request or response behavior. Monitor resource and connection limits.
+Traefik warns that enabling the API and dashboard exposes configuration information. Do not expose the insecure dashboard/API port publicly; keep it on a private management network or route it through authentication and authorization. Scope provider permissions—for example, access to the Docker socket can grant substantial control of the host.
+
+Set resource and connection limits appropriate to the workload. Benchmark representative routes, TLS settings, payload sizes, and concurrency before drawing performance conclusions.
 
 ## Common mistakes
 
-Avoid exposing dashboards, accepting overly broad routes, or trusting container metadata from untrusted workloads.
+- Exposing the dashboard or API without access controls.
+- Depending on container metadata from untrusted workloads to publish public routes.
+- Using catch-all rules or overlapping routers without verifying precedence.
+- Treating a successful proxy startup as proof that certificates, upstream health, or fail-closed behavior are correct.
+- Adding Traefik to a static deployment without a concrete need for its provider model.
 
 ## Observability
 
-Monitor request status and latency, backend health, certificate renewal, and proxy errors.
+Monitor request status and latency, backend health, certificate renewal, and proxy errors. Keep dashboard access private and redact sensitive data from diagnostic output.
 
 ## Upgrade and migration notes
 
-Review release notes for configuration and provider changes; validate routes in a staging environment before upgrading.
+Review Traefik's release notes and provider-specific changes before upgrading. Validate routes and TLS in staging before rolling out; the exact integration depends on the selected provider and deployment platform.
 
 ## Alternatives
 
-Caddy emphasizes straightforward web serving and HTTPS; platform-native ingress may be preferable when already standardized.
+Caddy emphasizes straightforward web serving and HTTPS; NGINX Open Source provides a mature web server and explicit proxy configuration; platform-native ingress may be preferable when already standardized. Prefer the one that best fits your route-change frequency, feature requirements, and existing operations skills.
 
 ## Sources
 
-Accessed 2026-11-13:
+Accessed 2026-11-16:
 
 - [Traefik documentation](https://doc.traefik.io/traefik/)
+- [Traefik API and Dashboard documentation](https://doc.traefik.io/traefik/reference/install-configuration/api-dashboard/)
 - [Traefik 3.7.19 release](https://github.com/traefik/traefik/releases/tag/v3.7.19)
-- [Traefik repository](https://github.com/traefik/traefik)
-
-Review edition-specific features and terms when choosing between the open-source proxy and commercial offerings.
+- [NGINX reverse proxy documentation](https://docs.nginx.com/nginx/admin-guide/web-server/reverse-proxy/)
+- [NGINX documentation](https://docs.nginx.com/)

@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import registrySource from '../../../docs/tool-registry.md?raw';
-import ToolCard from '../../components/ToolCard.astro';
 import SiteLayout from '../../layouts/SiteLayout.astro';
 
 const entries = await getCollection('tools', ({ data }) => !data.draft);
@@ -32,57 +31,112 @@ for (const entry of entries) {
 }
 catalog.sort((a, b) => a.title.localeCompare(b.title));
 const categories = [...new Set(catalog.map((tool) => tool.category))].sort();
+const categoryGroups = [
+  {
+    id: 'develop',
+    title: 'Develop',
+    categories: ['languages-runtimes', 'frontend', 'styling-ui', 'backend-apis', 'auth'],
+  },
+  { id: 'data-ai', title: 'Data & AI', categories: ['data', 'ai-dev', 'analytics'] },
+  {
+    id: 'build-test',
+    title: 'Build & test',
+    categories: ['package-management', 'build-quality', 'testing'],
+  },
+  {
+    id: 'ship-operate',
+    title: 'Ship & operate',
+    categories: ['deployment', 'iac-platform', 'ci-cd', 'observability', 'security'],
+  },
+];
+const categoryLabels: Record<string, string> = {
+  'languages-runtimes': 'Languages & runtimes',
+  'package-management': 'Package management',
+  frontend: 'Frontend',
+  'styling-ui': 'UI & styling',
+  'build-quality': 'Build quality',
+  testing: 'Testing',
+  'backend-apis': 'Backend & APIs',
+  auth: 'Authentication',
+  data: 'Data',
+  'ai-dev': 'AI development',
+  analytics: 'Product analytics',
+  observability: 'Observability',
+  'ci-cd': 'CI/CD',
+  security: 'Security',
+  deployment: 'Deployment',
+  'iac-platform': 'Infrastructure as code',
+};
+const groupedCategories = new Set(categoryGroups.flatMap((group) => group.categories));
+for (const category of categories) {
+  if (!groupedCategories.has(category) || !categoryLabels[category]) {
+    throw new Error(`Tool category "${category}" is missing a group or display label.`);
+  }
+}
+const groups = categoryGroups
+  .map((group) => {
+    const categoryEntries = group.categories
+      .map((category) => ({
+        id: category,
+        label: categoryLabels[category],
+        tools: catalog.filter((tool) => tool.category === category),
+      }))
+      .filter((category) => category.tools.length > 0);
+    return {
+      ...group,
+      categories: categoryEntries,
+      count: categoryEntries.reduce((total, category) => total + category.tools.length, 0),
+    };
+  })
+  .filter((group) => group.categories.length > 0);
 ---
 
 <SiteLayout title="Tools" description="Source-verified implementation guides for software tools.">
   <h1 class="text-4xl font-bold">All tools</h1>
   <p class="mt-4 max-w-2xl text-lg text-muted">
-    Browse all {catalog.length} tools in the registry. Published guides are linked; planned guides
-    are marked.
+    Browse {catalog.length} tools by what you want to build or operate. Published guides are linked;
+    planned guides are marked.
   </p>
   {
     catalog.length > 0 ? (
       <>
-      <form id="tool-filters" class="mt-10" hidden>
-        <fieldset class="m-0 border-0 p-0">
-          <legend class="mb-3 font-semibold">Category</legend>
-          <div class="flex flex-wrap gap-2">
-            <label class="category-chip">
-              <input class="sr-only" type="radio" name="category" value="" checked />
-              <span>All</span>
-            </label>
-            {categories.map((category) => (
-              <label class="category-chip">
-                <input class="sr-only" type="radio" name="category" value={category} />
-                <span>{category.replaceAll('-', ' ')}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-        <p id="filter-count" class="mt-3 text-sm text-muted" role="status" aria-live="polite"></p>
-      </form>
-      <ul id="tool-list" class="mt-10 grid list-none gap-6 p-0 md:grid-cols-2">
-        {catalog.map((tool) => (
-          <li
-            data-tool
-            data-category={tool.category}
-          >
-            {tool.entry ? (
-              <ToolCard entry={tool.entry} />
-            ) : (
-              <article class="rounded-xl border border-slate-300/70 bg-white/70 p-6 dark:border-slate-700 dark:bg-slate-900">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                  <p class="m-0 text-sm text-muted">{tool.category}</p>
-                  <span class="rounded-full bg-brand-soft px-3 py-1 text-sm font-semibold text-ink">
-                    Guide planned
-                  </span>
-                </div>
-                <h2 class="mt-4 text-2xl font-bold">{tool.title}</h2>
-              </article>
-            )}
-          </li>
-        ))}
-      </ul>
+        <nav class="mt-7 flex flex-wrap gap-x-5 gap-y-2" aria-label="Tool groups">
+          {groups.map((group) => (
+            <a class="font-semibold" href={`#${group.id}`}>
+              {group.title}{' '}<span class="text-sm text-muted">({group.count})</span>
+            </a>
+          ))}
+        </nav>
+        <div class="mt-8 grid gap-x-12 gap-y-10 sm:grid-cols-2">
+          {groups.map((group) => (
+            <section id={group.id} aria-labelledby={`${group.id}-heading`} class="border-t border-slate-300/70 pt-4 dark:border-slate-700">
+              <div class="flex items-baseline justify-between gap-3">
+                <h2 id={`${group.id}-heading`} class="m-0 text-xl font-bold">{group.title}</h2>
+                <span class="text-sm text-muted">{group.count} tools</span>
+              </div>
+              <div class="mt-4 divide-y divide-slate-200/80 dark:divide-slate-700">
+                {group.categories.map((category) => (
+                  <section class="py-3 first:pt-0 last:pb-0" aria-label={category.label}>
+                    <h3 class="m-0 text-sm font-semibold text-muted">{category.label}</h3>
+                    <ul class="mt-2 flex list-none flex-wrap gap-x-4 gap-y-2 p-0">
+                      {category.tools.map((tool) => (
+                        <li class="m-0">
+                          {tool.entry ? (
+                            <a class="font-medium" href={`/tools/${tool.entry.id}/`}>{tool.title}</a>
+                          ) : (
+                            <span class="text-muted">
+                              {tool.title}<span class="ml-1 text-xs">planned</span>
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </>
     ) : (
       <p class="mt-10 rounded-xl border border-dashed border-slate-400 p-8 text-muted">
@@ -91,28 +145,3 @@ const categories = [...new Set(catalog.map((tool) => tool.category))].sort();
     )
   }
 </SiteLayout>
-
-<script>
-  const form = document.querySelector<HTMLFormElement>('#tool-filters');
-  if (form) {
-    const filterForm = form;
-    const tools = [...document.querySelectorAll<HTMLElement>('[data-tool]')];
-    const count = document.querySelector<HTMLElement>('#filter-count');
-
-    function updateFilters() {
-      const selected = filterForm.querySelector<HTMLInputElement>('input[name="category"]:checked');
-      if (!selected) throw new Error('No category filter is selected.');
-      let visible = 0;
-      for (const tool of tools) {
-        const matches = !selected.value || tool.dataset.category === selected.value;
-        tool.hidden = !matches;
-        if (matches) visible++;
-      }
-      if (count) count.textContent = `${visible} ${visible === 1 ? 'tool' : 'tools'} found.`;
-    }
-
-    form.addEventListener('change', updateFilters);
-    updateFilters();
-    form.hidden = false;
-  }
-</script>

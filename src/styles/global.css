@@ -138,6 +138,64 @@ select:focus-visible {
   font-weight: 650;
 }
 
+.prose .traefik-comparison {
+  margin-block: 1.5rem;
+  overflow-x: auto;
+  border: 1px solid color-mix(in srgb, var(--color-brand) 28%, transparent);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--color-brand-soft) 22%, var(--color-paper));
+  box-shadow: 0 0.75rem 1.75rem rgb(15 23 42 / 0.06);
+}
+
+.prose .traefik-comparison:focus-visible {
+  outline: 3px solid #d97706;
+  outline-offset: 3px;
+}
+
+.prose .traefik-comparison table {
+  width: 100%;
+  min-width: 42rem;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.prose .traefik-comparison .comparison-label {
+  width: 22%;
+}
+
+.prose .traefik-comparison th,
+.prose .traefik-comparison td {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+  padding: 0.95rem 1.1rem;
+  line-height: 1.55;
+  vertical-align: top;
+}
+
+.prose .traefik-comparison thead th {
+  background: color-mix(in srgb, var(--color-brand-soft) 72%, var(--color-paper));
+  color: var(--color-ink);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.prose .traefik-comparison thead th:first-child {
+  color: var(--color-muted);
+  font-weight: 600;
+}
+
+.prose .traefik-comparison tbody th {
+  background: color-mix(in srgb, var(--color-brand-soft) 36%, var(--color-paper));
+  color: var(--color-ink);
+  font-weight: 650;
+}
+
+.prose .traefik-comparison tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
 .prose :is(p, li) a {
   text-decoration: underline;
 }
