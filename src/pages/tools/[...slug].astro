@@ -27,7 +27,7 @@ const readingMinutes = entry.body
 ---
 
 <SiteLayout title={entry.data.title} description={entry.data.summary} category={entry.data.category} image={`/og/tools/${entry.id}.png`} article>
-  <article class="prose mx-auto max-w-3xl">
+  <article class="prose tool-detail w-full max-w-none">
     <a href="/tools/">← All tools</a>
     <div class="mt-6 flex flex-wrap items-center gap-3">
       <MaturityBadge maturity={entry.data.maturity} />

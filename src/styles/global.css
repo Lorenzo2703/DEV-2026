@@ -138,6 +138,39 @@ select:focus-visible {
   font-weight: 650;
 }
 
+.tool-detail > h1 {
+  margin-block: 1.5rem 1rem;
+  line-height: 1.1;
+}
+
+.tool-detail > p {
+  margin-block: 1rem;
+  line-height: 1.75;
+}
+
+.tool-detail > h2 {
+  margin-top: 3.5rem;
+  margin-bottom: 1.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+  padding-top: 1.5rem;
+  line-height: 1.2;
+}
+
+.tool-detail > h2 + p {
+  margin-top: 0;
+}
+
+.tool-detail > ul,
+.tool-detail > ol {
+  margin-block: 1.25rem;
+  line-height: 1.75;
+}
+
+.tool-detail > ul > li + li,
+.tool-detail > ol > li + li {
+  margin-top: 0.65rem;
+}
+
 .prose .traefik-comparison {
   margin-block: 1.5rem;
   overflow-x: auto;
