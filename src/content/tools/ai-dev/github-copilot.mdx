@@ -1,68 +1,335 @@
 ---
 title: GitHub Copilot
-summary: Use AI assistance across coding workflows with repository guidance and human review.
+summary: "A team playbook for GitHub Copilot in VS Code: focused context, copyable prompts, safe agent workflows, interactive onboarding, and evidence-based review."
 category: ai-dev
 maturity: stable
 radar: adopt
-toolVersion: "Rolling service; weekly release 2026-11-06"
-verifiedAt: 2026-11-13
+toolVersion: "Rolling service; VS Code 1.147.0; weekly release 2026-11-16"
+verifiedAt: 2026-11-18
+needsVerification: false
 officialDocs: https://docs.github.com/en/copilot
 license: Proprietary
 pricing: mixed
-difficulty: beginner
+difficulty: intermediate
 alternatives: [claude-code]
-related: [mcp, github-actions]
-tags: [ai, coding-assistant, productivity]
+related: [mcp, github-actions, typescript, vitest, playwright, postgresql]
+tags: [ai, coding-assistant, context-engineering, developer-experience, code-review]
 ---
+
+import CodeTabs from '../../../components/CodeTabs.astro';
+import CopilotOnboarding from '../../../components/CopilotOnboarding.astro';
+import CopilotDiagram from '../../../components/CopilotDiagram.astro';
+import instructions from '../../../../snippets/github-copilot/copilot-instructions.md?raw';
+import promptFile from '../../../../snippets/github-copilot/feature.prompt.md?raw';
+import skill from '../../../../snippets/github-copilot/plan-feature/SKILL.md?raw';
+import scaffold from '../../../../snippets/github-copilot/scaffold.txt?raw';
+import unitTests from '../../../../snippets/github-copilot/unit-tests.txt?raw';
+import integrationTests from '../../../../snippets/github-copilot/integration-tests.txt?raw';
+import debug from '../../../../snippets/github-copilot/debug.txt?raw';
+import optimize from '../../../../snippets/github-copilot/optimize.txt?raw';
+import refactor from '../../../../snippets/github-copilot/refactor.txt?raw';
+import document from '../../../../snippets/github-copilot/document.txt?raw';
+import validation from '../../../../snippets/github-copilot/package.json?raw';
 
 ## What it is, when to use it, when not to
 
-GitHub Copilot provides coding assistance across IDEs, the CLI, and GitHub workflows. Use it to accelerate exploration and routine work; keep engineering judgment and review responsibility with the team.
+GitHub Copilot assists with code completion, questions about source, and agent-driven changes. Treat it as a fast contributor that needs a clear contract and an independent reviewer, not an authority on your application. This guide is a working agreement for engineers using **VS Code**.
+
+Use it for bounded feature work, unfamiliar-code exploration, regression tests, mechanical refactoring, and documentation grounded in source. The leverage comes from reducing search and typing while preserving the engineering checks you already trust.
+
+Do not delegate a production incident, authorization design, destructive migration, or deployment without an accountable engineer and explicit controls. When a deterministic rename, compiler diagnostic, query plan, or debugger answers the question, use that evidence first. The recommendation is **stable / adopt for reviewed assistance**, not blanket approval of every model, integration, or autonomous action.
 
 ## Prerequisites and versions
 
-Copilot is a rolling service rather than one versioned product. This guide references the weekly release published **2026-11-06**; features and controls vary by client, plan, and organization policy.
+- **Verified baseline:** VS Code **1.147.0 stable**, released **2026-11-18**, and the Copilot weekly release published **2026-11-16**. Copilot is a rolling service: this is not a single pinned extension or model version. Use your organization's approved stable editor release.
+- **Access:** a GitHub account with an approved Copilot seat, access to the repository, and the team's permitted models/tools. Availability depends on plan, policy, client, and execution environment.
+- **Repository:** a practice branch, working dependency installation, and known test/build commands. Establish a clean baseline before asking an agent to fix anything.
+- **Terms:** Copilot is proprietary, with free and paid plans. Model usage can consume AI credits; check current plan limits rather than assuming an agent loop is unlimited. The original examples in this guide are MIT-licensed; that does not change the service's terms or grant rights to unrelated generated code.
+
+**Compatibility matters.** A *harness* coordinates the model, context, tools, and permissions. Selecting a Claude model in the Copilot harness does not switch to the Claude harness. Selecting Copilot does not itself move your code to the cloud.
+
+Current VS Code documentation recommends the **Copilot** session target. The legacy **Local** harness is deprecated and scheduled for removal by **February 2027**. The requested `@workspace`, `@terminal`, `@vscode`, and `.prompt.md` workflows below are therefore labeled as compatibility paths, not new-team defaults.
 
 ## Install and minimal setup
 
-Enable Copilot for an eligible account or organization, install the chosen client, and review its data and policy settings before using it with private repositories.
+1. Install or update VS Code through the team's approved distribution. Use the official [Copilot setup flow](https://code.visualstudio.com/docs/setup/copilot): hover over the Copilot status-bar icon, select **Use AI Features**, and follow sign-in. Use the account holding your organization seat; an eligible account without a plan may otherwise be enrolled in Free.
+2. Open **Chat > Open Chat**. Start a new chat, select **Copilot** as Session Target, an approved model, and **Manual permissions**. Review existing tool/terminal auto-approval settings too: Manual is not a promise that every action prompts.
+3. Open an approved repository without production credentials. Review your team's data rules before attaching source or logs. If access or a feature is blocked, ask the administrator; do not work around policy with a personal account or API key.
+4. Complete the checklist below with a small synthetic task. It records **your confirmation**, not a connection to VS Code or GitHub.
+
+### Interactive onboarding checklist
+
+<CopilotOnboarding />
+
+If suggestions are missing, confirm the signed-in account, language enablement, organization policy, and network access. Try **Trigger Inline Suggestion** from the Command Palette. For chat, confirm the selected target and permitted model before changing settings at random.
 
 ## Correct implementation
 
-Provide concise repository instructions for architecture and commands. Ask for focused changes, inspect every diff, and verify generated code with the same checks as human-written code.
+### Core Capabilities & Modes
+
+Choose the smallest delegation that solves the task:
+
+<div class="my-6 overflow-x-auto [&_th]:p-3 [&_th]:text-left [&_td]:p-3 [&_td]:align-top [&_tr]:border-b [&_tr]:border-muted/40" role="region" aria-label="Copilot capability comparison" tabIndex={0}>
+
+| Workflow | Best use | Operating rule |
+| --- | --- | --- |
+| Inline autocomplete / ghost text | Completing a local expression, test case, or repetitive mapping | Write a meaningful name/signature and an expected behavior. Read the suggestion before accepting it. |
+| Next edit suggestions | Related edits while you continue coding | Inspect the proposed location as well as the content; nearby does not mean semantically equivalent. |
+| Chat and source exploration | Explaining a call path, comparing designs, interpreting diagnostics | Attach authoritative source, request citations, and say whether you want analysis only. |
+| Multi-file editing / agent workflow | A feature spanning implementation, callers, and tests | Agree on scope, inspect tool actions, run checks, and review the complete diff. |
+
+</div>
+
+For inline suggestions, **Tab** accepts and **Escape** dismisses. **Ctrl+Right** on Windows/Linux or **Cmd+Right** on macOS accepts the next word; the Command Palette also offers **Accept Next Line Of Inline Suggestion**. Partial acceptance is often better than accepting an entire plausible block. Keep relevant definitions/tests nearby; inspect null handling, return values, and side effects immediately.
+
+**Copilot Chat participants and current equivalents:**
+
+<div class="my-6 overflow-x-auto [&_th]:p-3 [&_th]:text-left [&_td]:p-3 [&_td]:align-top [&_tr]:border-b [&_tr]:border-muted/40" role="region" aria-label="Legacy participant compatibility" tabIndex={0}>
+
+| Requested syntax | Legacy Local use | Current Copilot approach |
+| --- | --- | --- |
+| `@workspace` | Route a repository question to workspace context | Ask directly, attach the relevant files/symbols, and use `#codebase` for a workspace search when needed. |
+| `@terminal` | Ask about a command or shell output | Attach the relevant terminal output through the context picker; state the shell, working directory, command, and exit status. |
+| `@vscode` | Ask about editor configuration and commands | Ask the editor question directly, provide the relevant settings and platform, and verify the proposed setting in official documentation. |
+
+</div>
+
+Participants invoked with `@name` are deprecated and unsupported in the Copilot harness. Do not copy a legacy participant prefix into a current prompt and assume the routing still works.
+
+**Copilot Edits** is older terminology for conversational multi-file editing, not a separate safety boundary. Do not depend on an old “Edit mode” screenshot matching today's UI. Use the current chat/agent controls to specify a bounded change and inspect its working set. Agent workflows can also search files, invoke tools, run commands, and iterate on failures; a proposed file list is guidance, not enforced filesystem confinement.
+
+Tracked edits are already on disk before you click **Keep**. Keep clears their pending-review state; it does not stage, commit, test, or approve them. Terminal/script/MCP changes may not appear in the working set, so check Git changes and untracked files too.
+
+<CopilotDiagram kind="workflow" />
+
+### Context Engineering (The 80/20 Rule)
+
+Use **80/20 as a prioritization heuristic**, not a measured productivity claim: spend most of your effort finding the few inputs that determine correctness. A useful request supplies:
+
+1. **Outcome:** observable behavior and acceptance criteria.
+2. **Authority:** the contract/schema, a comparable implementation, and its tests.
+3. **Constraints:** installed stack, permitted files, security boundaries, compatibility, and non-goals.
+4. **Evidence:** sanitized reproduction, diagnostics, runtime versions, or measured baseline.
+5. **Verification:** actual check commands, required output, and when to stop for clarification.
+
+**Open tabs are hints, not an attachment contract.** Keep the relevant implementation and test open, select the failing region when useful, and explicitly attach important files. Unrelated tabs and long chat history can add noise. A workspace index helps locate code; it does not put every file in the request or guarantee the correct file was read.
+
+**Use `#file` / `#symbol` references through the picker.** Type `#` and select the actual file or code symbol offered by your client, or choose **Add Context > Files / Symbols**. Open the symbol's containing file first if needed. Older clients may expose `#file:`-style tokens; do not guess a universal `#symbol:...` string. Confirm the resolved attachment appears before sending. Dragging files from Explorer or editor tabs also adds context.
+
+When exploring unfamiliar code, request a source-grounded explanation first; then attach the files it found before requesting edits. If an answer cites the wrong implementation or obsolete API, correct the context rather than layering contradictory instructions onto a long conversation. Start a fresh chat for a different task or a confused thread, carrying forward the confirmed contract and evidence.
+
+<CopilotDiagram kind="context" />
+
+#### Put durable rules in project instructions
+
+For Copilot, the shared project file is **`.github/copilot-instructions.md`**, relative to the repository root. Start with a short set of actionable rules; reuse an existing file rather than creating a competing authority. Cover architecture boundaries, the installed stack, error handling, commands, and review requirements.
+
+This example is tailored to **this handbook**, not a prescription to make every service use Astro. Adapt it to the receiving repository before installing it.
+
+<CodeTabs id="copilot-instructions" label="Repository instruction example" items={[
+  { label: 'copilot-instructions.md', language: 'markdown', code: instructions },
+]} />
+
+For area-specific rules, supported `*.instructions.md` files in `.github/instructions/` can use `applyTo` patterns relative to the project root. Keep broad rules in the main file and test scoped activation in the intended harness. Do not scatter conflicting instructions across the tree.
+
+**Verify discovery and effect separately:** run **Chat: Open Customizations**, inspect Instructions, and start a fresh chat. Ask for a small representative task without repeating the rules. Check References where available, or Agent Debug Logs, then inspect the actual proposed location, dependencies, and checks. A file appearing in the customization list proves discovery, not compliance.
+
+Instructions influence chat/agent behavior; they do **not** apply to inline suggestions, enforce architecture, or replace lint rules, compiler checks, access controls, or code review.
+
+#### Reuse workflows: skills first, prompt files for legacy sessions
+
+For a current Copilot workflow, place the following skill in **`.github/skills/plan-feature/SKILL.md`** and verify `/plan-feature` appears in a fresh session. The directory name matches `name`. `disable-model-invocation: true` makes this example explicitly invoked rather than automatically selected.
+
+For a team still using Local, the legacy equivalent belongs in **`.github/prompts/feature.prompt.md`**. Its declared `name` makes `/plan-feature` the command. Prompt files run only in Local chat sessions; writing one from a Copilot session does not make it executable by that harness. Do not install both examples just to follow this guide.
+
+<CodeTabs id="copilot-workflows" label="Current skill and legacy prompt-file examples" items={[
+  { label: 'Current: SKILL.md', language: 'markdown', code: skill },
+  { label: 'Legacy: feature.prompt.md', language: 'markdown', code: promptFile },
+]} />
+
+These are inert examples under `snippets/github-copilot/`, not active configuration for this repository. A “do not edit” instruction is a request, not a permission boundary: use read-only tools/permissions where available and inspect activity. Review any downloaded skill's scripts and network behavior before enabling it.
+
+### High-Leverage Use Cases & Prompt Patterns
+
+Replace **every bracketed placeholder** before sending. Attach the named files through Add Context; the placeholder names are not magic references. Each template asks for a contract, evidence, verification, and a stop condition. Approve an implementation plan before allowing edits.
+
+#### Scaffold a feature or service using repository patterns
+
+Choose one reference implementation that already expresses your intended boundaries. For a service, include configuration, health/shutdown, auth, and deployment contracts where relevant; do not ask for “production ready” without defining those requirements.
+
+<CodeTabs id="copilot-scaffold" label="Scaffolding prompt" items={[
+  { label: 'Feature / service', language: 'text', code: scaffold },
+]} />
+
+#### Write unit and integration tests, including edge cases
+
+Agree on expected outcomes independently of the current code. Unit tests isolate behavior; integration tests prove an actual boundary. For authorization, test another user's or tenant's records, not only an unauthenticated request. Include exact accepted/rejected boundaries rather than a vague “large input.”
+
+<CodeTabs id="copilot-tests" label="Behavior-first testing prompts" items={[
+  { label: 'Unit tests', language: 'text', code: unitTests },
+  { label: 'Integration tests', language: 'text', code: integrationTests },
+]} />
+
+#### Debug a stack trace and optimize a measured bottleneck
+
+Give the first relevant application frame and a minimal reproduction, not a screenshot containing credentials. For performance, provide data distribution and a profile/query plan before asking for a rewrite. A prettier loop or a new index is not evidence of improvement.
+
+<CodeTabs id="copilot-diagnostics" label="Debugging and performance prompts" items={[
+  { label: 'Debug a failure', language: 'text', code: debug },
+  { label: 'Optimize with evidence', language: 'text', code: optimize },
+]} />
+
+For SQL, preserve parameterization, tenant filters, ordering, and transaction semantics. `EXPLAIN ANALYZE` executes the statement: use approved safe data, especially for writes. For algorithms, compare complexity, allocations, and representative inputs; ensure the benchmark does not time setup instead of the changed operation.
+
+#### Refactor legacy code and generate documentation or OpenAPI
+
+Characterize external behavior before changing structure. Generate documentation from routes, schemas, auth middleware, and tests together; a handler alone cannot establish the complete API contract. A proposed OpenAPI specification is not verified until the team's validator and contract checks pass.
+
+<CodeTabs id="copilot-maintenance" label="Refactoring and documentation prompts" items={[
+  { label: 'Refactor safely', language: 'text', code: refactor },
+  { label: 'Documentation / OpenAPI', language: 'text', code: document },
+]} />
 
 ## Integrate with the rest of the stack
 
-Use IDE or CLI assistance for local tasks and hosted agents only with repository permissions appropriate to the requested work. Keep CI as the source of truth for build and test results.
+- **[TypeScript](/tools/languages-runtimes/typescript/):** demand valid types and runtime validation at trust boundaries. A cast is not input validation.
+- **[Vitest](/tools/testing/vitest/) and [Playwright](/tools/testing/playwright/):** reuse fixtures and test commands; test externally visible behavior. An agent's “tests passed” summary needs actual command output.
+- **[PostgreSQL](/tools/data/postgresql/):** evaluate generated SQL against real schema, indexes, plans, concurrency, and access controls.
+- **[GitHub Actions](/tools/ci-cd/github-actions/):** require the same branch protections, reviews, and CI for generated changes as for human-written work. Do not grant privileged CI merely because a bot authored the patch.
+- **[MCP](/tools/ai-dev/mcp/):** enable only approved servers and minimum necessary tools. A connector adds an execution and data boundary, not just better autocomplete.
+
+Local editor sessions, CLI sessions, and hosted agents do not automatically share unsaved files, environment variables, credentials, permissions, or customization support. Recheck the execution location before a command runs. A Git worktree separates files; it is not a security sandbox.
 
 ## Test it
 
-Trial the workflow on a small issue, check its changes and tool actions, and confirm the selected client honors organization policies.
+### Validate the guide's sample pack
+
+From the repository root, enter **`snippets/github-copilot/`**, then run **`bun run typecheck`** and **`bun run run`**. The package uses the handbook's installed dependencies; run `bun ci` at the root first if they are absent. The existing root **`bun run snippets`** command also discovers this package.
+
+<CodeTabs id="copilot-validation" label="Sample validation commands" items={[
+  { label: 'package.json', language: 'json', code: validation },
+]} />
+
+These tests parse the sample prompt/skill frontmatter, check metadata shape and skill-directory naming, and type-check the validator. Markdown guidance and text prompts are **not executable application samples**. Passing this check does not prove VS Code discovery, model compliance, organization policy, or code quality.
+
+### Run a real acceptance exercise
+
+1. In an approved practice repository, record the current commit and run the affected tests before changing anything.
+2. Choose a small documented defect or behavior change with an independently known expected result. Attach its implementation, contract, and neighboring test.
+3. In a fresh Copilot session, verify project instructions were included. Ask for the bounded plan, inspect its citations, then approve only the intended change.
+4. Inspect the proposed regression test. Confirm it catches the old defect without discarding unrelated work. For a new feature, confirm it rejects the old missing behavior.
+5. Run the tests and required type/lint/build checks yourself. Inspect the full diff, lockfile changes, untracked files, and tool activity. No unexpected dependency, outbound action, or permission escalation is acceptable.
+6. In a separate synthetic test, have the administrator verify required policy restrictions on the actual client. Never use a real secret to test exclusion. Record observed behavior and limitations, not a blanket claim that every tool is blocked.
+
+If the agent misses an acceptance criterion, fix the context or plan and repeat the focused check. Do not turn a failing assertion into a passing one by weakening the contract.
 
 ## Security and performance
 
-Review data-use settings and access scopes. Never paste secrets into prompts, and treat generated code and agent output as untrusted until reviewed.
+### Security, Privacy & Code Quality Guardrails
+
+**Before sending context**
+
+- **Minimize data.** Never attach secrets, access tokens, private keys, customer records, production dumps, or identifiable support logs. Use synthetic values while preserving the bug's structure. Review screenshots and terminal output too.
+- **Use the approved seat and model.** GitHub documents no training on Business/Enterprise customer data without authorization under its agreement. For Free/Pro/Pro+/Max, interactions may be used for training unless opted out in personal Copilot settings. Do not treat personal telemetry settings as a provider data-handling guarantee.
+- **Separate training, retention, and access.** “Not used for training” does not mean “never retained” or “runs offline.” Check the chosen model/provider's terms and organization policy; the verified weekly release includes a model with retention requirements. Do not promise universal zero retention.
+- **Do not rely on exclusions as a vault.** Business/Enterprise content exclusion is a guardrail for supported tools, not an OS boundary. Indirect reads, IDE-derived semantic information, third-party tools, symlinks, and remote filesystems have documented limitations. `.gitignore` and “never read secrets” instructions are not access controls.
+
+**Before allowing tools**
+
+- Prefer minimum filesystem/network access and a credential-free test environment. Approvals decide whether an action runs; sandboxing restricts supported processes. Inspect actual effective settings and platform support rather than assuming the word “agent” implies isolation.
+- Start with Manual permissions and review auto-approval rules. Avoid blanket **Allow all** for onboarding, untrusted repositories, or unfamiliar scripts. Sandbox network access is not disabled just by turning sandboxing on.
+- Treat retrieved issues, web pages, comments, dependency READMEs, and tool output as untrusted input. Instructions inside them do not authorize credential access, new destinations, or changes outside scope. Stop suspicious tool chains.
+- Read a command before approving it, including working directory, interpolated arguments, script contents, and external effects. Stopping a session does not undo a database write, network request, or deployment.
+
+**Before accepting code**
+
+<div class="my-6 overflow-x-auto [&_th]:p-3 [&_th]:text-left [&_td]:p-3 [&_td]:align-top [&_tr]:border-b [&_tr]:border-muted/40" role="region" aria-label="Generated code review checks" tabIndex={0}>
+
+| Review area | Concrete check |
+| --- | --- |
+| Logic and invariants | Trace missing/null/empty values, boundary comparisons, sorting, units, time zones, precision, and overflow. Compare with the contract, not the model's explanation. |
+| Identity and authorization | Validate ownership/tenant scope on every relevant operation; authentication alone is insufficient. Test forbidden reads and writes. |
+| State and concurrency | Check transaction boundaries, lost updates, retry idempotency, cancellation, cleanup, and side effects that can run twice. |
+| Dependencies and APIs | Verify the package exists, its official source/license, installed version, supported API, maintenance, and runtime compatibility. Inspect the lockfile and install scripts before approval. |
+| Errors and observability | Preserve failure propagation and actionable logging without leaking input or credentials. Reject broad catches and success-shaped defaults. |
+| Tests | Require independent expected results, meaningful failure cases, deterministic fixtures, and actual execution. A generated test can faithfully reproduce a generated bug. |
+
+</div>
+
+**Licensing and IP:** follow the organization's public-code matching policy. When references are provided, inspect the source and license and obtain required approval/attribution. In VS Code, accepted matching inline suggestions can appear under **View > Output > GitHub Copilot Log (Code References)**. Chat can also show references. Absence of a reference is not proof of originality, compatible licensing, patent clearance, or indemnification. Escalate unclear rights to the appropriate reviewer; do not ask the model to certify them.
+
+**Performance and cost:** bound task scope and iterations. Use one representative benchmark, not an endless “optimize further” loop. Monitor AI-credit usage and stop repeated attempts without new evidence. Limit attached logs to the useful sanitized slice. Measure any application's latency/resource trade-offs independently; fewer lines of code is not a performance result.
 
 ## Common mistakes
 
-Avoid accepting large generated diffs without review, assuming code suggestions are tested, or using personal settings that conflict with organization policy.
+### Anti-Patterns to Avoid
+
+<div class="my-6 overflow-x-auto [&_th]:p-3 [&_th]:text-left [&_td]:p-3 [&_td]:align-top [&_tr]:border-b [&_tr]:border-muted/40" role="region" aria-label="Ineffective and effective prompting habits" tabIndex={0}>
+
+| Ineffective habit | Effective replacement |
+| --- | --- |
+| “Build a production-ready service.” | Name its reference implementation, public contract, operational requirements, and acceptance tests. |
+| Attach the whole repository and every log. | Attach the contract, one relevant path, one neighboring test, and a minimal sanitized reproduction. |
+| Assume open tabs or an index mean the model saw everything. | Check resolved attachments and source citations; request missing source explicitly. |
+| “Write tests for this code” and accept them unchanged. | Specify outcomes independently; inspect edge cases and prove the regression test catches the defect. |
+| “Make it faster.” | Supply a measured baseline, target, representative data, and invariants; compare before/after. |
+| Keep asking “try again” in a confused thread. | Correct the missing evidence or start fresh with the confirmed contract. |
+| Treat repository instructions as enforcement. | Verify inclusion and use actual compiler, CI, permissions, and sandbox controls. |
+| Accept a large diff because it compiles. | Review small behavior-preserving steps, authorization, error paths, and persisted effects. |
+| Install a suggested package immediately. | Verify its identity, license, version, API, and need; review lockfile/install changes. |
+| Disable policy or use a personal account when blocked. | Resolve approved access with the administrator and document the limitation. |
+
+</div>
 
 ## Observability
 
-Use available usage and audit reporting to understand adoption, policy compliance, and client-version coverage.
+Evaluate **verified engineering outcomes**, not lines generated or suggestions accepted:
+
+- Record whether representative tasks met acceptance criteria, passed checks, and survived review without material rework.
+- Review escaped defects, security findings, repeated failure modes, and missing tests. Change guidance only when evidence identifies a recurring problem.
+- Use available plan/admin usage, billing, and audit views to check adoption, permitted clients/models, policy changes, and cost. The VS Code Copilot status dashboard shows allowance usage; reporting detail varies by plan.
+- Record the client/harness/model used for a controlled evaluation and rerun the same small task set after material changes. Results can vary even with the same prompt.
+
+Keep evaluation data synthetic and aggregate team findings. Do not log prompts, source, personal data, or sensitive outputs just to measure adoption, and do not rank individual engineers by acceptance counts. Application observability remains the application's responsibility.
 
 ## Upgrade and migration notes
 
-Copilot clients update independently. Follow the relevant IDE or CLI release notes and recheck policy behavior after client updates.
+Revisit this playbook when the editor, harness, model policy, or tool integrations change. Pinning your application lockfile does not pin the Copilot service.
+
+1. Read the official client notes and Copilot changelog. Distinguish stable behavior from preview/experimental features; none of the experimental features in the verified release is required here.
+2. Back up existing customizations. For legacy Local users, open **Chat: Open Customizations > Migrations** with Copilot selected. Review conversions before applying them.
+3. Replace participant routing with direct requests and explicit context. Convert recurring `.prompt.md` workflows to skills; recheck agent/model/tool choices rather than assuming all metadata transfers.
+4. Verify discovery, relative resources, permissions, and actual behavior in a fresh session using the same representative task. Changing the model alone does not migrate the harness.
+5. Retire original copies only after verification. Avoid contradictory duplicate instructions and retain a recovery path for configuration changes.
+
+The documented Local removal boundary is **February 2027**. Do not build a new onboarding process around it. If an integration still requires Local, document the blocker and administrator-approved temporary path rather than silently making it the team default.
 
 ## Alternatives
 
-Claude Code emphasizes repository-level agent workflows; choose based on required clients, governance, model options, and integration.
+- **Ordinary editor/compiler tools:** prefer symbol rename, diagnostics, code actions, formatters, and deterministic generators for well-defined transformations. They are easier to audit than an open-ended agent request.
+- **[Claude Code](/tools/ai-dev/claude-code/):** evaluate as a separate workflow with its own supported configuration, credentials, permissions, and terms. A Claude model selected in Copilot is not the same setup.
+- **Another approved assistant or no assistant:** compare the same synthetic tasks, correctness, review effort, privacy requirements, and total cost. Do not introduce multiple tools solely because one suggested an unverifiable answer.
 
 ## Sources
 
-Accessed 2026-11-13:
+Official sources accessed **2026-11-18**:
 
-- [GitHub Copilot documentation](https://docs.github.com/en/copilot)
-- [GitHub Copilot weekly releases, November 2](https://github.blog/changelog/2026-11-06-github-copilot-weekly-releases-november-2/)
-- [GitHub Copilot plans](https://github.com/features/copilot/plans)
+- [VS Code 1.147 stable release notes](https://code.visualstudio.com/updates/v1_147)
+- [Copilot weekly releases, November 9; published November 16](https://github.blog/changelog/2026-11-16-github-copilot-weekly-releases-november-9/)
+- [Set up Copilot in VS Code](https://code.visualstudio.com/docs/setup/copilot)
+- [Use the Chat view](https://code.visualstudio.com/docs/agents/run/chat-view)
+- [Inline and next edit suggestions](https://code.visualstudio.com/docs/editing/ai-powered-suggestions)
+- [Context, file/symbol attachments, and deprecated participants](https://code.visualstudio.com/docs/chat/copilot-chat-context)
+- [Custom instructions and their limits](https://code.visualstudio.com/docs/agent-customization/custom-instructions)
+- [Legacy prompt-file scope, format, and invocation](https://code.visualstudio.com/docs/agent-customization/prompt-files)
+- [Agent skills: format, invocation, and locations](https://code.visualstudio.com/docs/agent-customization/agent-skills)
+- [Harness choices and compatibility](https://code.visualstudio.com/docs/agents/run/agent-harnesses)
+- [Move from Local to Copilot](https://code.visualstudio.com/docs/agents/run/move-to-copilot)
+- [Migrate customizations](https://code.visualstudio.com/docs/agent-customization/migrate-customizations)
+- [Review and revert agent changes](https://code.visualstudio.com/docs/agents/run/review-code-edits)
+- [Permissions and approvals](https://code.visualstudio.com/docs/agents/run/approvals)
+- [Sandbox boundaries and network behavior](https://code.visualstudio.com/docs/agents/run/agent-sandboxing)
+- [Content-exclusion availability and limitations](https://docs.github.com/en/copilot/concepts/security-governance-and-network-settings/content-exclusion)
+- [Account policies and model-training settings](https://docs.github.com/en/copilot/how-tos/manage-your-account/manage-policies)
+- [Finding matching public code and license references](https://docs.github.com/en/copilot/how-tos/copilot-in-your-ide/copilot-for-common-tasks/find-matching-code)
+- [Current plans and usage allowances](https://github.com/features/copilot/plans)

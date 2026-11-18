@@ -1,0 +1,14 @@
+Goal: explain and fix [OBSERVED FAILURE]; expected behavior is [EXPECTED].
+Context: attached [SANITIZED STACK TRACE], [MINIMAL REPRODUCTION], [RELEVANT SOURCE],
+[RUNTIME/DEPENDENCY VERSIONS], and [RECENT RELEVANT DIFF].
+Reproduction command and actual result: [COMMAND / EXIT STATUS / REDACTED OUTPUT].
+
+Do not edit yet. Separate observed facts from hypotheses; rank likely causes.
+Trace the first relevant application frame and the failing input through its
+callers. Propose one discriminating check per leading hypothesis.
+After evidence identifies the cause, propose the smallest fix and regression test.
+Preserve error propagation and documented behavior; do not hide the exception.
+
+Verify: run the reproduction and regression test, then relevant neighboring tests.
+Return: root cause with citations, evidence, diff summary, and actual results.
+Stop: request missing evidence instead of guessing APIs or adding broad catches.

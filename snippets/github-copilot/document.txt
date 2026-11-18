@@ -1,0 +1,17 @@
+Goal: produce [README/API DOCUMENTATION/OPENAPI CONTRACT] for [BOUNDARY].
+Context: attached [IMPLEMENTATION], [ROUTE REGISTRATION], [REQUEST/RESPONSE SCHEMAS],
+[AUTH MIDDLEWARE], [ERROR MAPPING], [TESTS], and [EXISTING DOC/SPEC CONVENTION].
+
+Extract only behavior demonstrated by these sources and cite its location.
+For OpenAPI, use the repository's existing supported version and validator.
+Cover methods/paths, parameters, required/null fields, success/error responses,
+authentication and operation-level authorization requirements.
+Do not invent endpoints, response examples, status codes, defaults, or guarantees.
+Use synthetic examples. Clearly separate missing evidence from proposed changes.
+Do not publish internal-only endpoints or include credentials or real user data.
+
+Verify: run the existing documentation/spec validator and relevant contract tests;
+cross-check representative documented responses against actual test fixtures.
+Return: proposed documentation, evidence map, validation results, and open questions.
+Stop: if no contract authority or validation tool exists, report that limitation
+and ask before adding tooling or presenting a draft contract as verified.

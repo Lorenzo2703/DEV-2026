@@ -1,0 +1,17 @@
+Goal: verify [API/SERVICE BOUNDARY] against its real [DATABASE/DEPENDENCY].
+Context: attached [ROUTES], [SCHEMA/MIGRATIONS], [AUTH RULES], [TEST FIXTURES],
+and [EXISTING INTEGRATION TEST/TEST CONFIG].
+Acceptance criteria: [REQUESTS, RESPONSES, AND PERSISTED EFFECTS].
+
+Use the repository's existing isolated test environment; never connect to
+production. Propose the fixture lifecycle and cleanup before implementation.
+Cover valid requests, malformed input, unauthenticated/forbidden access,
+cross-tenant access, duplicates, rollback, and relevant concurrent writes.
+Check persisted state, not only HTTP status. Test retries/timeouts only when
+their documented semantics and a deterministic harness are available.
+Do not replace the real boundary with mocks and label the result integration.
+
+Verify: run the actual integration command with isolated synthetic fixtures.
+Return: environment, cases, command/results, and any untested external behavior.
+Stop: if the required service or credentials are unavailable, report the blocker;
+do not fabricate passing output or silently switch to a mock.

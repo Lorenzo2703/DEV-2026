@@ -1,0 +1,16 @@
+Goal: test the public behavior of [MODULE/SYMBOL], not its current implementation.
+Context: attached [SOURCE], [CALLERS/CONTRACT], [NEIGHBORING TEST], and [TEST CONFIG].
+Acceptance criteria: [INDEPENDENTLY SPECIFIED OUTCOMES].
+
+Before writing tests, propose a behavior matrix: normal case, empty/missing input,
+exact lower/upper boundaries, malformed values, dependency failure, and relevant
+time/locale/concurrency cases. Mark inapplicable cases with a reason.
+Reuse existing fixtures and the installed test runner. Mock external I/O at the
+boundary, not the function under test. Avoid sleeps and order-dependent state.
+Do not derive expected values by calling the same implementation.
+
+Verify: run the selected tests using the repository command. For the bug case,
+show that the regression test fails on the old behavior and passes with the fix
+when this can be done without discarding anyone's work.
+Return: test matrix, tests added, command/results, and behaviors not covered.
+Stop: ask when the contract is ambiguous; do not encode a guessed behavior.

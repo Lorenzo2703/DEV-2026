@@ -1,0 +1,172 @@
+---
+interface Props {
+  kind: 'context' | 'workflow';
+}
+
+const { kind } = Astro.props;
+const diagrams = {
+  context: {
+    title: 'Context engineering: assemble a focused request',
+    nodes: [
+      [
+        'Goal',
+        'State an observable outcome',
+        'Describe what should change for a user and what must stay unchanged. A role such as "senior engineer" cannot replace acceptance criteria.',
+      ],
+      [
+        'Instructions',
+        'Supply durable repository rules',
+        'Keep architecture, installed stack, error-handling conventions, and real check commands in the project instructions. Verify that the selected harness includes them.',
+      ],
+      [
+        'Source',
+        'Attach the reference implementation',
+        'Use Add Context to select the relevant file, symbol, caller, and neighboring test. Open tabs can help, but do not guarantee that the needed source was included.',
+      ],
+      [
+        'Evidence',
+        'Attach a small sanitized reproduction',
+        'Include the actual failing input, stack trace, query plan, or profile. Replace sensitive values while preserving the relationships needed to reproduce the bug.',
+      ],
+      [
+        'Contract',
+        'Define the verification boundary',
+        'Specify allowed files, preserved APIs, required checks, and when to stop for clarification. Review the attachments before sending; an index is not the whole repository in context.',
+      ],
+    ],
+  },
+  workflow: {
+    title: 'Agent workflow: plan, edit, test, review',
+    nodes: [
+      [
+        'Plan',
+        'Agree on scope before edits',
+        'Ask for source citations, a proposed file list, acceptance criteria, and risks. Resolve ambiguities before giving the agent permission to change code.',
+      ],
+      [
+        'Edit',
+        'Inspect a bounded change',
+        'Let the agent reuse the established pattern. Review tool actions as well as file edits; stop scope creep or requests for unnecessary permissions.',
+      ],
+      [
+        'Test',
+        'Require independent evidence',
+        'Run focused behavioral tests and required repository checks. A generated test can repeat the implementation bug; compare its expectations with the contract.',
+      ],
+      [
+        'Review',
+        'Inspect the complete diff',
+        'Check logic, authorization, error paths, dependencies, and untracked files. Keeping an editor edit is not staging, committing, or approving a pull request.',
+      ],
+      [
+        'Decide',
+        'Merge or return to the plan',
+        'A human owns the outcome. Merge only with review and green checks; if evidence contradicts the plan, return to the first step rather than accepting a plausible explanation.',
+      ],
+    ],
+  },
+};
+const diagram = diagrams[kind];
+const id = `copilot-${kind}`;
+---
+
+<figure class="copilot-diagram" aria-labelledby={`${id}-title`} data-copilot-diagram={kind}>
+  <strong id={`${id}-title`} class="diagram-title">{diagram.title}</strong>
+  <p class="diagram-help" data-diagram-help hidden>Select a node to inspect its role. These are workflow explanations, not a live Copilot session.</p>
+  <ol class="diagram-nodes">
+    {diagram.nodes.map(([label, title, detail], index) => (
+      <li>
+        <strong class="node-label" data-node-label>{index + 1}. {label}</strong>
+        <button type="button" hidden aria-controls={`${id}-${index}`} data-diagram-node>
+          <span class="node-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          {label}
+        </button>
+        <div id={`${id}-${index}`} class="node-detail" data-node-detail>
+          <strong>{title}</strong>
+          <p>{detail}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-copilot-diagram]').forEach((root) => {
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-diagram-node]')];
+    const details = [...root.querySelectorAll<HTMLElement>('[data-node-detail]')];
+    const labels = [...root.querySelectorAll<HTMLElement>('[data-node-label]')];
+    const help = root.querySelector<HTMLElement>('[data-diagram-help]');
+    if (!help || buttons.length !== details.length || buttons.length !== labels.length) {
+      throw new Error('Copilot diagram controls are incomplete.');
+    }
+    function select(index: number): void {
+      buttons.forEach((button, current) => {
+        button.setAttribute('aria-pressed', String(current === index));
+        const detail = details[current];
+        if (detail) detail.hidden = current !== index;
+      });
+    }
+    buttons.forEach((button, index) => {
+      button.hidden = false;
+      button.addEventListener('click', () => select(index));
+    });
+    labels.forEach((label) => {
+      label.hidden = true;
+    });
+    select(0);
+    help.hidden = false;
+    root.dataset.enhanced = 'true';
+  });
+</script>
+
+<style>
+  .copilot-diagram {
+    margin: 2rem 0;
+    border: 1px solid var(--color-muted);
+    border-radius: 0.75rem;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    background: var(--color-brand-soft);
+  }
+  .diagram-title { display: block; font-size: 1.15rem; }
+  .diagram-help { font-size: 0.9rem; }
+  .diagram-nodes { list-style: none; padding: 0; margin: 1.5rem 0 0; }
+  .diagram-nodes li { margin: 0; padding: 0; min-width: 0; }
+  .node-label { color: var(--color-brand); }
+  .node-detail { padding: 1rem 0; }
+  .node-detail p { margin: 0.5rem 0 0; }
+  button {
+    width: 100%;
+    min-height: 64px;
+    border: 1px solid var(--color-muted);
+    border-radius: 0.25rem;
+    padding: 0.6rem;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    text-align: left;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .node-number { display: block; color: var(--color-muted); font-size: 0.8rem; }
+  button[aria-pressed="true"] { border-color: var(--color-brand); box-shadow: inset 0 -3px var(--color-brand); }
+  button:hover { background: var(--color-brand-soft); }
+  [data-enhanced] .diagram-nodes { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.75rem; }
+  [data-enhanced] li { display: contents; }
+  [data-enhanced] button { grid-row: 1; }
+  [data-enhanced] .node-detail {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--color-muted);
+    margin-top: 0.25rem;
+  }
+  @media (max-width: 40rem) {
+    [data-enhanced] .diagram-nodes { grid-template-columns: 1fr; }
+    [data-enhanced] li { display: block; }
+    [data-enhanced] .node-detail { margin-top: 0.75rem; }
+  }
+  @media print {
+    .copilot-diagram { background: transparent; }
+    [data-enhanced] .diagram-nodes { display: block; }
+    [data-node-label], [data-node-detail] { display: block !important; }
+    [data-diagram-node], .diagram-help { display: none; }
+  }
+</style>

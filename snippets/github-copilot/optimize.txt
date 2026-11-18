@@ -1,0 +1,17 @@
+Goal: improve [QUERY/ALGORITHM] from [MEASURED BASELINE] to [TARGET/BUDGET]
+without changing [ORDERING, AUTHORIZATION, CONSISTENCY, AND OUTPUT CONTRACT].
+Context: attached [IMPLEMENTATION], [SCHEMA/INDEXES OR DATA STRUCTURES],
+[SANITIZED QUERY PLAN/PROFILE], [DATA VOLUME/DISTRIBUTION], and [BENCHMARK].
+
+First identify measured cost: database I/O, joins, allocations, CPU, network,
+or algorithmic complexity. State hypotheses and propose a reproducible experiment.
+Use representative synthetic data and the same environment for before/after runs.
+For SQL, inspect parameterized query plans and rows scanned/returned. Run
+EXPLAIN ANALYZE only in an approved safe environment: it executes the statement.
+Do not add an index, cache, migration, or dependency without explaining write,
+memory, invalidation, and rollout costs and obtaining approval.
+
+Verify: compare identical outputs and edge cases, report latency distribution,
+resource costs, and dataset characteristics; distinguish cold and warm runs.
+Return: evidence, proposed change, before/after measurements, and trade-offs.
+Stop: if no reliable baseline exists, produce the measurement plan, not a speedup claim.

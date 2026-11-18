@@ -1,0 +1,15 @@
+Goal: refactor [LEGACY AREA] to [SPECIFIC DESIGN] without changing behavior.
+Context: attached [SOURCE], [CALLERS], [CHARACTERIZATION TESTS], and
+[COMPARABLE CURRENT PATTERN].
+Preserve: [PUBLIC API, SERIALIZATION, SIDE EFFECTS, ORDERING, AND ERROR SEMANTICS].
+
+First list observable behavior and gaps in test protection. Add only the needed
+characterization tests; distinguish existing bugs from this refactor's scope.
+Propose small reviewable steps. Wait for approval before changing public contracts
+or introducing libraries. Keep cleanup unrelated to this behavior out of the diff.
+Do not replace awkward logic until its purpose is established from callers/tests.
+
+Verify: run characterization and affected tests before and after each meaningful
+step, plus repository-required type/build checks. Compare external outputs.
+Return: preserved invariants, changed files, commands/results, and remaining risks.
+Stop: if tests and callers disagree on behavior, ask which contract is intended.

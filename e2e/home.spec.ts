@@ -4,6 +4,213 @@ import { dirname } from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
+test('Copilot guide exposes prompts and accessible interactive diagrams', async ({
+  page,
+}, testInfo) => {
+  await page.goto('/tools/');
+  await page.getByRole('link', { name: 'GitHub Copilot', exact: true }).click();
+  await expect(page).toHaveURL('/tools/ai-dev/github-copilot/');
+  await expect(page.getByRole('heading', { name: 'Core Capabilities & Modes' })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Context Engineering (The 80/20 Rule)' }),
+  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Anti-Patterns to Avoid' })).toBeVisible();
+  await expect(page.locator('#copilot-scaffold')).toContainText('Wait for approval before edits');
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.locator('#copilot-scaffold').getByRole('button', { name: 'Copy code' }).click();
+  await expect(page.locator('#copilot-scaffold').getByRole('status')).toHaveText('Code copied.');
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain(
+    'Goal: implement [FEATURE]',
+  );
+  await page
+    .locator('#copilot-tests')
+    .getByRole('tab', { name: 'Integration tests', exact: true })
+    .click();
+  await expect(page.locator('#copilot-tests').getByRole('tabpanel')).toContainText(
+    'cross-tenant access',
+  );
+  await page
+    .locator('#copilot-maintenance')
+    .getByRole('tab', { name: 'Documentation / OpenAPI' })
+    .click();
+  await expect(page.locator('#copilot-maintenance').getByRole('tabpanel')).toContainText(
+    'Do not invent endpoints',
+  );
+  await page
+    .locator('#copilot-workflows')
+    .getByRole('tab', { name: 'Legacy: feature.prompt.md' })
+    .click();
+  await expect(page.locator('#copilot-workflows').getByRole('tabpanel')).toContainText(
+    'agent: agent',
+  );
+
+  const context = page.getByRole('figure', {
+    name: 'Context engineering: assemble a focused request',
+  });
+  const workflow = page.getByRole('figure', { name: 'Agent workflow: plan, edit, test, review' });
+  await context.getByRole('button', { name: 'Evidence', exact: true }).click();
+  await expect(context.getByRole('button', { name: 'Evidence', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(context.getByText('Attach a small sanitized reproduction')).toBeVisible();
+  await expect(context.getByText('State an observable outcome')).toBeHidden();
+  const review = workflow.getByRole('button', { name: 'Review', exact: true });
+  await review.focus();
+  await page.keyboard.press('Space');
+  await expect(review).toHaveAttribute('aria-pressed', 'true');
+  await expect(workflow.getByText('Inspect the complete diff')).toBeVisible();
+  await expect(context.getByText('Attach a small sanitized reproduction')).toBeVisible();
+
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  for (const button of [review, page.getByRole('button', { name: 'Reset checklist' })]) {
+    await button.hover();
+    await expect(button).toHaveCSS('transform', 'none');
+  }
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  expect(await review.evaluate((button) => getComputedStyle(button).transitionDuration)).toBe('0s');
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate(
+      (value) => document.documentElement.setAttribute('data-theme', value),
+      theme,
+    );
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  }
+  await page.evaluate(() => document.documentElement.setAttribute('data-theme', 'light'));
+  await context.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath('copilot-context-desktop.png') });
+  for (const width of [1440, 1024, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    );
+    await expect(context.getByRole('button', { name: 'Evidence', exact: true })).toBeVisible();
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await context.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath('copilot-context-mobile.png') });
+});
+
+test('Copilot onboarding saves known steps, restores progress, and resets only its own state', async ({
+  page,
+}, testInfo) => {
+  const key = 'dev-in-2026:copilot-onboarding:v1';
+  await page.goto('/tools/ai-dev/github-copilot/');
+  const checklist = page.getByRole('region', { name: 'Copilot onboarding checklist' });
+  const account = checklist.getByRole('checkbox', { name: /Confirm your approved account/ });
+  const editor = checklist.getByRole('checkbox', { name: /Set up and sign in/ });
+  await expect(checklist.locator('output')).toHaveText('0 of 9 steps completed');
+  expect(
+    await checklist.evaluate((element) => element.getBoundingClientRect().height),
+  ).toBeLessThan(600);
+  await checklist.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: testInfo.outputPath('copilot-onboarding-desktop.png') });
+  await account.focus();
+  await page.keyboard.press('Space');
+  await editor.check();
+  await expect(checklist.locator('output')).toHaveText('2 of 9 steps completed');
+  await expect(checklist.getByRole('progressbar')).toHaveAttribute('value', '2');
+  expect(
+    await page.evaluate(
+      (storageKey) => JSON.parse(localStorage.getItem(storageKey) ?? 'null'),
+      key,
+    ),
+  ).toEqual(['account', 'editor']);
+  await page.evaluate(() => localStorage.setItem('copilot-unrelated-test', 'keep'));
+  await page.reload();
+  await expect(account).toBeChecked();
+  await expect(editor).toBeChecked();
+  await expect(checklist.locator('output')).toHaveText('2 of 9 steps completed');
+  for (const checkbox of await checklist.getByRole('checkbox').all()) await checkbox.check();
+  await expect(checklist.locator('output')).toHaveText('9 of 9 steps completed');
+  await checklist.getByRole('button', { name: 'Reset checklist' }).click();
+  await expect(checklist.locator('output')).toHaveText('0 of 9 steps completed');
+  expect(await page.evaluate((storageKey) => localStorage.getItem(storageKey), key)).toBeNull();
+  expect(await page.evaluate(() => localStorage.getItem('copilot-unrelated-test'))).toBe('keep');
+  await page.reload();
+  await expect(account).not.toBeChecked();
+});
+
+for (const saved of ['{broken', '["account","unrecognized-step"]']) {
+  test(`Copilot onboarding reports invalid saved data: ${saved}`, async ({ page }) => {
+    await page.addInitScript((value) => {
+      localStorage.setItem('dev-in-2026:copilot-onboarding:v1', value);
+    }, saved);
+    await page.goto('/tools/ai-dev/github-copilot/');
+    const checklist = page.getByRole('region', { name: 'Copilot onboarding checklist' });
+    await expect(checklist.locator('[data-onboarding-storage]')).toContainText(
+      'Saved progress could not be loaded',
+    );
+    await expect(checklist.locator('output')).toHaveText('0 of 9 steps completed');
+    await expect(checklist.getByRole('checkbox').first()).not.toBeChecked();
+    await checklist.getByRole('button', { name: 'Reset checklist' }).click();
+    await expect(checklist.locator('[data-onboarding-storage]')).toContainText(
+      'Saved progress cleared',
+    );
+    expect(
+      await page.evaluate(() => localStorage.getItem('dev-in-2026:copilot-onboarding:v1')),
+    ).toBeNull();
+  });
+}
+
+test('Copilot onboarding remains usable when browser storage is denied', async ({ page }) => {
+  await page.addInitScript(() => {
+    for (const method of ['getItem', 'setItem', 'removeItem'] as const) {
+      const original: (this: Storage, key: string, value: string) => unknown =
+        Storage.prototype[method];
+      Object.defineProperty(Storage.prototype, method, {
+        value(this: Storage, key: string, value = '') {
+          if (key === 'dev-in-2026:copilot-onboarding:v1') {
+            throw new DOMException('Storage denied', 'SecurityError');
+          }
+          return original.call(this, key, value);
+        },
+      });
+    }
+  });
+  await page.goto('/tools/ai-dev/github-copilot/');
+  const checklist = page.getByRole('region', { name: 'Copilot onboarding checklist' });
+  await expect(checklist.locator('[data-onboarding-storage]')).toContainText(
+    'Saved progress could not be loaded',
+  );
+  await checklist.getByRole('checkbox').first().check();
+  await expect(checklist.locator('output')).toHaveText('1 of 9 steps completed');
+  await expect(checklist.locator('[data-onboarding-storage]')).toContainText('could not be saved');
+  await checklist.getByRole('button', { name: 'Reset checklist' }).click();
+  await expect(checklist.locator('output')).toHaveText('0 of 9 steps completed');
+  await expect(checklist.locator('[data-onboarding-storage]')).toContainText(
+    'saved progress could not be cleared',
+  );
+});
+
+test('Copilot guide keeps diagrams, samples, and onboarding readable without JavaScript', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  try {
+    await page.goto('http://127.0.0.1:4321/tools/ai-dev/github-copilot/');
+    await expect(page.getByText('State an observable outcome')).toBeVisible();
+    await expect(page.getByText('Define the verification boundary')).toBeVisible();
+    await expect(page.getByText('Agree on scope before edits')).toBeVisible();
+    await expect(page.getByText('Merge or return to the plan')).toBeVisible();
+    await expect(page.locator('#copilot-tests')).toContainText('cross-tenant access');
+    await expect(page.getByRole('button', { name: 'Reset checklist' })).toBeHidden();
+    const checkbox = page.getByRole('checkbox', { name: /Confirm your approved account/ });
+    await checkbox.check();
+    await expect(checkbox).toBeChecked();
+    const notice = page.locator('[data-copilot-onboarding] noscript p');
+    await expect(notice).toBeVisible();
+    await expect(notice).toContainText('progress will not be saved between visits');
+  } finally {
+    await context.close();
+  }
+});
+
 test('home page provides the main handbook navigation', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { name: /build and operate software/i })).toBeVisible();
@@ -190,8 +397,8 @@ test('radar decision notes appear in their rings and open with tool links', asyn
 test('radar ring navigation is accessible and usable on narrow screens', async ({ page }) => {
   await page.goto('/radar/');
   const navigation = page.getByRole('navigation', { name: 'Recommendation rings' });
-  await expect(navigation.getByRole('link')).  toHaveCount(3);
-    for (const ring of ['adopt', 'trial', 'assess']) {
+  await expect(navigation.getByRole('link')).toHaveCount(3);
+  for (const ring of ['adopt', 'trial', 'assess']) {
     const link = navigation.locator(`a[href="#radar-${ring}"]`);
     await link.click();
     await expect(page).toHaveURL(new RegExp(`#radar-${ring}$`));
@@ -260,9 +467,7 @@ test('guides index includes both guides and dated posts', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Introducing Dev in 2026' })).toBeVisible();
 });
 
-test('home stack builder supports multiple optional technologies per role', async ({
-  page,
-}) => {
+test('home stack builder supports multiple optional technologies per role', async ({ page }) => {
   await page.goto('/');
   const roadmap = page.locator('[data-technology-pathways]');
   await roadmap.locator('[data-scope-id="ai-app"]').click();
@@ -408,10 +613,7 @@ test('stack bootstrap downloads scripts with primary choices and manual setup', 
     if (format === 'node' || (format === 'powershell') === (process.platform === 'win32')) {
       const result = spawnSync(command, args, { cwd: dirname(script), encoding: 'utf8' });
       expect(result.status, result.stderr).toBe(0);
-      const readme = await readFile(
-        testInfo.outputPath(`example-${format}`, 'README.md'),
-        'utf8',
-      );
+      const readme = await readFile(testInfo.outputPath(`example-${format}`, 'README.md'), 'utf8');
       expect(readme).toContain('Node.js (primary choice)');
       expect(readme).toContain('PostgreSQL');
       expect(readme).toContain('not automatically integrated');
@@ -738,6 +940,10 @@ test('selects remain usable in forced colors', async ({ page }) => {
 
 test('search finds pages and filters by category', async ({ page }) => {
   await page.goto('/search/');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const searchButton = page.getByRole('button', { name: 'Search', exact: true });
+  await searchButton.hover();
+  await expect(searchButton).toHaveCSS('transform', 'none');
   await expect(page.getByLabel('Search terms')).toHaveCSS('min-height', '44px');
   await page.getByLabel('Category').focus();
   await expect(page.getByLabel('Category')).toHaveCSS('outline-style', 'solid');

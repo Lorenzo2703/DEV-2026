@@ -327,14 +327,11 @@ select:focus-visible {
   padding: 0.7rem 1.25rem;
   font-weight: 650;
   cursor: pointer;
-  transition:
-    filter 160ms ease,
-    transform 160ms ease;
+  transition: filter 160ms ease;
 }
 
 .search-submit:hover {
   filter: brightness(1.08);
-  transform: translateY(-1px);
 }
 
 .form-control {

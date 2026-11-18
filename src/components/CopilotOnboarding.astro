@@ -1,0 +1,150 @@
+---
+const steps = [
+  ['account', 'Confirm your approved account and seat'],
+  ['editor', 'Set up and sign in to VS Code'],
+  ['policy', 'Review data and tool permissions'],
+  ['workspace', 'Open a permitted repository'],
+  ['instructions', 'Verify project instructions are discovered'],
+  ['inline', 'Try an inline completion'],
+  ['context', 'Ask a source-grounded question'],
+  ['review', 'Review one bounded agent change'],
+  ['checks', 'Run the repository checks yourself'],
+];
+---
+
+<section class="copilot-onboarding" aria-label="Copilot onboarding checklist" data-copilot-onboarding>
+  <p class="onboarding-note">Complete these steps in VS Code. Only checked step IDs are saved in this browser.</p>
+  <div data-onboarding-progress hidden>
+    <output aria-live="polite" data-onboarding-count></output>
+    <progress max={steps.length} value="0" aria-label="Completed Copilot onboarding steps"></progress>
+  </div>
+  <fieldset>
+    <legend class="sr-only">First-run setup</legend>
+    {steps.map(([id, title]) => (
+      <label class="onboarding-step">
+        <input type="checkbox" value={id} />
+        <span>{title}</span>
+      </label>
+    ))}
+  </fieldset>
+  <div class="onboarding-actions">
+    <p role="status" data-onboarding-storage>Enable JavaScript to save progress locally and use reset.</p>
+    <button type="button" data-onboarding-reset hidden>Reset checklist</button>
+  </div>
+  <noscript><p>The steps remain checkable, but progress will not be saved between visits.</p></noscript>
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-copilot-onboarding]').forEach((root) => {
+    const key = 'dev-in-2026:copilot-onboarding:v1';
+    const checkboxes = [...root.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')];
+    const progressGroup = root.querySelector<HTMLElement>('[data-onboarding-progress]');
+    const progress = root.querySelector<HTMLProgressElement>('progress');
+    const count = root.querySelector<HTMLOutputElement>('[data-onboarding-count]');
+    const storageStatus = root.querySelector<HTMLElement>('[data-onboarding-storage]');
+    const reset = root.querySelector<HTMLButtonElement>('[data-onboarding-reset]');
+    if (!progressGroup || !progress || !count || !storageStatus || !reset) {
+      throw new Error('Copilot onboarding controls are incomplete.');
+    }
+
+    const knownIds = new Set(checkboxes.map((checkbox) => checkbox.value));
+    const savedMessage = '';
+    try {
+      const saved = localStorage.getItem(key);
+      if (saved !== null) {
+        const ids: unknown = JSON.parse(saved);
+        if (
+          !Array.isArray(ids) ||
+          !ids.every((id: unknown) => typeof id === 'string' && knownIds.has(id)) ||
+          new Set(ids).size !== ids.length
+        ) {
+          throw new Error('Invalid onboarding step IDs.');
+        }
+        checkboxes.forEach((checkbox) => {
+          checkbox.checked = ids.includes(checkbox.value);
+        });
+      }
+      storageStatus.textContent = savedMessage;
+    } catch {
+      storageStatus.textContent =
+        'Saved progress could not be loaded. Continue for this visit; use Reset checklist to clear invalid data. Browser storage may be unavailable.';
+    }
+
+    function updateProgress(): void {
+      const completed = checkboxes.filter((checkbox) => checkbox.checked).length;
+      if (progress) progress.value = completed;
+      if (count) count.textContent = `${completed} of ${checkboxes.length} steps completed`;
+    }
+
+    function save(clear: boolean): void {
+      if (!storageStatus) return;
+      try {
+        if (clear) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(
+            key,
+            JSON.stringify(checkboxes.filter((checkbox) => checkbox.checked).map((checkbox) => checkbox.value)),
+          );
+        }
+        storageStatus.textContent = clear ? 'Saved progress cleared. All steps reset.' : savedMessage;
+      } catch {
+        storageStatus.textContent = clear
+          ? 'Checklist reset for this visit, but saved progress could not be cleared. Browser storage is unavailable.'
+          : 'Progress changed for this visit but could not be saved. Browser storage is unavailable.';
+      }
+    }
+
+    checkboxes.forEach((checkbox) => {
+      checkbox.addEventListener('change', () => {
+        updateProgress();
+        save(false);
+      });
+    });
+    reset.addEventListener('click', () => {
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+      updateProgress();
+      save(true);
+    });
+    updateProgress();
+    progressGroup.hidden = false;
+    reset.hidden = false;
+  });
+</script>
+
+<style>
+  .copilot-onboarding {
+    margin: 1.5rem 0;
+  }
+  .onboarding-note { margin-top: 0; color: var(--color-muted); font-size: 0.9rem; }
+  output { display: block; font-size: 0.9rem; }
+  progress { display: block; width: 100%; height: 0.375rem; margin-top: 0.5rem; accent-color: var(--color-brand); }
+  fieldset { min-width: 0; margin: 0.75rem 0; border: 0; padding: 0; }
+  .onboarding-step {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 44px;
+    padding: 0.5rem 0;
+    cursor: pointer;
+  }
+  input { flex: 0 0 auto; width: 1rem; height: 1rem; margin: 0; accent-color: var(--color-brand); }
+  .onboarding-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+  .onboarding-actions p { flex: 1 1 15rem; margin: 0; color: var(--color-muted); font-size: 0.85rem; }
+  button {
+    min-height: 44px;
+    border: 0;
+    border-radius: 0.25rem;
+    padding: 0.5rem 0;
+    color: var(--color-brand);
+    background: transparent;
+    cursor: pointer;
+  }
+  button:hover { text-decoration: underline; }
+  @media print {
+    .onboarding-actions, [data-onboarding-progress] { display: none; }
+    .copilot-onboarding { background: transparent; }
+  }
+</style>

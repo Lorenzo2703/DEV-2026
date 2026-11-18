@@ -1,0 +1,16 @@
+Goal: implement [FEATURE] with these acceptance criteria: [OBSERVABLE OUTCOMES].
+Context: I attached [MANIFEST], [REFERENCE IMPLEMENTATION], [ITS TESTS],
+and [CONTRACT/SCHEMA] using Add Context. Read these before editing.
+
+First explain the existing pattern with file/symbol citations. Propose the
+smallest file list and any open questions. Wait for approval before edits.
+After approval, implement only [SCOPE]; preserve [PUBLIC CONTRACT/INVARIANTS].
+Reuse the installed libraries and existing error/auth/configuration boundaries.
+No new dependency, schema migration, deployment change, or unrelated cleanup
+without separate approval.
+
+Verify: add focused behavioral tests for [SUCCESS], [INVALID INPUT],
+[AUTHORIZATION], and [FAILURE]. Discover the repo's real test/build commands
+from its scripts; run the affected tests and required checks.
+Return: changed files, actual commands and results, limitations, and remaining risks.
+Stop: ask if a required behavior, dependency API, or contract is not established.
