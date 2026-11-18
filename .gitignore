@@ -3,6 +3,10 @@ dist/
 # generated types
 .astro/
 
+.agents/
+
+.taste-skill/
+
 # dependencies
 node_modules/
 

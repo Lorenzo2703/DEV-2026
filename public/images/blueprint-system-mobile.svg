@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" fill="none">
+  <rect width="800" height="1000" rx="24" fill="#162a17"/>
+  <path d="M400 204v114m0 116v114m0 116v114" stroke="#c6f19d" stroke-width="4" stroke-linecap="round"/>
+  <path d="m392 308 8 16 8-16m-16 206 8 16 8-16m-16 206 8 16 8-16m-16 206 8 16 8-16" stroke="#c6f19d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#c6f19d" stroke-width="3">
+    <rect x="120" y="80" width="560" height="124" rx="18" fill="#1c3420"/>
+    <rect x="120" y="318" width="560" height="124" rx="18" fill="#1c3420"/>
+    <rect x="120" y="556" width="560" height="124" rx="18" fill="#1c3420"/>
+    <rect x="120" y="794" width="560" height="124" rx="18" fill="#1c3420"/>
+  </g>
+  <g fill="#c6f19d">
+    <circle cx="184" cy="142" r="17"/>
+    <circle cx="184" cy="380" r="17"/>
+    <circle cx="184" cy="618" r="17"/>
+    <circle cx="184" cy="856" r="17"/>
+  </g>
+  <g fill="#fff" font-family="sans-serif">
+    <text x="226" y="139" font-size="23">Application</text>
+    <text x="226" y="173" fill="#aab8a7" font-size="15">Web clients and user workflows</text>
+    <text x="226" y="377" font-size="23">API services</text>
+    <text x="226" y="411" fill="#aab8a7" font-size="15">Contracts and business logic</text>
+    <text x="226" y="615" font-size="23">Identity</text>
+    <text x="226" y="649" fill="#aab8a7" font-size="15">Access control and protection</text>
+    <text x="226" y="853" font-size="23">Data</text>
+    <text x="226" y="887" fill="#aab8a7" font-size="15">Persistence and operations</text>
+  </g>
+</svg>

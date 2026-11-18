@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" fill="none">
+  <rect width="1200" height="320" rx="24" fill="#162a17"/>
+  <path d="M92 160h1016" stroke="#456346" stroke-width="2"/>
+  <g stroke="#456346" stroke-width="2">
+    <circle cx="170" cy="160" r="88"/>
+    <circle cx="170" cy="160" r="62"/>
+    <circle cx="170" cy="160" r="36"/>
+    <circle cx="170" cy="160" r="10"/>
+    <circle cx="456" cy="160" r="88"/>
+    <circle cx="456" cy="160" r="62"/>
+    <circle cx="456" cy="160" r="36"/>
+    <circle cx="456" cy="160" r="10"/>
+    <circle cx="744" cy="160" r="88"/>
+    <circle cx="744" cy="160" r="62"/>
+    <circle cx="744" cy="160" r="36"/>
+    <circle cx="744" cy="160" r="10"/>
+    <circle cx="1030" cy="160" r="88"/>
+    <circle cx="1030" cy="160" r="62"/>
+    <circle cx="1030" cy="160" r="36"/>
+    <circle cx="1030" cy="160" r="10"/>
+  </g>
+  <g stroke="#c6f19d" stroke-width="3">
+    <circle cx="170" cy="160" r="36"/>
+    <circle cx="456" cy="160" r="62"/>
+    <circle cx="744" cy="160" r="88"/>
+    <circle cx="1030" cy="160" r="10"/>
+  </g>
+  <g fill="#c6f19d">
+    <circle cx="170" cy="124" r="7"/>
+    <circle cx="456" cy="98" r="7"/>
+    <circle cx="744" cy="72" r="7"/>
+    <circle cx="1030" cy="160" r="7"/>
+  </g>
+</svg>

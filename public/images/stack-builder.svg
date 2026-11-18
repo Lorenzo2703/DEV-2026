@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" fill="none">
+  <rect width="1200" height="800" rx="28" fill="#162a17"/>
+  <path d="M398 402h142m120 0h142M600 315v-96m0 366v-96" stroke="#c6f19d" stroke-width="4" stroke-linecap="round"/>
+  <path d="M524 394l16 8-16 8m120-16-16 8 16 8M592 235l8-16 8 16m-16 334 8-16 8 16" stroke="#c6f19d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#c6f19d" stroke-width="3">
+    <rect x="90" y="310" width="308" height="184" rx="18" fill="#1c3420"/>
+    <rect x="540" y="315" width="120" height="174" rx="18" fill="#1c3420"/>
+    <rect x="802" y="310" width="308" height="184" rx="18" fill="#1c3420"/>
+    <rect x="456" y="66" width="288" height="153" rx="18" fill="#1c3420"/>
+    <rect x="456" y="581" width="288" height="153" rx="18" fill="#1c3420"/>
+  </g>
+  <g fill="#c6f19d">
+    <circle cx="130" cy="374" r="9"/>
+    <circle cx="130" cy="402" r="9"/>
+    <circle cx="130" cy="430" r="9"/>
+    <circle cx="843" cy="374" r="9"/>
+    <circle cx="843" cy="402" r="9"/>
+    <circle cx="843" cy="430" r="9"/>
+  </g>
+  <g fill="#ffffff" font-family="sans-serif" text-anchor="middle">
+    <text x="244" y="367" font-size="24">Project scope</text>
+    <text x="244" y="411" font-size="18" fill="#aab8a7">Application · service · site</text>
+    <text x="600" y="388" font-size="20">Choose</text>
+    <text x="600" y="420" font-size="20">roles</text>
+    <text x="956" y="367" font-size="24">Technology guides</text>
+    <text x="956" y="411" font-size="18" fill="#aab8a7">Compare options by role</text>
+    <text x="600" y="128" font-size="24">Select technologies</text>
+    <text x="600" y="168" font-size="18" fill="#aab8a7">Optional choices</text>
+    <text x="600" y="644" font-size="24">Bootstrap script</text>
+    <text x="600" y="684" font-size="18" fill="#aab8a7">Generate a starter</text>
+  </g>
+</svg>

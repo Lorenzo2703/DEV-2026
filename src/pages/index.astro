@@ -1,4 +1,4 @@
----
+﻿---
 import { getCollection } from 'astro:content';
 import TechnologyPathways from '../components/TechnologyPathways.astro';
 import SiteLayout from '../layouts/SiteLayout.astro';
@@ -14,63 +14,68 @@ const featuredBlueprints = [...blueprints]
 const latestPost = [...guides]
   .filter((entry) => entry.data.publishedAt)
   .sort((a, b) => (b.data.publishedAt?.getTime() ?? 0) - (a.data.publishedAt?.getTime() ?? 0))[0];
-const statuses = ['adopt', 'trial', 'assess', 'hold'] as const;
+const statuses = ['adopt', 'trial', 'assess'] as const;
 ---
 
 <SiteLayout
   title="Home"
   description="Practical, source-verified guides for building, shipping, and operating software."
 >
-  <section class="max-w-3xl">
-    <p class="font-semibold uppercase tracking-wide text-brand">A developer's handbook</p>
-    <h1 class="mt-4 text-5xl font-bold leading-tight">Build and operate software with confidence.</h1>
-    <p class="mt-6 text-xl text-muted">
+  <section class="home-hero">
+    <p class="home-eyebrow">A developer's handbook</p>
+    <h1>Build and operate software with confidence.</h1>
+    <p class="home-lede">
       Clear implementation guidance for the tools and systems developers rely on, grounded in
       current sources and runnable examples.
     </p>
-    <div class="mt-8 flex flex-wrap gap-4">
-      <a class="rounded-lg bg-brand px-5 py-3 font-semibold !text-paper no-underline" href="/tools/">
-        Browse tool guides
-      </a>
-      <a class="rounded-lg border border-current px-5 py-3 font-semibold no-underline" href="/radar/">
-        Explore the radar
-      </a>
+    <div class="home-actions">
+      <a class="home-button bg-brand !text-paper" href="/tools/">Browse tool guides</a>
+      <a class="home-button" href="/radar/">Explore the radar</a>
     </div>
   </section>
+
   <TechnologyPathways tools={tools} />
+
   {latestPost && (
-    <section class="mt-10 max-w-3xl" aria-labelledby="latest-announcement">
-      <h2 id="latest-announcement" class="text-2xl font-bold">Latest announcement</h2>
-      <p class="mt-2">
-        <a class="underline" href={`/guides/${latestPost.id}/`}>{latestPost.data.title}</a>
+    <section class="home-section home-announcement" aria-labelledby="latest-announcement">
+      <h2 id="latest-announcement" class="home-heading">Latest announcement</h2>
+      <p>
+        <a href={`/guides/${latestPost.id}/`}>{latestPost.data.title}</a>
         {' — '}{latestPost.data.summary}
       </p>
     </section>
   )}
-  <section class="mt-16" aria-labelledby="featured-blueprints">
-    <h2 id="featured-blueprints" class="text-3xl font-bold">Featured blueprints</h2>
+
+  <section class="home-section" aria-labelledby="featured-blueprints">
+    <div class="home-section-head">
+      <h2 id="featured-blueprints" class="home-heading">Featured blueprints</h2>
+      <a class="home-more" href="/blueprints/">Browse blueprints</a>
+    </div>
     {featuredBlueprints.length ? (
-      <ul class="mt-6 grid list-none gap-4 p-0 md:grid-cols-3">
+      <ul class="home-grid home-grid-3">
         {featuredBlueprints.map((entry) => (
-          <li class="rounded-xl border border-slate-300/70 p-5 dark:border-slate-700">
-            <h3 class="text-xl font-bold"><a href={`/blueprints/${entry.id}/`}>{entry.data.title}</a></h3>
+          <li class="home-card">
+            <h3><a href={`/blueprints/${entry.id}/`}>{entry.data.title}</a></h3>
             <p>{entry.data.summary}</p>
           </li>
         ))}
       </ul>
-    ) : <p class="mt-4 text-muted">No blueprints have been published yet.</p>}
-    <a href="/blueprints/">Browse blueprints</a>
+    ) : <p class="home-muted">No blueprints have been published yet.</p>}
   </section>
-  <section class="mt-16" aria-labelledby="radar-overview">
-    <h2 id="radar-overview" class="text-3xl font-bold">Technology radar</h2>
-    <ul class="mt-6 grid list-none gap-4 p-0 sm:grid-cols-2 lg:grid-cols-4">
+
+  <section class="home-section" aria-labelledby="radar-overview">
+    <div class="home-section-head">
+      <h2 id="radar-overview" class="home-heading">Technology radar</h2>
+      <a class="home-more" href="/radar/">Explore the radar</a>
+    </div>
+    <ul class="home-grid home-grid-4">
       {statuses.map((status) => (
-        <li class="rounded-xl border border-slate-300/70 p-5 dark:border-slate-700">
-          <h3 class="font-bold capitalize">{status}</h3>
+        <li class="home-card home-stat">
+          <h3>{status}</h3>
           <p>{tools.filter((entry) => entry.data.radar === status).length} tools</p>
         </li>
       ))}
     </ul>
-    <a href="/radar/">Explore the radar</a>
   </section>
 </SiteLayout>
+

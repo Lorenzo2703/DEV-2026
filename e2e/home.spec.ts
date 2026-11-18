@@ -174,9 +174,6 @@ test('radar decision notes appear in their rings and open with tool links', asyn
   await expect(
     page.getByRole('link', { name: 'AI orchestration as a default dependency' }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('link', { name: 'Kubernetes for the static handbook' }),
-  ).toBeVisible();
   await page
     .getByRole('list', { name: 'adopt decision notes' })
     .getByRole('link', { name: 'Static content publishing' })
@@ -193,8 +190,8 @@ test('radar decision notes appear in their rings and open with tool links', asyn
 test('radar ring navigation is accessible and usable on narrow screens', async ({ page }) => {
   await page.goto('/radar/');
   const navigation = page.getByRole('navigation', { name: 'Recommendation rings' });
-  await expect(navigation.getByRole('link')).toHaveCount(4);
-  for (const ring of ['adopt', 'trial', 'assess', 'hold']) {
+  await expect(navigation.getByRole('link')).  toHaveCount(3);
+    for (const ring of ['adopt', 'trial', 'assess']) {
     const link = navigation.locator(`a[href="#radar-${ring}"]`);
     await link.click();
     await expect(page).toHaveURL(new RegExp(`#radar-${ring}$`));

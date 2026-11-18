@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" fill="none">
+  <rect width="1200" height="400" rx="24" fill="#162a17"/>
+  <path d="M248 201h150m154 0h150m154 0h146" stroke="#c6f19d" stroke-width="4" stroke-linecap="round"/>
+  <path d="m385 193 16 8-16 8m150-16-16 8 16 8m150-16-16 8 16 8m150-16-16 8 16 8" stroke="#c6f19d" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <g stroke="#c6f19d" stroke-width="3">
+    <rect x="60" y="106" width="188" height="190" rx="18" fill="#1c3420"/>
+    <rect x="402" y="106" width="154" height="190" rx="18" fill="#1c3420"/>
+    <rect x="710" y="106" width="154" height="190" rx="18" fill="#1c3420"/>
+    <rect x="1008" y="106" width="132" height="190" rx="18" fill="#1c3420"/>
+  </g>
+  <circle cx="154" cy="158" r="18" fill="#c6f19d"/>
+  <circle cx="479" cy="158" r="18" fill="#c6f19d"/>
+  <circle cx="787" cy="158" r="18" fill="#c6f19d"/>
+  <circle cx="1074" cy="158" r="18" fill="#c6f19d"/>
+  <g fill="#fff" font-family="sans-serif" text-anchor="middle">
+    <text x="154" y="215" font-size="21">Application</text>
+    <text x="479" y="215" font-size="21">API</text>
+    <text x="787" y="215" font-size="21">Identity</text>
+    <text x="1074" y="215" font-size="21">Data</text>
+    <text x="154" y="252" fill="#aab8a7" font-size="14">Web clients</text>
+    <text x="479" y="252" fill="#aab8a7" font-size="14">Services</text>
+    <text x="787" y="252" fill="#aab8a7" font-size="14">Access control</text>
+    <text x="1074" y="252" fill="#aab8a7" font-size="14">Persistence</text>
+  </g>
+</svg>

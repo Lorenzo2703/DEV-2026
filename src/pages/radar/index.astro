@@ -7,305 +7,133 @@ const [entries, decisions] = await Promise.all([
   getCollection('tools', ({ data }) => !data.draft),
   getCollection('radar', ({ data }) => !data.draft),
 ]);
-const statuses = ['adopt', 'trial', 'assess', 'hold'] as const;
-const guidance = {
-  adopt: {
-    label: 'A dependable default',
-    description:
-      'Prefer these when they fit your requirements. Still validate the trade-offs in your own stack.',
-  },
-  trial: {
-    label: 'Try it with a purpose',
-    description:
-      'Use in a bounded project. Measure the benefits and operational cost before making it a default.',
-  },
-  assess: {
-    label: 'Explore before committing',
-    description:
-      'Investigate the fit, maturity, and risks. A promising idea is not yet a production recommendation.',
-  },
-  hold: {
-    label: 'Pause new adoption',
-    description:
-      'Avoid adding this by default. Existing use may be reasonable; read the context and consider an exit path.',
-  },
-};
-const rings = statuses.map((status, index) => ({
-  status,
-  number: String(index + 1).padStart(2, '0'),
-  ...guidance[status],
+const rings = [
+  { status: 'adopt', description: 'A dependable default when it fits your requirements.' },
+  { status: 'trial', description: 'Use in a bounded project and measure the cost first.' },
+  { status: 'assess', description: 'Explore the fit and risks before committing.' },
+].map((ring) => ({
+  ...ring,
   tools: entries
-    .filter((entry) => entry.data.radar === status)
+    .filter((entry) => entry.data.radar === ring.status)
     .sort((a, b) => a.data.title.localeCompare(b.data.title)),
   notes: decisions
-    .filter((entry) => entry.data.status === status)
+    .filter((entry) => entry.data.status === ring.status)
     .sort((a, b) => a.data.title.localeCompare(b.data.title)),
 }));
 ---
 
 <SiteLayout title="Radar" description="A maturity-aware view of tools evaluated in this handbook.">
   <div class="radar-page">
-    <div class="radar-hero">
-      <div>
-        <p class="radar-eyebrow">Make deliberate technology choices</p>
-        <h1>Technology radar</h1>
-        <p class="radar-intro">
-          What to reach for, what to try, and where to slow down.
-          A practical view of the tools and architectural decisions in this handbook.
-        </p>
-        <p class="radar-context">
-          A recommendation is not a popularity score. Read each guide's verification status,
-          risks, and exit path before choosing.
-        </p>
-        <div class="radar-totals" aria-label="Radar coverage">
-          <p><strong>{entries.length}</strong><span>tool guides</span></p>
-          <p><strong>{decisions.length}</strong><span>decision notes</span></p>
-          <p><strong>4</strong><span>recommendation rings</span></p>
-        </div>
-      </div>
-      <div class="radar-visual" aria-hidden="true">
-        <svg viewBox="0 0 400 400" fill="none">
-          <path d="M200 12V388M12 200H388" class="radar-axis" />
-          <circle cx="200" cy="200" r="178" class="orbit orbit-hold" />
-          <circle cx="200" cy="200" r="134" class="orbit orbit-assess" />
-          <circle cx="200" cy="200" r="90" class="orbit orbit-trial" />
-          <circle cx="200" cy="200" r="46" class="orbit orbit-adopt" />
-          <path d="M200 200L326 74" class="radar-radius" />
-          <circle cx="200" cy="200" r="5" class="radar-center" />
-          <g class="radar-ring-labels">
-            <text x="200" y="45">HOLD</text>
-            <text x="200" y="89">ASSESS</text>
-            <text x="200" y="133">TRIAL</text>
-            <text x="200" y="177">ADOPT</text>
-          </g>
-        </svg>
-        <p>Closer to the center, closer to a default.</p>
-      </div>
-    </div>
+    <header class="radar-header">
+      <h1>Technology radar</h1>
+      <p>What to reach for, what to try, and what to explore first.</p>
+    </header>
 
-    <nav aria-label="Recommendation rings" class="radar-ring-nav">
+    <nav aria-label="Recommendation rings" class="radar-nav">
       {rings.map((ring) => (
-        <a href={`#radar-${ring.status}`} class={`ring-jump ring-${ring.status}`}>
-          <span class="ring-jump-top"><span>{ring.number} / {ring.status}</span><span aria-hidden="true">↘</span></span>
-          <strong>{ring.label}</strong>
-          <span class="ring-jump-count">{ring.tools.length} tools · {ring.notes.length} notes</span>
-        </a>
+        <a href={`#radar-${ring.status}`}>{ring.status} <span>{ring.tools.length}</span></a>
       ))}
     </nav>
 
-    <div class="radar-board">
+    <div class="radar-rings">
       {rings.map((ring) => (
-        <section aria-labelledby={`radar-${ring.status}`} class={`radar-ring ring-${ring.status}`}>
-          <div class="ring-heading">
-            <div>
-              <p class="radar-eyebrow">Ring {ring.number}</p>
-              <h2 id={`radar-${ring.status}`} tabindex="-1">{ring.status}</h2>
-            </div>
-            <span class="ring-count">{ring.tools.length}<span>tools</span></span>
+        <section aria-labelledby={`radar-${ring.status}`} class="radar-ring">
+          <div class="ring-head">
+            <h2 id={`radar-${ring.status}`} tabindex="-1">{ring.status}</h2>
+            <p>{ring.description}</p>
           </div>
-          <p class="ring-description">{ring.description}</p>
-          {ring.notes.length > 0 && (
-            <div class="ring-notes">
-              <h3>Decision notes</h3>
-              <ul aria-label={`${ring.status} decision notes`}>
+          <div class="ring-body">
+            {ring.notes.length > 0 && (
+              <ul class="ring-notes" aria-label={`${ring.status} decision notes`}>
                 {ring.notes.map((note) => (
                   <li>
-                    <a href={`/radar/${note.id}/`}>
-                      <span>{note.data.title}</span><span aria-hidden="true">↗</span>
-                    </a>
+                    <a href={`/radar/${note.id}/`}>{note.data.title}</a>
                     <p>{note.data.summary}</p>
                   </li>
                 ))}
               </ul>
-            </div>
-          )}
-          <h3 class="ring-tools-heading">Tool guides</h3>
-          {ring.tools.length ? (
-            <ul class="radar-tools" aria-label={`${ring.status} tools`}>
-              {ring.tools.map((tool) => (
-                <li>
-                  <a href={`/tools/${tool.id}/`} class="radar-tool-link">
-                    <span>{tool.data.title}</span><span aria-hidden="true">↗</span>
-                  </a>
-                  <p class="radar-tool-category">{tool.data.category.replaceAll('-', ' ')}</p>
-                  <div class="radar-tool-meta">
+            )}
+            {ring.tools.length ? (
+              <ul class="radar-tools" aria-label={`${ring.status} tools`}>
+                {ring.tools.map((tool) => (
+                  <li>
+                    <a href={`/tools/${tool.id}/`}>{tool.data.title}</a>
                     <MaturityBadge maturity={tool.data.maturity} />
-                    {tool.data.needsVerification && <span class="radar-review">Needs verification</span>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p class="radar-empty">No tools in this ring yet.</p>
-          )}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="radar-empty">No tools in this ring yet.</p>
+            )}
+          </div>
         </section>
       ))}
     </div>
-    <aside class="radar-footnote" aria-label="How to read this radar">
-      <strong>Recommendation and maturity are different signals.</strong>
-      <p>A stable tool can still be a poor default for a particular problem. Rings describe adoption guidance; maturity badges describe the tool's lifecycle. Decision notes explain the context.</p>
-      <a href="/guides/choosing-a-stack/">Choose a stack by its boundaries <span aria-hidden="true">→</span></a>
-    </aside>
+
+    <p class="radar-footnote">
+      Rings describe adoption guidance; maturity describes a tool's lifecycle.
+      <a href="/guides/choosing-a-stack/">Choose a stack by its boundaries</a>
+    </p>
   </div>
 </SiteLayout>
 
 <style>
   .radar-page {
-    --radar-border: color-mix(in srgb, var(--color-ink) 18%, transparent);
-  }
-  .radar-hero {
-    display: grid;
-    align-items: center;
-    gap: 2rem;
-  }
-  .radar-eyebrow {
-    margin: 0;
-    color: var(--color-muted);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    --radar-border: color-mix(in srgb, var(--color-ink) 14%, transparent);
+    max-width: 56rem;
   }
   h1 {
-    margin: 1rem 0;
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: 750;
-    letter-spacing: -0.045em;
-    line-height: 1.05;
+    margin: 0;
+    font-size: clamp(2.25rem, 6vw, 3.5rem);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
   }
-  .radar-intro {
-    max-width: 36rem;
-    font-size: 1.25rem;
-    line-height: 1.65;
-  }
-  .radar-context {
-    max-width: 34rem;
-    margin-top: 1rem;
+  .radar-header p {
+    margin: 1rem 0 0;
     color: var(--color-muted);
-    line-height: 1.7;
+    font-size: 1.15rem;
   }
-  .radar-totals {
+  .radar-nav {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.5rem 2rem;
+    gap: 0.5rem 1.5rem;
     margin-top: 2rem;
   }
-  .radar-totals p {
-    margin: 0;
-  }
-  .radar-totals strong,
-  .radar-totals span {
-    display: block;
-  }
-  .radar-totals strong {
-    font-size: 1.75rem;
-    font-variant-numeric: tabular-nums;
-  }
-  .radar-totals span {
-    color: var(--color-muted);
-    font-size: 0.8rem;
-  }
-  .radar-visual {
-    max-width: 25rem;
-    width: 100%;
-    justify-self: center;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--color-brand-soft), transparent 70%);
-  }
-  .radar-visual svg {
-    width: 100%;
-  }
-  .radar-visual p {
-    margin: 0;
-    color: var(--color-muted);
-    text-align: center;
-    font-size: 0.75rem;
-  }
-  .radar-axis {
-    stroke: var(--radar-border);
-    stroke-dasharray: 3 6;
-  }
-  .orbit {
-    stroke: var(--color-brand);
-    stroke-width: 1.5;
-  }
-  .orbit-hold { stroke-dasharray: 3 7; }
-  .orbit-assess { stroke-dasharray: 8 5; }
-  .orbit-trial { stroke-width: 2; }
-  .orbit-adopt {
-    fill: var(--color-brand-soft);
-    stroke-width: 3;
-  }
-  .radar-radius { stroke: var(--color-brand); }
-  .radar-center { fill: var(--color-brand); }
-  .radar-ring-labels {
-    fill: var(--color-ink);
-    text-anchor: middle;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 2px;
-  }
-  .radar-ring-nav {
-    display: grid;
-    gap: 0.75rem;
-    margin: 3rem 0;
-  }
-  .ring-adopt { --ring-accent: #269a73; }
-  .ring-trial { --ring-accent: #4584dc; }
-  .ring-assess { --ring-accent: #ab7ad6; }
-  .ring-hold { --ring-accent: #cf8d45; }
-  .ring-jump {
-    display: grid;
-    gap: 0.8rem;
-    border: 1px solid var(--radar-border);
-    border-top: 3px solid var(--ring-accent);
-    border-radius: 0.75rem;
-    background: color-mix(in srgb, var(--color-paper) 94%, var(--ring-accent));
+  .radar-nav a {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    gap: 0.4rem;
     color: var(--color-ink);
-    padding: 1.25rem;
-    text-decoration: none;
+    font-weight: 600;
+    text-transform: capitalize;
   }
-  .ring-jump:hover {
-    border-color: var(--ring-accent);
-    background: color-mix(in srgb, var(--color-paper) 88%, var(--ring-accent));
-  }
-  .ring-jump-top {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-  }
-  .ring-jump-count {
+  .radar-nav span {
     color: var(--color-muted);
-    font-size: 0.8rem;
+    font-weight: 400;
   }
-  .radar-board {
-    display: grid;
-    align-items: start;
-    gap: 1.5rem;
+  .radar-rings {
+    margin-top: 2rem;
+    border-bottom: 1px solid var(--radar-border);
   }
   .radar-ring {
-    min-width: 0;
-    border: 1px solid var(--radar-border);
-    border-top: 4px solid var(--ring-accent);
-    border-radius: 1rem;
-    background: linear-gradient(150deg, color-mix(in srgb, var(--color-paper) 95%, var(--ring-accent)), var(--color-paper) 20rem);
-    padding: clamp(1rem, 3vw, 1.75rem);
+    display: grid;
+    gap: 1rem 3rem;
+    align-items: start;
+    border-top: 1px solid var(--radar-border);
+    padding: 2rem 0;
   }
-  .ring-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
+  @media (min-width: 48rem) {
+    .radar-ring {
+      grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 2fr);
+    }
   }
   h2 {
-    margin: 0.25rem 0 0;
-    font-size: 2rem;
-    font-weight: 750;
-    letter-spacing: -0.03em;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
     text-transform: capitalize;
     scroll-margin-top: 2rem;
   }
@@ -313,122 +141,93 @@ const rings = statuses.map((status, index) => ({
     outline: 3px solid var(--color-brand);
     outline-offset: 4px;
   }
-  .ring-count {
-    display: grid;
-    min-width: 3.5rem;
-    text-align: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-  }
-  .ring-count span {
+  .ring-head p {
+    margin: 0.5rem 0 0;
     color: var(--color-muted);
-    font-size: 0.75rem;
-    font-weight: 400;
-  }
-  .ring-description {
-    margin: 1rem 0 1.5rem;
-    color: var(--color-muted);
-    line-height: 1.65;
-  }
-  h3 {
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-size: 0.95rem;
+    line-height: 1.55;
   }
   ul {
+    margin: 0;
     padding: 0;
     list-style: none;
   }
   .ring-notes {
-    border-block: 1px solid var(--radar-border);
-    padding-block: 1rem;
-  }
-  .ring-notes ul {
     display: grid;
-    gap: 1.25rem;
-    margin-top: 0.75rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
   }
-  .ring-notes a,
-  .radar-tool-link {
-    display: flex;
-    min-height: 2.75rem;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    color: var(--color-ink);
+  .ring-notes a {
     font-weight: 650;
-    text-decoration: none;
-  }
-  .ring-notes a:hover,
-  .radar-tool-link:hover {
-    color: var(--color-brand);
-    text-decoration: underline;
   }
   .ring-notes p {
     margin: 0.25rem 0 0;
     color: var(--color-muted);
-    font-size: 0.9rem;
-    line-height: 1.65;
-  }
-  .ring-tools-heading {
-    margin-top: 1.5rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
   }
   .radar-tools {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
-    gap: 0.75rem;
-    margin-top: 0.75rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.375rem;
+  }
+  @media (min-width: 64rem) {
+    .radar-tools {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
   .radar-tools li {
-    min-width: 0;
-    border: 1px solid var(--radar-border);
-    border-radius: 0.65rem;
-    padding: 0.5rem 0.85rem 0.85rem;
-  }
-  .radar-tool-link span:first-child {
-    overflow-wrap: anywhere;
-  }
-  .radar-tool-category {
-    margin: 0 0 0.75rem;
-    color: var(--color-muted);
-    font-size: 0.75rem;
-  }
-  .radar-tool-meta {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 0.5rem;
+    column-gap: 0.5rem;
+    min-height: 2.75rem;
+    border: 1px solid var(--radar-border);
+    border-radius: 0.5rem;
+    background: #18212f;
+    color: #fff;
+    padding: 0.125rem 0.375rem;
   }
-  .radar-review {
-    color: var(--color-muted);
-    font-size: 0.75rem;
+  .radar-tools a {
+    min-width: 0;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    color: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  .radar-tools :global(.maturity-stable),
+  .radar-tools :global(.maturity-frontier),
+  .radar-tools :global(.maturity-legacy),
+  .radar-tools :global(.maturity-deprecated) {
+    padding: 0.0625rem 0.375rem;
+    font-size: 0.6875rem;
+    line-height: 1.2;
+  }
+  .radar-tools .maturity-stable {
+    background: #15583b;
+    color: #fff;
+  }
+  .radar-tools .maturity-frontier {
+    background: #673c00;
+    color: #fff;
+  }
+  .radar-tools .maturity-legacy {
+    background: #334155;
+    color: #fff;
+  }
+  .radar-tools .maturity-deprecated {
+    background: #7f1d1d;
+    color: #fff;
   }
   .radar-empty {
-    margin-top: 1rem;
-    border: 1px dashed var(--radar-border);
-    border-radius: 0.65rem;
-    padding: 1.25rem;
+    margin: 0;
     color: var(--color-muted);
   }
   .radar-footnote {
     margin-top: 2rem;
-    border-left: 3px solid var(--color-brand);
-    padding: 0.5rem 1.25rem;
-    line-height: 1.7;
-  }
-  .radar-footnote p {
-    max-width: 50rem;
-    margin: 0.5rem 0;
     color: var(--color-muted);
-  }
-  @media (min-width: 40rem) {
-    .radar-ring-nav { grid-template-columns: repeat(2, 1fr); }
-  }
-  @media (min-width: 64rem) {
-    .radar-hero { grid-template-columns: 1.5fr 1fr; }
-    .radar-ring-nav { grid-template-columns: repeat(4, 1fr); }
-    .radar-board { grid-template-columns: repeat(2, 1fr); }
+    font-size: 0.95rem;
   }
 </style>

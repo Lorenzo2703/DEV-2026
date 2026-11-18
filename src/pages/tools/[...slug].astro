@@ -42,7 +42,7 @@ const readingMinutes = entry.body
       ))}</p>
     )}
     {sections.length > 0 && (
-      <nav aria-label="On this page" class="table-of-contents">
+      <nav aria-label="On this page" class="table-of-contents table-of-contents-compact">
         <p class="m-0 font-bold">On this page</p>
         <ol>
           {sections.map((section) => <li><a href={`#${section.slug}`}>{section.text}</a></li>)}
